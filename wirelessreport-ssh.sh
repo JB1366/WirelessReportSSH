@@ -2272,19 +2272,19 @@ cat <<HTML >> "$WEB_PAGE"
 <script>
 function initial() {
     show_menu();
-    var savedView = localStorage.getItem('wifiReportView') || 'split';
+    var savedView = localStorage.getItem('ssh_wifiReportView') || 'split';
     switchTab(savedView);
-    if (localStorage.getItem('wifiReportPopoutOpen') === 'true') {
+    if (localStorage.getItem('ssh_wifiReportPopoutOpen') === 'true') {
         openPopout();
     }
-    var savedRate = localStorage.getItem('wifiReportAutoRefresh') || "0";
+    var savedRate = localStorage.getItem('ssh_wifiReportAutoRefresh') || "0";
     document.getElementById('refresh-option').value = savedRate;
     initAutoRefresh(parseInt(savedRate));
     var ids = ['allTable', 'mainTable', 'nodeTable', 'popMainTable', 'popNodeTable'];
     ids.forEach(function(id) {
         var tableObj = document.getElementById(id);
         if (tableObj && tableObj.rows && tableObj.rows.length > 1) {
-            var ipState = localStorage.getItem('toggle_' + id + '_show-ip');
+            var ipState = localStorage.getItem('ssh_toggle_' + id + '_show-ip');
             var ipHeader = tableObj.querySelector('thead th:nth-child(2)');
             if (ipState === "true") {
                 tableObj.classList.add('show-ip');
@@ -2293,7 +2293,7 @@ function initial() {
                 tableObj.classList.remove('show-ip');
                 if (ipHeader) ipHeader.innerHTML = "MAC ADDRESS ⇅";
             }
-            var ifaceState = localStorage.getItem('toggle_' + id + '_show-iface');
+            var ifaceState = localStorage.getItem('ssh_toggle_' + id + '_show-iface');
             var ifaceHeader = tableObj.querySelector('thead th:nth-child(5)');
             if (ifaceState === "true") {
                 tableObj.classList.add('show-iface');
@@ -2302,8 +2302,8 @@ function initial() {
                 tableObj.classList.remove('show-iface');
                 if (ifaceHeader) ifaceHeader.innerHTML = "SSID ⇅";
             }
-            var savedCol = localStorage.getItem('savedSortCol_' + id);
-            var savedDir = localStorage.getItem('savedSortDir_' + id);
+            var savedCol = localStorage.getItem('ssh_savedSortCol_' + id);
+            var savedDir = localStorage.getItem('ssh_savedSortDir_' + id);
             if (savedCol !== null) {
                 try {
                     sortTable(parseInt(savedCol), id, true, (savedDir === 'desc'));
@@ -2362,14 +2362,14 @@ window.addEventListener('DOMContentLoaded', function() {
     const selectEl = document.getElementById('refresh-option');
     if (selectEl) {
         selectEl.addEventListener('change', function() {
-            localStorage.setItem('wifiReportAutoRefresh', this.value);
+            localStorage.setItem('ssh_wifiReportAutoRefresh', this.value);
             initAutoRefresh(parseInt(this.value));
         });
     }
 });
 
 function switchTab(view) {
-    localStorage.setItem('wifiReportView', view);
+    localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
     var all = document.getElementById('allCol');
     var btnMain = document.getElementById('btnMain');
@@ -2395,7 +2395,7 @@ function toggleCols(tId, cls, header, labelA, labelB) {
     if(!table) return;
     var isActive = table.classList.toggle(cls);
     header.innerHTML = (isActive ? labelB : labelA) + " ⇅";
-    localStorage.setItem('toggle_' + tId + '_' + cls, isActive ? "true" : "false");
+    localStorage.setItem('ssh_toggle_' + tId + '_' + cls, isActive ? "true" : "false");
     var colIdx = (cls === 'show-ip') ? 1 : 4;
     sortTable(colIdx, tId, true);
 }
@@ -2413,12 +2413,12 @@ function sortTable(n, tId, keepDir, forceDesc) {
         dir = (dir === "asc") ? "desc" : "asc";
     }
     table.setAttribute("data-dir-" + n, dir);
-    localStorage.setItem('savedSortCol_' + tId, n);
-    localStorage.setItem('savedSortDir_' + tId, dir);
+    localStorage.setItem('ssh_savedSortCol_' + tId, n);
+    localStorage.setItem('ssh_savedSortDir_' + tId, dir);
     if (window.event && window.event.type === 'contextmenu' && n === 0) {
-        localStorage.setItem('savedSortNodeMode_' + tId, 'true');
+        localStorage.setItem('ssh_savedSortNodeMode_' + tId, 'true');
     } else if (window.event && window.event.type === 'click') {
-        localStorage.removeItem('savedSortNodeMode_' + tId);
+        localStorage.removeItem('ssh_savedSortNodeMode_' + tId);
     }
     var headers = table.querySelectorAll('th');
     headers.forEach(function(h, idx) {
@@ -2448,7 +2448,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
 				return cell.innerText.trim();
 			};
 			var isRightClick = (window.event && window.event.type === 'contextmenu');
-			var isNodeModeSaved = (localStorage.getItem('savedSortNodeMode_' + tId) === 'true');
+			var isNodeModeSaved = (localStorage.getItem('ssh_savedSortNodeMode_' + tId) === 'true');
 			if (isRightClick || isNodeModeSaved) {
 				var nodeA = getNodeNum(cellA);
 				var nodeB = getNodeNum(cellB);
@@ -2496,7 +2496,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
 }
 
 function openPopout() {
-    localStorage.setItem('wifiReportPopoutOpen', 'true');
+    localStorage.setItem('ssh_wifiReportPopoutOpen', 'true');
     var body = document.getElementById('popoutBody'); body.innerHTML = "";
     var mCol = document.getElementById('mainCol');
     var nCol = document.getElementById('nodeCol');
@@ -2539,7 +2539,7 @@ function openPopout() {
 
 function closePopout() {
     document.getElementById('popoutModal').style.display = 'none';
-    localStorage.setItem('wifiReportPopoutOpen', 'false');
+    localStorage.setItem('ssh_wifiReportPopoutOpen', 'false');
 }
 
 function toggleWideView(forceState) {
@@ -2547,9 +2547,6 @@ function toggleWideView(forceState) {
     var next = (typeof forceState === 'boolean') ? forceState : !active;
     document.body.classList.toggle('wr-wide-mode', next);
     setWideButtonState(next);
-
-    /* Starting Wide View at the top makes the transition predictable.  Leaving
-       it restores the ordinary ASUS page without navigating or reloading. */
     var container = document.getElementById('wifiReportContainer');
     if (next && container) container.scrollTop = 0;
 }
