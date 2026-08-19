@@ -116,10 +116,10 @@ install_menu() {
 }
 
 check_version() {
-    local mode="$1"; DEV=""; freeze() { return 0; }
+    local mode="$1"; freeze() { return 0; }
     if [ ! -f "$REPORT_SCRIPT" ]; then STATE="NOT_INSTALLED"; freeze() { freeze2; return 1; }
     elif [ -z "$REMOTE_VERSION" ]; then STATE="OFFLINE"
-    elif [ "$(echo "$SCRIPT_VERSION" | tr -d '.')" -gt "$(echo "$REMOTE_VERSION" | tr -d '.')" ]; then  STATE="UP_TO_DATE"; DEV="-DEV"
+    elif [ "$(echo "$SCRIPT_VERSION" | tr -d '.')" -gt "$(echo "$REMOTE_VERSION" | tr -d '.')" ]; then  STATE="UP_TO_DATE"
     elif [ "$SCRIPT_VERSION" != "$REMOTE_VERSION" ]; then STATE="OUTDATED"
     elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then STATE="HASH_DIFF"
     else STATE="UP_TO_DATE"; fi
@@ -130,8 +130,8 @@ check_version() {
                                VERSION_HASH=" [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
                 HASH_DIFF)     HOVER_TEXT="Current v$SCRIPT_VERSION <br> Hash Update available"
                                VERSION_HASH=" [Hash]"; HEADER_TITLE="header-title2" ;;
-                UP_TO_DATE|*)  HOVER_TEXT="Current v$SCRIPT_VERSION$DEV"
-                               VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
+                UP_TO_DATE|*)  HOVER_TEXT="Current v$SCRIPT_VERSION"
+                               VERSION_HASH=""; HEADER_TITLE="header-title" ;;
             esac ;;
         do_install)
             case "$STATE" in
@@ -139,7 +139,7 @@ check_version() {
                                UP="update version?" ;;
                 HASH_DIFF)     echo -e "\n${GR}[i] There is a Hash Update for (${NC}v$SCRIPT_VERSION${GR}).${NC}\n"
                                UP="update Hash?" ;;
-                UP_TO_DATE|*)  echo -e "\n${GR}[i] You are already on the latest version (${NC}v$SCRIPT_VERSION$DEV${GR}).${NC}\n"
+                UP_TO_DATE|*)  echo -e "\n${GR}[i] You are already on the latest version (${NC}v$SCRIPT_VERSION${GR}).${NC}\n"
                                UP="reinstall/overwrite anyway?";;
             esac ;;
         *)
@@ -148,7 +148,7 @@ check_version() {
                 NOT_INSTALLED) echo -e "$STATUS ${RD}[Not Installed]${NC} Latest Available: ${GR}v$REMOTE_VERSION${NC}"; N1="${BL}(1)" ;;
                 OUTDATED)      echo -e "$STATUS [v$REMOTE_VERSION Available] $CURRENT" ;;
                 HASH_DIFF)     echo -e "$STATUS [Hash Update Available] $CURRENT" ;;
-                UP_TO_DATE|*)  echo -e "$STATUS [Up to date] $CURRENT$DEV" ;;
+                UP_TO_DATE|*)  echo -e "$STATUS [Up to date] $CURRENT" ;;
             esac ;;
     esac
 }
