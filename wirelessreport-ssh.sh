@@ -45,7 +45,8 @@ DHCPSTATIC_CACHE="/tmp/dhcp_static.cache"
 DEVICE_LIST_CACHE="/tmp/asus_device_list.cache"
 CUSTOM_CLIENTS_CACHE="/tmp/custom_clients.cache"
 if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
-export PATH="/usr/sbin:/usr/bin:/sbin:/bin:$PATH"; unset LD_LIBRARY_PATH
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+unset LD_LIBRARY_PATH
 
 #==================#
 #  Script Install  #
@@ -192,11 +193,9 @@ menu_vars() {
     STATUS=" ${BL}STATUS:${NC}"; CURRENT="${BL}CURRENT:${NC} v$SCRIPT_VERSION$DEV"
     SS_FILE="/jffs/scripts/services-start"; SE_FILE="/jffs/scripts/service-event"
 	if [ -z "$SSH_KEY" ]; then KEY="${RD}NO${NC}"; else KEY="${GR}YES${NC}"; fi
-	PORT="${GR}$SSH_PORT${NC}"
-    REPORT_UNIT="${REPORT_UNIT:-F}"; CT="${GR}$CUR_TIME${NC}"
-	if [ "$REPORT_UNIT" = "ISO" ]; then DN="ISO"; DU="${GR}°C${NC}"
-    elif [ "$REPORT_UNIT" = "C" ]; then DN="INTL"; DU="${GR}°C${NC}"
-    else DN="USA"; DU="${GR}°F${NC}"; fi
+	PORT="${GR}$SSH_PORT${NC}"; CT="${GR}$CUR_TIME${NC}"
+    REPORT_UNIT="${REPORT_UNIT:-F}"
+	case "$REPORT_UNIT" in ISO) DN="ISO"; DU="${GR}°C${NC}" ;; C) DN="INTL"; DU="${GR}°C${NC}" ;; *) DN="USA"; DU="${GR}°F${NC}" ;; esac
     DATE_ISO="${GR}$(date +"%Y-%m-%d %H:%M:%S")${NC}"
     DATE_INTL="${GR}$(date +"%-d-%b %-H:%M:%S")${NC}"
     DATE_USA="${GR}$(date +"%b-%-d %-H:%M:%S")${NC}"
@@ -211,12 +210,8 @@ menu_vars() {
 	if [ "$CUR_DATE" = "1" ]; then TS="$ON"; else TS="$OFF"; fi
     THEME=${THEME:-ORIGINAL}; TM_STAT="${GR}$THEME${NC}"
 	IPPAD=${IPPAD:-1}
-	if [ "$IPPAD" = "2" ]; then PD_STAT="${GR}Last 2 Octets${NC}"
-	elif [ "$IPPAD" = "1" ]; then PD_STAT="${BL}Last Octet${NC}"
-	else PD_STAT="${RD}Disabled${NC}"; fi
-	HOST_COLOR=${HOST_COLOR:-0}
-	if [ "$HOST_COLOR" = "1" ]; then HN_STAT="${BL}Colored${NC}"
-	else HN_STAT="${GR}Numbered${NC}"; fi
+	case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets${NC}" ;; 1) PD_STAT="${BL}Last Octet${NC}" ;; *) PD_STAT="${RD}Disabled${NC}" ;; esac
+	HOST_COLOR=${HOST_COLOR:-0}; if [ "$HOST_COLOR" = "1" ]; then HN_STAT="${BL}Colored${NC}"; else HN_STAT="${GR}Numbered${NC}"; fi
 }
 
 do_install() {
@@ -2891,27 +2886,24 @@ rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$DEVICE_LIST_CACHE" "$NODE_DATA_DIR
 }
 case "$1" in
     install)
-        # Install/Uninstall options
         startup
         install_menu
         ;;
     inject|inject1|inject2|inject3)
         case "$1" in
-            inject)  ;; # Called by services-start to mount tab
-            inject1) NOLOADSCRIPT="1" ;; # Manual Tab Injection
-            inject2) INJECT="2" ;; # Called by services-start to mount menu
-            inject3) NOLOADSCRIPT="1"; INJECT="2" ;; # Manual Menu Injection
+            inject)  ;;
+            inject1) NOLOADSCRIPT="1" ;;
+            inject2) INJECT="2" ;;
+            inject3) NOLOADSCRIPT="1"; INJECT="2" ;;
         esac
         inject_menu
         ;;
     amtmupdate)
-        # Called by AMTM for autoupdates
 		shift
         ScriptUpdateFromAMTM "$@"
         exit "$?"
         ;;
 	*)
-        # Run (Scans)
 		startup
 		run_report
         ;;
