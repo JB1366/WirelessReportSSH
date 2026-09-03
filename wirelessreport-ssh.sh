@@ -1275,7 +1275,8 @@ do_runtime() {
         .button-refresh:has(.button-trigger:hover) .button-trigger:after, .button-refresh:has(select:hover) select:after { opacity: 1; visibility: visible; }"
         RUNTIME_CSS=$(echo "$RUNTIME_CSS" | sed 's/^    //')
 	else
-		RUNTIME_CSS=""; RUNTIME=""
+		RUNTIME_CSS=".button-tables.button-trigger { color: #ffffff; }
+        .button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }"; RUNTIME=""
 		if [ -f "$USB_PATH/runtime.db" ]; then rm -f "$USB_PATH/runtime.db"; fi
 	fi
 }
@@ -2234,7 +2235,6 @@ cat <<HTML >> "$WEB_PAGE"
 	.pulse-blue { color: #00e5ff !important; font-weight: bold; animation: pulse-blue-glow 2s infinite; }
 	@keyframes pulse-blue-glow { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     .new-device-row { background-color: rgba(0, 229, 255, 0.1) !important; animation: pulse-blue-glow 2s infinite; }
-    ${RUNTIME_CSS}
     .button-auto-refresh { display: inline-flex; align-items: center; padding: 0 5px; height: 28px; border: 0; margin-left: -4px; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; border-top-right-radius: 4px; border-bottom-right-radius: 4px; color: #0096ff; font-size: 12px; font-weight: bold; cursor: pointer !important; }
     .button-auto-refresh > span { color: #0096ff; font-weight: bold; pointer-events: none; user-select: none; }
     .button-auto-refresh:hover, .button-auto-refresh.active { border-color: #0096ff; box-shadow: 0 0 25px rgba(0,150,255,0.6); color: #0096ff; position: relative; z-index: 5 }
@@ -2244,6 +2244,7 @@ cat <<HTML >> "$WEB_PAGE"
     .button-tables { border: 1px solid #475a68; color: white; padding: 0 12px; font-size: 12px; border-radius: 4px; font-weight: bold; height: 28px; cursor: pointer !important; line-height: 26px; transition: all 0.2s ease; box-sizing: border-box; }
     .button-tables:hover, .button-tables.active { color: #0096ff; border-color: #0096ff; box-shadow: 0 0 25px rgba(0,150,255,0.6); position: relative; z-index: 5 }
     .button-tables.active { background: rgba(0,150,255,0.15); }
+    ${RUNTIME_CSS}
     #refresh-option { color: #ffffff; background: transparent; border: none; outline: none; font-weight: bold; cursor: pointer; padding: 0; margin: 0; font-family: inherit; font-size: inherit; }
     #refresh-option option { font-weight: bold; }
     #refresh-option:focus { outline: none; border: none; }
