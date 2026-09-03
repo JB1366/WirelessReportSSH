@@ -91,7 +91,8 @@ install_menu() {
 		echo -e "  $N7  Set Options                                     "
         echo -e "  $N8  Configure RSSI History ($RH_STAT)               "
 		echo -e "  $N9  Configure SSH Options  Key:($KEY)               "
-		echo -e "  $LE  Exit                                            "
+		echo -e "                                                       "
+        echo -e "  $LE  Exit                                            "
 		echo -e "                                                       "
 		echo -e "${BL}=================================================="
 		while true; do
@@ -426,28 +427,26 @@ check_ssh() {
             case "$choice" in
                 1)
                     ssh_keys
-                    if [ "$install" = "1" ]; then return 0; fi
-                    break ;;
+                    if [ "$install" = "1" ]; then return 0; fi ;;
                 2)
-                    del_ssh_keys
-                    break ;;
+                    del_ssh_keys ;;
                 3)
                     echo -e "\n${YL}[i] Setting Up Router-Only...${NC}"
                     sed -i '/^SSH_NODES=/d' "$CONFIG"
                     echo 'SSH_NODES=" "' >> "$CONFIG"
-                    pause; break ;;
+                    pause ;;
                 4)
                     echo -e "\n${BL}================ Authorized Keys =================${NC}\n"
                     if [ -f "/root/.ssh/authorized_keys" ]; then cat /root/.ssh/authorized_keys
                     else echo -e "${YL}[!] File not found.${NC}"; fi
                     echo -e "\n\n${BL}==================================================${NC}"
-                    pause; break ;;
+                    pause ;;
                 5)
                     echo -e "\n${BL}================== Known Hosts  ==================${NC}\n"
                     if [ -f "/jffs/.ssh/known_hosts" ]; then cat /jffs/.ssh/known_hosts
                     else echo -e "${YL}[!] File not found.${NC}"; fi
                     echo -e "\n${BL}==================================================${NC}"
-                    pause; break ;;
+                    pause ;;
                 6)
                     echo -e "\n${BL}================= SSH Error Log ==================${NC}\n"
                     if [ -f "$ERROR_LOG" ]; then
@@ -463,16 +462,15 @@ check_ssh() {
                         echo -e "${YL}[!] File not found.${NC}"
                         echo -e "\n${BL}==================================================${NC}"
                         pause
-                    fi
-                    break ;;
+                    fi ;;
                 7)
-                    node_auth
-                    break ;;
+                    node_auth ;;
                 e|E)
                     return 0 ;;
                 *)
                     freeze 2; continue ;;
             esac
+            break
         done
 	done
 }
@@ -638,7 +636,7 @@ ssh_keys() {
 	echo -e "${BL}[*] TIP: If a node is missing after authentication,     "
 	echo -e "${BL}[*]      use option #7 to reauthenticate.          ${NC}"
 	printf "\n[*] Press ${BL}[ENTER]${NC} to begin authentication check..."; read -r discard
-	node_auth "pause"
+	node_auth
 }
 
 del_ssh_keys() {
@@ -830,7 +828,7 @@ set_nicknames() {
                         done
                     fi
                     echo -e "\n${GR}[+] Default hardware models restored.${NC}"
-                    pause; break ;;
+                    pause ;;
                 2)
                     echo -e "\n${BL}[*] Updating nicknames with Locations...${NC}\n"
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
@@ -862,7 +860,7 @@ set_nicknames() {
                         node_idx=$((node_idx + 1))
                     done
                     echo -e "\n${GR}[+] Nicknames updated to Locations...${NC}"
-                    pause; break ;;
+                    pause ;;
                 3)
                     echo -e "\n${BL}[*] Manual Entry Mode${NC}\n"
                     OLD_MAIN="${MAIN_NICK:-$MAIN_ROUTER}"
@@ -888,12 +886,13 @@ set_nicknames() {
                         node_idx=$((node_idx + 1))
                     done
                     echo -e "\n${GR}[+] Manual nicknames saved (max 25 chars).${NC}"
-                    pause; break ;;
+                    pause ;;
                 e|E)
                     return ;;
                 *)
                     freeze 2; continue ;;
             esac
+            break
         done
     done
 }
@@ -1112,14 +1111,12 @@ set_options() {
                         if [ "$RTIME" = "1" ]; then sed -i 's/RTIME=.*/RTIME="0"/' "$CONFIG"
                         else sed -i 's/RTIME=.*/RTIME="1"/' "$CONFIG"; fi
                     else echo 'RTIME="0"' >> "$CONFIG"; fi
-                    if [ -f "$USB_PATH/runtime.db" ]; then rm -f "$USB_PATH/runtime.db"; fi
-                    break ;;
+                    if [ -f "$USB_PATH/runtime.db" ]; then rm -f "$USB_PATH/runtime.db"; fi ;;
                 2)
                     if grep -q "BACKHAUL=" "$CONFIG"; then
                         if [ "$BACKHAUL" = "yes" ]; then NEW_BACK="no"; else NEW_BACK="yes"; fi
                         sed -i "s/BACKHAUL=.*/BACKHAUL=\"$NEW_BACK\"/" "$CONFIG"
-                    else echo 'BACKHAUL="yes"' >> "$CONFIG"; fi
-                    break ;;
+                    else echo 'BACKHAUL="yes"' >> "$CONFIG"; fi ;;
                 3)
                     while true; do
                         echo -e "\n (${GR}0${NC}) disable (${GR}15${NC}) def (${GR}1440${NC}) max "
@@ -1137,7 +1134,7 @@ set_options() {
                             freeze 3; continue
                         fi
                     done
-                    pause; break ;;
+                    pause ;;
                 4)
                     if grep -q "IPPAD=" "$CONFIG"; then
                         case "$IPPAD" in
@@ -1151,16 +1148,12 @@ set_options() {
                         echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"; NEW_PAD="0"
                         echo 'IPPAD="0"' >> "$CONFIG"
                         pause
-                    fi
-                    break ;;
+                    fi ;;
                 5)
                     if grep -q "HOST_COLOR=" "$CONFIG"; then
                         if [ "$HOST_COLOR" = "1" ]; then NEW_HC="0"; else NEW_HC="1"; fi
                         sed -i "s/HOST_COLOR=.*/HOST_COLOR=\"$NEW_HC\"/" "$CONFIG"
-                    else
-                        echo 'HOST_COLOR="1"' >> "$CONFIG"
-                    fi
-                    break ;;
+                    else echo 'HOST_COLOR="1"' >> "$CONFIG"; fi ;;
                 dev)
                     while true; do
                         printf "\n ${NC}Current Branch: [${GR}$BRANCH_NAME${NC}] Swap Branch (y/n): "; read -r toggle
@@ -1179,6 +1172,7 @@ set_options() {
                 *)
                     freeze 2; continue ;;
             esac
+            break
         done
     done
 }
