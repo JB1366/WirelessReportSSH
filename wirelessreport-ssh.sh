@@ -1167,6 +1167,9 @@ set_options() {
                     printf "\nPress ${BL}[Enter]${NC} to switch to [${GR}$BRANCH_NAME${NC}] branch & restart script..."; read -r restart
                     if do_update; then exec "$REPORT_SCRIPT" install "$@"
                     else echo -e "${RD}Error: Branch update failed!${NC}" >&2; exit 1; fi ;;
+                i|I)
+                    if grep -q "INJECT=" "$CONFIG"; then sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
+                    else echo 'INJECT="2"' >> "$CONFIG"; fi; freeze 2; continue ;;
                 e|E)
                     return 0 ;;
                 *)
