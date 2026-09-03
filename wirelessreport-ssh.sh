@@ -1262,8 +1262,7 @@ do_runtime() {
 		NEW_MAX=$(awk "BEGIN {printf \"%.2f\", ($DIFF > $MAX_TIME) ? $DIFF : $MAX_TIME}")
 		echo "$NEW_TOTAL $NEW_COUNT $NEW_MIN $NEW_MAX" > "$STATS_FILE"
 		logger -p user.info -t "Wireless_Report_SSH" "Report completed in $RUNTIME. AVG: ${AVERAGE}s (L: ${NEW_MIN}s/H: ${NEW_MAX}s) over $NEW_COUNT scans."
-		RUNTIME_CSS=".button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }
-        .button-refresh, .button-refresh select, .button-refresh .button-trigger { position: relative; display: inline-block; }
+		RUNTIME_CSS=".button-refresh, .button-refresh select, .button-refresh .button-trigger { position: relative; display: inline-block; }
         .button-refresh:before, .button-refresh .button-trigger:before, .button-refresh select:before { position: absolute; height: 28px; line-height: 28px; padding: 0 15px; background: $RT_TOOLTIP; color: white; font-size: 12px; font-weight: bold; border: 1.5px solid #0096ff; border-radius: 20px; box-shadow: 0 0 10px rgba(0,150,255,0.3); white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 100; pointer-events: none; }
         .button-refresh:after, .button-refresh .button-trigger:after, .button-refresh select:after { content: \"\"; position: absolute; width: 4px; height: 4px; background: #0096ff; border-radius: 50%; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 101; pointer-events: none; }
         .button-refresh:before { content: \"Avg: ${AVERAGE}s over $NEW_COUNT scans\"; left: -80px; bottom: 185%; }
