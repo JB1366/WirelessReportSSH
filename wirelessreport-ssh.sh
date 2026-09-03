@@ -1075,23 +1075,15 @@ set_theme() {
         while true; do
             selection
             case "$choice" in
-                1)
-                    if grep -q "^THEME=" "$CONFIG"; then sed -i "s/^THEME=.*/THEME=\"ORIGINAL\"/" "$CONFIG"
-                    else echo 'THEME="ORIGINAL"' >> "$CONFIG"; fi
-                    break ;;
-                2)
-                    if grep -q "^THEME=" "$CONFIG"; then sed -i "s/^THEME=.*/THEME=\"DARKMODE\"/" "$CONFIG"
-                    else echo 'THEME="DARKMODE"' >> "$CONFIG"; fi
-                    break ;;
-                3)
-                    if grep -q "^THEME=" "$CONFIG"; then sed -i "s/^THEME=.*/THEME=\"ASUS_WEBUI\"/" "$CONFIG"
-                    else  echo 'THEME="ASUS_WEBUI"' >> "$CONFIG"; fi
-                    break ;;
-                e|E)
-                    return 0 ;;
-                *)
-                    freeze 2; continue ;;
+                1) TM="ORIGINAL" ;;
+                2) TM="DARKMODE" ;;
+                3) TM="ASUS_WEBUI" ;;
+                e|E) return 0 ;;
+                *) freeze 2; continue ;;
             esac
+            if grep -q "^THEME=" "$CONFIG"; then sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
+            else echo "THEME=\"$TM\"" >> "$CONFIG"; fi
+            break
         done
     done
 }
@@ -1148,21 +1140,17 @@ set_options() {
                     pause; break ;;
                 4)
                     if grep -q "IPPAD=" "$CONFIG"; then
-                        if [ "$IPPAD" = "1" ]; then
-                            echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"
-                            NEW_PAD="0"; pause
-                        elif [ "$IPPAD" = "0" ]; then
-                            echo -e "\n${GR}[+] Mode 2:${NC} 192.168.50.3 --> ${GR}192.168.050.003${NC} (Last 2 Octets)"
-                            NEW_PAD="2"; pause
-                        else
-                            echo -e "\n${GR}[+] Mode 1:${NC} 192.168.50.3 --> ${GR}192.168.50.003${NC} (Last Octet Only)"
-                            NEW_PAD="1"; pause
-                        fi
+                        case "$IPPAD" in
+                            1) echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"; NEW_PAD="0" ;;
+                            0) echo -e "\n${GR}[+] Mode 2:${NC} 192.168.50.3 --> ${GR}192.168.050.003${NC} (Last 2 Octets)";  NEW_PAD="2" ;;
+                            *) echo -e "\n${GR}[+] Mode 1:${NC} 192.168.50.3 --> ${GR}192.168.50.003${NC} (Last Octet Only)"; NEW_PAD="1" ;;
+                        esac
+                        pause
                         sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
                     else
-                        echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"
+                        echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"; NEW_PAD="0"
                         echo 'IPPAD="0"' >> "$CONFIG"
-                        NEW_PAD="0"; pause
+                        pause
                     fi
                     break ;;
                 5)
