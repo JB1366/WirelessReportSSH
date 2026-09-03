@@ -1168,8 +1168,14 @@ set_options() {
                     if do_update; then exec "$REPORT_SCRIPT" install "$@"
                     else echo -e "${RD}Error: Branch update failed!${NC}" >&2; exit 1; fi ;;
                 i|I)
-                    if grep -q "INJECT=" "$CONFIG"; then sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
-                    else echo 'INJECT="2"' >> "$CONFIG"; fi; freeze 2; continue ;;
+                    if grep -q 'INJECT="2"' "$CONFIG"; then
+                        echo -e "\n${YL}[+] INJECT=\"2\" already exists in CONFIG${NC}"
+                    else
+                        if grep -q "INJECT=" "$CONFIG"; then sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
+                        else echo 'INJECT="2"' >> "$CONFIG"; fi
+                        echo -e "\n${GR}[+] Adding INJECT=\"2\" to CONFIG${NC}"
+                    fi
+                    pause; continue 2 ;;
                 e|E)
                     return 0 ;;
                 *)
