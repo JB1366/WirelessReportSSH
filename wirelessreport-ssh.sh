@@ -135,6 +135,8 @@ check_version() {
     case "$mode" in
         header_box)
             case "$STATE" in
+                OFFLINE)       HOVER_TEXT="Current v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable"
+                               VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
                 OUTDATED)      HOVER_TEXT="Current v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available"
                                VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
                 HASH_DIFF)     HOVER_TEXT="Current v$SCRIPT_VERSION$DEV <br> Hash Update available"
@@ -144,6 +146,8 @@ check_version() {
             esac ;;
         do_install)
             case "$STATE" in
+                OFFLINE)       echo -e "\n$RD[!] Github Unreachable$NC\n"
+                               UP="try again later?" ;;
                 OUTDATED)      echo -e "\n$GR[i] A new version (${NC}v$REMOTE_VERSION$GR) is available!$NC\n"
                                UP="update version?" ;;
                 HASH_DIFF)     echo -e "\n$GR[i] There is a Hash Update for (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
