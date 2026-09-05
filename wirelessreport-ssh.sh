@@ -78,23 +78,23 @@ show_header() {
 install_menu() {
 	while true; do
 		show_header
-		echo -e "${BL}=================================================="
+		echo -e "$BL=================================================="
 		check_version
-		echo -e "${BL}=================================================="
-		echo -e "                                                       "
-		echo -e "  $N1  Install/Update                                  "
-		echo -e "  $N2  Uninstall                                       "
-		echo -e "  $N3  Set Temp/Date ($DU) ($CT)                       "
-		echo -e "  $N4  Set Device Nicknames                            "
-        echo -e "  $N5  Set Device Colors                               "
-        echo -e "  $N6  Set Theme  ($TM_STAT)                           "
-		echo -e "  $N7  Set Options                                     "
-        echo -e "  $N8  Configure RSSI History ($RH_STAT)               "
-		echo -e "  $N9  Configure SSH Options  Key:($KEY)               "
-		echo -e "                                                       "
-        echo -e "  $LE  Exit                                            "
-		echo -e "                                                       "
-		echo -e "${BL}=================================================="
+		echo -e "$BL=================================================="
+		echo -e "                                                     "
+		echo -e "  $N1  Install/Update                                "
+		echo -e "  $N2  Uninstall                                     "
+		echo -e "  $N3  Set Temp/Date ($DU) ($CT)                     "
+		echo -e "  $N4  Set Device Nicknames                          "
+        echo -e "  $N5  Set Device Colors                             "
+        echo -e "  $N6  Set Theme  ($TM_STAT)                         "
+		echo -e "  $N7  Set Options                                   "
+        echo -e "  $N8  Configure RSSI History ($RH_STAT)             "
+		echo -e "  $N9  Configure SSH Options  Key:($KEY)             "
+		echo -e "                                                     "
+        echo -e "  $LE  Exit                                          "
+		echo -e "                                                     "
+		echo -e "$BL=================================================="
 		while true; do
 			selection
 			case "$choice" in
@@ -144,20 +144,20 @@ check_version() {
             esac ;;
         do_install)
             case "$STATE" in
-                OUTDATED)      echo -e "\n${GR}[i] A new version (${NC}v$REMOTE_VERSION${GR}) is available!${NC}\n"
+                OUTDATED)      echo -e "\n$GR[i] A new version (${NC}v$REMOTE_VERSION$GR) is available!$NC\n"
                                UP="update version?" ;;
-                HASH_DIFF)     echo -e "\n${GR}[i] There is a Hash Update for (${NC}v$SCRIPT_VERSION$DEV${GR}).${NC}\n"
+                HASH_DIFF)     echo -e "\n$GR[i] There is a Hash Update for (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
                                UP="update Hash?" ;;
-                UP_TO_DATE|*)  echo -e "\n${GR}[i] You are already on the latest version (${NC}v$SCRIPT_VERSION$DEV${GR}).${NC}\n"
+                UP_TO_DATE|*)  echo -e "\n$GR[i] You are already on the latest version (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
                                UP="reinstall/overwrite anyway?";;
             esac ;;
         *)
             case "$STATE" in
-                OFFLINE)       echo -e "$STATUS [Offline]         ${RD}Could not reach GitHub${NC}" ;;
-                NOT_INSTALLED) echo -e "$STATUS [Not Installed] ${BL}Latest Available:${NC} v$REMOTE_VERSION"; N1="${BL}(1)" ;;
-                OUTDATED)      echo -e "$STATUS [v$REMOTE_VERSION Available]      $CURRENT" ;;
-                HASH_DIFF)     echo -e "$STATUS [Hash Update Available] $CURRENT" ;;
-                UP_TO_DATE|*)  echo -e "$STATUS [Up to date]            $CURRENT" ;;
+                OFFLINE)       echo -e "$STATUS [Offline]$RD         Could not reach GitHub$NC" ;;
+                NOT_INSTALLED) echo -e "$STATUS [Not Installed]$BL Latest Available:$NC v$REMOTE_VERSION"; N1="$BL(1)" ;;
+                OUTDATED)      echo -e "$STATUS [v$REMOTE_VERSION Available]     $CURRENT" ;;
+                HASH_DIFF)     echo -e "$STATUS [Hash Update Available]$CURRENT" ;;
+                UP_TO_DATE|*)  echo -e "$STATUS [Up to date]           $CURRENT" ;;
             esac ;;
     esac
 }
@@ -185,34 +185,34 @@ menu_vars() {
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
     JB_1366="${NC}Copyright (c) 2026 JB_1366 - All Rights Reserved"
-    JB1366="${GR}${UL}https://github.com/JB1366/WirelessReportSSH${NC}"
-	for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\${BL}(${i})\${NC}\""; done
-	for i in E C R; do eval "L${i}=\"\${BL}(${i})\${NC}\""; done
-    ON="${GR}ON${NC}"; OFF="${RD}OFF${NC}"; echo -e "${BL}"
+    JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
+	for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
+	for i in E C R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
+    ON="${GR}ON$NC"; OFF="${RD}OFF$NC"; echo -e "$BL"
 	: "${MAIN_COLOR:=#0096ff}"
     : "${NODE_COLORS:=#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
-    STATUS=" ${BL}STATUS:${NC}"; CURRENT="${BL}CURRENT:${NC} v$SCRIPT_VERSION$DEV"
+    STATUS="$BL STATUS:$NC"; CURRENT="$BL CURRENT:$NC v$SCRIPT_VERSION$DEV"
     SS_FILE="/jffs/scripts/services-start"; SE_FILE="/jffs/scripts/service-event"
-	if [ -z "$SSH_KEY" ]; then KEY="${RD}NO${NC}"; else KEY="${GR}YES${NC}"; fi
-	PORT="${GR}$SSH_PORT${NC}"; CT="${GR}$CUR_TIME${NC}"
+	if [ -z "$SSH_KEY" ]; then KEY="${RD}NO$NC"; else KEY="${GR}YES$NC"; fi
+	PORT="$GR$SSH_PORT$NC"; CT="$GR$CUR_TIME$NC"
     REPORT_UNIT="${REPORT_UNIT:-F}"
-	case "$REPORT_UNIT" in ISO) DN="ISO"; DU="${GR}°C${NC}" ;; C) DN="INTL"; DU="${GR}°C${NC}" ;; *) DN="USA"; DU="${GR}°F${NC}" ;; esac
-    DATE_ISO="${GR}$(date +"%Y-%m-%d %H:%M:%S")${NC}"
-    DATE_INTL="${GR}$(date +"%-d-%b %-H:%M:%S")${NC}"
-    DATE_USA="${GR}$(date +"%b-%-d %-H:%M:%S")${NC}"
+	case "$REPORT_UNIT" in ISO) DN="ISO"; DU="$GR°C$NC" ;; C) DN="INTL"; DU="$GR°C$NC" ;; *) DN="USA"; DU="$GR°F$NC" ;; esac
+    DATE_ISO="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"
+    DATE_INTL="$GR$(date +"%-d-%b %-H:%M:%S")$NC"
+    DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"
 	RTIME=${RTIME:-1}; if [ "$RTIME" = "0" ]; then RT_STAT="$OFF"; else RT_STAT="$ON"; fi
     BACKHAUL=${BACKHAUL:-no}; if [ "$BACKHAUL" = "no" ]; then WB_STAT="$OFF"; else WB_STAT="$ON"; fi
-    PULSE_MINS=${PULSE_MINS:-15}; if [ "$PULSE_MINS" = "0" ]; then UP_STAT="$OFF"; else UP_STAT="${GR}${PULSE_MINS} Mins${NC}"; fi
+    PULSE_MINS=${PULSE_MINS:-15}; if [ "$PULSE_MINS" = "0" ]; then UP_STAT="$OFF"; else UP_STAT="$GR${PULSE_MINS} Mins$NC"; fi
     RS_HIST=${RS_HIST:-0}; CUR_RS_HIST=${CUR_RS_HIST:-$RS_HIST}
 	CUR_ENTRIES=${CUR_ENTRIES:-${RS_HIST_ENTRIES:-5}}
-	CUR_DATE=${CUR_DATE:-${RS_HIST_DATE:-0}}; CE="${GR}$CUR_ENTRIES${NC}"
+	CUR_DATE=${CUR_DATE:-${RS_HIST_DATE:-0}}; CE="$GR$CUR_ENTRIES$NC"
     if [ "$RS_HIST" = "1" ]; then RH_STAT="$ON"; else RH_STAT="$OFF"; fi
 	if [ "$CUR_RS_HIST" = "1" ]; then CH="$ON"; else CH="$OFF"; fi
 	if [ "$CUR_DATE" = "1" ]; then TS="$ON"; else TS="$OFF"; fi
-    THEME=${THEME:-ORIGINAL}; TM_STAT="${GR}$THEME${NC}"
+    THEME=${THEME:-ORIGINAL}; TM_STAT="$GR$THEME$NC"
 	IPPAD=${IPPAD:-1}
-	case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets${NC}" ;; 1) PD_STAT="${BL}Last Octet${NC}" ;; *) PD_STAT="${RD}Disabled${NC}" ;; esac
-	HOST_COLOR=${HOST_COLOR:-0}; if [ "$HOST_COLOR" = "1" ]; then HN_STAT="${BL}Colored${NC}"; else HN_STAT="${GR}Numbered${NC}"; fi
+	case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets$NC" ;; 1) PD_STAT="${BL}Last Octet$NC" ;; *) PD_STAT="${RD}Disabled$NC" ;; esac
+	HOST_COLOR=${HOST_COLOR:-0}; if [ "$HOST_COLOR" = "1" ]; then HN_STAT="${BL}Colored$NC"; else HN_STAT="${GR}Numbered$NC"; fi
 }
 
 do_install() {
@@ -227,35 +227,35 @@ do_install() {
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac; done
     fi
     do_update || return 1
-    echo -e "\n${GR}[+] Downloading latest version (${NC}v$REMOTE_VERSION${GR})${NC}"
+    echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
 	if [ "$is_update" = "1" ]; then
-		echo -e "\n${BL}[✓] Wireless Report SSH successfully installed.${NC}"
-		printf "\nPress ${BL}[Enter]${NC} to apply changes & restart script..."; read -r discard
+		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
+		printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
 		logger -p user.info -t "Wireless_Report_SSH" "(v$REMOTE_VERSION) successfully installed."
 		exec "$REPORT_SCRIPT" install "$@"
-		echo -e "${RD}Error: Failed to restart script!${NC}" >&2
+		echo -e "$RD[!]Error: Failed to restart script!$NC" >&2
 		exit 1
 	fi
     if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-        echo -e "${RD}[!] ERROR: JFFS custom scripts not enabled.${NC}"
+        echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
         pause; return 1
     fi
 	if [ "${USB_PATH#*/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n${GR}[+] USB Found: Using $USB_PATH for reports and history.${NC}"
+        echo -e "\n$GR[+] USB Found: Using $USB_PATH for reports and history.$NC"
     else
-        echo -e "\n${YL}[!] No USB detected: Using JFFS at $USB_PATH.${NC}"
+        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
 	if [ -f "$SSH_KEY" ]; then node_auth
 	else
 		install="1"
-		echo -e "\n${BL}[+] Press ${WH}[Enter]${BL} to proceed to SSH Environment Setup${NC}"
-		echo -e "${BL}[+] Generate RSA keys or provision router-only setup${NC}"
+		echo -e "\n$BL[+] Press $WH[Enter]$BL to proceed to SSH Environment Setup$NC"
+		echo -e "$BL[+] Generate RSA keys or provision router-only setup$NC"
         read -r discard
 		check_ssh || return 1
 	fi
-    echo -e "\n${GR}[+] Processing Wireless Report SSH Files...${NC}\n"
+    echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
     inject_menu
-    echo -e "${GR}[+] Mounting Menu [Wireless] Tab [Wireless Report SSH]${NC}\n"
+    echo -e "$GR[+] Mounting Menu [Wireless] Tab [Wireless Report SSH]$NC\n"
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
     echo "$REPORT_SCRIPT inject & # Inject Wireless Report SSH" >> "$SS_FILE"
@@ -266,11 +266,11 @@ do_install() {
     chmod +x "$SE_FILE"
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     logger -p user.info -t "Wireless_Report_SSH" "(v$REMOTE_VERSION) successfully installed."
-    echo -e "${GR}[✓] SUCCESS: Installation complete!${NC}\n"
-    echo -e "${YL}[i] To access Report, navigate to Advanced Settings > Wireless "
-    echo -e "${YL}    in the ASUS WebGUI and select the Wireless Report SSH tab on the far right.${NC}\n"
-    echo -e "${BL}[i] Tip: On router only install, you can add node(s) later."
-    echo -e "${BL}         Use option #7 in SSH menu to authenticate new node(s).${NC}"
+    echo -e "$GR[✓] SUCCESS: Installation complete!$NC\n"
+    echo -e "$YL[i] To access Report, navigate to Advanced Settings > Wireless "
+    echo -e "$YL    in the ASUS WebGUI and select the Wireless Report SSH tab on the far right.$NC\n"
+    echo -e "$BL[i] Tip: On router only install, you can add node(s) later."
+    echo -e "$BL         Use option #7 in SSH menu to authenticate new node(s).$NC"
 	pause
 }
 
@@ -283,7 +283,7 @@ do_update() {
     else
         rm -f "$TEMP_SCRIPT"
         if [ ! -f "$0" ]; then
-            echo -e "${RD}[!] Download failed. Aborting installation.${NC}"
+            echo -e "$RD[!] Download failed. Aborting installation.$NC"
             return 1
         fi
         local CURRENT_PATH; local TARGET_PATH
@@ -292,12 +292,12 @@ do_update() {
         TARGET_PATH=$(readlink -f "$REPORT_SCRIPT" 2>/dev/null)
         [ -z "$TARGET_PATH" ] && TARGET_PATH="$REPORT_SCRIPT"
         if [ "$CURRENT_PATH" != "$TARGET_PATH" ]; then
-            echo -e "\n${YL}[!] GitHub unreachable. Installing current local copy...${NC}\n"
+            echo -e "\n$YL[!] GitHub unreachable. Installing current local copy...$NC\n"
             cp "$0" "$REPORT_SCRIPT"
             chmod +x "$REPORT_SCRIPT" 2>/dev/null
             return 0
         else
-            echo -e "${RD}[!] GitHub unreachable and script is already in place.${NC}"
+            echo -e "$RD[!] GitHub unreachable and script is already in place.$NC"
             return 1
         fi
     fi
@@ -405,23 +405,23 @@ ssh_init () {
 check_ssh() {
 	while true; do
 		show_header
-		echo -e "${BL}=================================================="
-		echo -e "${NC}                SSH Environment                   "
-		echo -e "${BL}=================================================="
-		echo -e "${NC} SSH-Key: $KEY                         Port: $PORT"
-		echo -e "${BL}=================================================="
-		echo -e "                                                       "
-		echo -e "  $N1  Generate RSA Keys & Provision AiMesh Nodes      "
-		echo -e "  $N2  Remove RSA Keys                                 "
-		echo -e "  $N3  Provision Main Router Only                      "
-		echo -e "  $N4  View Authorized Keys                            "
-		echo -e "  $N5  View Known Hosts                                "
-		echo -e "  $N6  View SSH Error Log                              "
-		echo -e "  $N7  Node Authentication                             "
-		echo -e "                                                       "
-		echo -e "  $LE  Exit back to main menu                          "
-		echo -e "                                                       "
-		echo -e "${BL}=================================================="
+		echo -e "$BL=================================================="
+		echo -e "$NC                SSH Environment                   "
+		echo -e "$BL=================================================="
+		echo -e "$NC SSH-Key: $KEY                         Port: $PORT"
+		echo -e "$BL=================================================="
+		echo -e "                                                     "
+		echo -e "  $N1  Generate RSA Keys & Provision AiMesh Nodes    "
+		echo -e "  $N2  Remove RSA Keys                               "
+		echo -e "  $N3  Provision Main Router Only                    "
+		echo -e "  $N4  View Authorized Keys                          "
+		echo -e "  $N5  View Known Hosts                              "
+		echo -e "  $N6  View SSH Error Log                            "
+		echo -e "  $N7  Node Authentication                           "
+		echo -e "                                                     "
+		echo -e "  $LE  Exit back to main menu                        "
+		echo -e "                                                     "
+		echo -e "$BL=================================================="
         while true; do
             selection
             case "$choice" in
@@ -431,36 +431,36 @@ check_ssh() {
                 2)
                     del_ssh_keys ;;
                 3)
-                    echo -e "\n${YL}[i] Setting Up Router-Only...${NC}"
+                    echo -e "\n$YL[i] Setting Up Router-Only...$NC"
                     sed -i '/^SSH_NODES=/d' "$CONFIG"
                     echo 'SSH_NODES=" "' >> "$CONFIG"
                     pause ;;
                 4)
-                    echo -e "\n${BL}================ Authorized Keys =================${NC}\n"
+                    echo -e "\n$BL================ Authorized Keys =================$NC\n"
                     if [ -f "/root/.ssh/authorized_keys" ]; then cat /root/.ssh/authorized_keys
-                    else echo -e "${YL}[!] File not found.${NC}"; fi
-                    echo -e "\n\n${BL}==================================================${NC}"
+                    else echo -e "$YL[!] File not found.$NC"; fi
+                    echo -e "\n\n$BL==================================================$NC"
                     pause ;;
                 5)
-                    echo -e "\n${BL}================== Known Hosts  ==================${NC}\n"
+                    echo -e "\n$BL================== Known Hosts  ==================$NC\n"
                     if [ -f "/jffs/.ssh/known_hosts" ]; then cat /jffs/.ssh/known_hosts
-                    else echo -e "${YL}[!] File not found.${NC}"; fi
-                    echo -e "\n${BL}==================================================${NC}"
+                    else echo -e "$YL[!] File not found.$NC"; fi
+                    echo -e "\n$BL==================================================$NC"
                     pause ;;
                 6)
-                    echo -e "\n${BL}================= SSH Error Log ==================${NC}\n"
+                    echo -e "\n$BL================= SSH Error Log ==================$NC\n"
                     if [ -f "$ERROR_LOG" ]; then
                         cat "$ERROR_LOG"
-                        echo -e "\n\n${BL}==================================================${NC}"
+                        echo -e "\n\n$BL==================================================$NC"
                         printf "\nRemove error log? (y/n): "; read -r rm_log
                         if [ "$rm_log" = "y" ] || [ "$rm_log" = "Y" ]; then
                             rm -f "$ERROR_LOG"
-                            echo -e "\n${GR}[✓] Error log removed.${NC}"
+                            echo -e "\n$GR[✓] Error log removed.$NC"
                             pause
                         fi
                     else
-                        echo -e "${YL}[!] File not found.${NC}"
-                        echo -e "\n${BL}==================================================${NC}"
+                        echo -e "$YL[!] File not found.$NC"
+                        echo -e "\n$BL==================================================$NC"
                         pause
                     fi ;;
                 7)
@@ -477,24 +477,24 @@ check_ssh() {
 
 node_auth() {
 	if [ ! -s "$SSH_KEY" ]; then
-        echo -e "\n${YL}[!] Main Router SSH Key not found.${NC}"
+        echo -e "\n$YL[!] Main Router SSH Key not found.$NC"
         pause; return
     fi
 	sed -i '/^SSH_NODES=/d' "$CONFIG"
-	echo -e "\n${GR}[✓] Main Router SSH Key found at: ${WH}$SSH_KEY${NC}\n"
-	echo -e "${BL}=================================================="
-    echo -e "${NC}         Verifying Node Authentication            "
-    echo -e "${BL}==================================================\n"
+	echo -e "\n$GR[✓] Main Router SSH Key found at: $WH$SSH_KEY$NC\n"
+	echo -e "$BL=================================================="
+    echo -e "$NC         Verifying Node Authentication            "
+    echo -e "$BL==================================================\n"
 	UNSUPPORTED_MODELS="AX4200|AX1800S|XD4"
 	AIMESH_NODES=$(nvram get asus_device_list | sed 's/</\n/g' | grep '>2$' | awk -F '>' '{print $2 "|" $3}' | grep -vE "$UNSUPPORTED_MODELS" | sort -t . -k 4,4n)
 	if [ -z "$AIMESH_NODES" ]; then
 		AIMESH_NODES=$(nvram get cfg_device_list | sed 's/</\n/g' | grep '>0$' | awk -F '>' '{print $1 "|" $2}' | grep -vE "$UNSUPPORTED_MODELS" | sort -t . -k 4,4n)
 	fi
 	if nvram get asus_device_list | grep -qE "$UNSUPPORTED_MODELS" || nvram get cfg_device_list | grep -qE "$UNSUPPORTED_MODELS"; then
-		echo -e " ${YL}[!]${NC} These models not supported: TUF-AX4200, RT-AX1800S, ZENWIFI_XD4_PLUS."
+		echo -e " $YL[!]$NC These models not supported: TUF-AX4200, RT-AX1800S, ZENWIFI_XD4_PLUS."
 	fi
     if [ -z "$AIMESH_NODES" ]; then
-        echo -e "\n${RD}[!] No AiMesh Nodes detected in NVRAM.${NC}"
+        echo -e "\n$RD[!] No AiMesh Nodes detected in NVRAM.$NC"
         TOTAL_NODES=0; any_success=0
         ACTION_MSG="Force ROUTER-ONLY configuration"; KEY_LBL="r"
     else
@@ -504,7 +504,7 @@ node_auth() {
 			ROUTER="${line%%|*}"; IP="${line#*|}"
             [ -z "$IP" ] || [ "$IP" = "$ROUTER" ] && continue
 			if [ -z "$ROUTER" ]; then ROUTER="Node_$IP"; fi
-			printf "${NC}[*] Testing ${GR}%-14s${NC} (%s) " "$ROUTER" "$IP"
+			printf "$NC[*] Testing $GR%-14s$NC (%s) " "$ROUTER" "$IP"
             SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
 			SSH_RC=$?
 			if [ -n "$SSH_ERR" ]; then
@@ -513,7 +513,7 @@ node_auth() {
 				done
 			fi
 			if [ "$SSH_RC" -eq 0 ]; then
-				echo -e "${GR}[✓] AUTHENTICATED${NC}"
+				echo -e "$GR[✓] AUTHENTICATED$NC"
 				any_success=$((any_success + 1))
 				VALID_NODES="$VALID_NODES $ROUTER|$IP"
 				if ! grep -q "$IP" /jffs/.ssh/known_hosts 2>/dev/null; then
@@ -522,23 +522,23 @@ node_auth() {
 					if grep -q "$IP" /root/.ssh/known_hosts 2>/dev/null; then
 						grep "$IP" /root/.ssh/known_hosts >> /jffs/.ssh/known_hosts
 						sort -u /jffs/.ssh/known_hosts -o /jffs/.ssh/known_hosts
-						echo -e "${GR}[✓] DONE${NC}"
+						echo -e "$GR[✓] DONE$NC"
 						new_nodes=$((new_nodes + 1))
 						TARGET_KEY=$(awk -v ip="$IP" '$1 ~ ip {print $2, $3}' /jffs/.ssh/known_hosts 2>/dev/null)
 						if [ -n "$TARGET_KEY" ]; then
-							echo -e "    Node Host Key: ${BL}$TARGET_KEY${NC}"
+							echo -e "    Node Host Key: $BL$TARGET_KEY$NC"
 						fi
 					else
-						echo -e "${RD}[✗] FAILED${NC}"
+						echo -e "$RD[✗] FAILED$NC"
 					fi
 				fi
 			else
 				if echo "$SSH_ERR" | grep -q "No auth methods"; then
-					echo -e "${RD}[✗] Failed: Invalid Username or SSH Key.${NC}"
+					echo -e "$RD[✗] Failed: Invalid Username or SSH Key.$NC"
 				elif echo "$SSH_ERR" | grep -q "Connection refused"; then
-					echo -e "${RD}[✗] Failed: SSH Connection refused.${NC}"
+					echo -e "$RD[✗] Failed: SSH Connection refused.$NC"
 				else
-					echo -e "${RD}[✗] Failed: Unknown connection issue.${NC}"
+					echo -e "$RD[✗] Failed: Unknown connection issue.$NC"
 				fi
 			fi
 		done
@@ -547,40 +547,40 @@ node_auth() {
     if [ -z "$VALID_NODES" ]; then echo 'SSH_NODES=" "' >> "$CONFIG"
     else echo "SSH_NODES=\"$VALID_NODES\"" >> "$CONFIG"; fi
     if [ "$any_success" -gt 0 ] && [ "$any_success" -eq "$TOTAL_NODES" ]; then
-        echo -e "\n${GR}[✓] All nodes ($any_success/$TOTAL_NODES) authenticated successfully!${NC}"
+        echo -e "\n$GR[✓] All nodes ($any_success/$TOTAL_NODES) authenticated successfully!$NC"
         if [ "$new_nodes" -gt 0 ]; then
             [ "$new_nodes" -eq 1 ] && suffix="" || suffix="s"
-            echo -e "\n${YL}[!] $new_nodes new node$suffix successfully authenticated.${NC}"
+            echo -e "\n$YL[!] $new_nodes new node$suffix successfully authenticated.$NC"
         fi
         pause; return
     else
         if [ "$any_success" -gt 0 ]; then
-            echo -e "\n${YL}[!] Partial Success: Only $any_success of $TOTAL_NODES nodes authenticated.${NC}"
+            echo -e "\n$YL[!] Partial Success: Only $any_success of $TOTAL_NODES nodes authenticated.$NC"
             ACTION_MSG="Continue with current nodes only"
             KEY_LBL="$LC"
         else
-            echo -e "\n${RD}[!] CRITICAL: SSH authentication failed on all nodes.${NC}\n"
+            echo -e "\n$RD[!] CRITICAL: SSH authentication failed on all nodes.$NC\n"
             ACTION_MSG="Force ROUTER-ONLY configuration"
             KEY_LBL="$LR"
         fi
         echo -e "\n Choices:\n"
-        echo -e "  ${BL}(Enter)${NC} Retry authentication"
-        echo -e "  ${BL}$KEY_LBL${NC}     $ACTION_MSG"
-        echo -e "  ${BL}$LE     Exit to main menu\n"
+        echo -e "  $BL(Enter)$NC Retry authentication"
+        echo -e "  $BL$KEY_LBL$NC     $ACTION_MSG"
+        echo -e "  $BL$LE     Exit to main menu\n"
         selection
         case "$choice" in
             [rR]|[cC])
-                echo -e "\n\n${YL}[!] $ACTION_MSG...${NC}\n"
+                echo -e "\n\n$YL[!] $ACTION_MSG...$NC\n"
                 if [ "$any_success" -eq 0 ]; then
                     sed -i '/SSH_NODES=/d' "$CONFIG"
                     echo 'SSH_NODES=" "' >> "$CONFIG"
                 fi
-                echo -e "${GR}[✓] Environment configuration locked in.${NC}"
+                echo -e "$GR[✓] Environment configuration locked in.$NC"
                 pause; return ;;
             e|E)
                 break 2 ;;
             *)
-                echo -e "\n\n${BL}[i] Retrying authentication...${NC}"
+                echo -e "\n\n$BL[i] Retrying authentication...$NC"
                 sleep 5
                 node_auth; return ;;
         esac
@@ -589,67 +589,67 @@ node_auth() {
 
 ssh_keys() {
 	if [ -f "$SSH_KEY" ]; then
-		echo -e "\n${YL}[!] Main Router SSH Key already exists.${NC}"
+		echo -e "\n$YL[!] Main Router SSH Key already exists.$NC"
 		pause; return 0
 	fi
 	if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
 		while true; do
-            printf "\n${NC}Stored key detected in /jffs/.ssh/, Proceed? (y/n): "; read -r update
+            printf "$NC\nStored key detected in /jffs/.ssh/, Proceed? (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
-        echo -e "\n${GR}[!]  Linking and configuring...${NC}\n"
+        echo -e "\n$GR[!]  Linking and configuring...$NC\n"
 	fi
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
         while true; do
-            printf "\n${NC}Do you want to create RSA Key (y/n): "; read -r update
+            printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
-        echo -e "\n${YL}[i] Creating RSA Key in /jffs/.ssh/${NC}\n"
+        echo -e "\n$YL[i] Creating RSA Key in /jffs/.ssh/$NC\n"
         mkdir -p /jffs/.ssh
         dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
     fi
 	rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
     mkdir -p /root/.ssh
     cp /jffs/.ssh/id_dropbear /root/.ssh/id_dropbear
-    echo -e "\n${BL}[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear${NC}\n"
+    echo -e "\n$BL[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear$NC\n"
 	SSH_KEY="/root/.ssh/id_dropbear"
     local pub_key=$(dropbearkey -y -f "/root/.ssh/id_dropbear" | grep "^ssh-rsa")
     local current_keys=$(nvram get sshd_authkeys)
 	local combined_keys=$(printf "%s\n%s" "$current_keys" "$pub_key" | sed '/^$/d' | sort -u)
-	echo -e "\n${YL}[i] Injecting Key into NVRAM...${NC}\n"
+	echo -e "\n$YL[i] Injecting Key into NVRAM...$NC\n"
 	nvram set sshd_authkeys="$combined_keys"
     nvram commit
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
     chmod 600 /root/.ssh/authorized_keys
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
     if ! grep -q "id_dropbear" "$SS_FILE"; then
-        echo -e "\n${YL}[i] Adding SSH Key to services-start for persistence on reboots...${NC}"
-		echo -e "\n${YL}[i] Adding known_hosts to services-start...${NC}\n"
+        echo -e "\n$YL[i] Adding SSH Key to services-start for persistence on reboots...$NC"
+		echo -e "\n$YL[i] Adding known_hosts to services-start...$NC\n"
 		echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
-	echo -e "${BL}=================================================="
-	echo -e "${NC}               ACTION REQUIRED NOW                "
-    echo -e "${BL}=================================================="
-    echo -e "                                                       "
-	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management    "
-	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n        "
-	echo -e "${YL}[!] Do not press [Enter] until Nodes are confirmed to be back online.\n"
-	echo -e "${BL}[*] TIP: If a node is missing after authentication,     "
-	echo -e "${BL}[*]      use option #7 to reauthenticate.          ${NC}"
-	printf "\n[*] Press ${BL}[ENTER]${NC} to begin authentication check..."; read -r discard
+	echo -e "$BL=================================================="
+	echo -e "$NC               ACTION REQUIRED NOW                "
+    echo -e "$BL=================================================="
+    echo -e "                                                     "
+	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management  "
+	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n      "
+	echo -e "$YL[!] Do not press [Enter] until Nodes are confirmed to be back online.\n"
+	echo -e "$BL[*] TIP: If a node is missing after authentication,                    "
+	echo -e "$BL[*]      use option #7 to reauthenticate.                           $NC"
+	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check..."; read -r discard
 	node_auth
 }
 
 del_ssh_keys() {
 	if [ -f "$SSH_KEY" ]; then
-		echo -e "\n${YL}[!] Main Router SSH Key exists.${NC}\n"
+		echo -e "\n$YL[!] Main Router SSH Key exists.$NC\n"
         while true; do
             printf "Do you want to delete Key? (y/n): "; read -r delete
             case "$delete" in y|Y) break ;; n|N) return ;; *) freeze ;; esac; done
 	else
-		echo -e "\n${YL}[!] No active RSA key found to delete.${NC}"
+		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
 		pause; return
 	fi
-	echo -e "\n${YL}[i] Purging RSA key footprint from environment...${NC}"
+	echo -e "\n$YL[i] Purging RSA key footprint from environment...$NC"
 	if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
 		PUB_STRING=$(awk '{print $2}' /jffs/.ssh/id_dropbear.pub)
 	else
@@ -667,7 +667,7 @@ del_ssh_keys() {
 	rm -f "/jffs/.ssh/id_dropbear" "/jffs/.ssh/id_dropbear.pub" "/root/.ssh/id_dropbear"
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
 	chmod 600 /root/.ssh/authorized_keys
-	echo -e "\n${GR}[✓] RSA Keys removed successfully.${NC}"
+	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
 	ssh_init; pause
 }
 
@@ -675,11 +675,11 @@ inject_menu() {
 	source /usr/sbin/helper.sh
 	TAB_LABEL="Wireless Report SSH"
 	if [ -f "$CONFIG" ]; then sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"; else touch "$CONFIG"; fi
-    if ! nvram get rc_support | grep -q am_addons; then echo -e "\n${RD}[!] ERROR: This firmware does not support addons!${NC}"; exit 5; fi
+    if ! nvram get rc_support | grep -q am_addons; then echo -e "\n$RD[!] ERROR: This firmware does not support addons!$NC"; exit 5; fi
     if [ ! -f "$WEB_PAGE" ]; then echo "<html><body>$TAB_LABEL Loading...</body></html>" > "$WEB_PAGE"; fi
 	LOCKFILE=/tmp/addonwebui.lock; FD=386; eval exec "$FD>$LOCKFILE"; flock -x "$FD"
     am_get_webui_page "$WEB_PAGE"
-	if [ "$am_webui_page" = "none" ]; then echo -e "\n${RD}[!] ERROR: Unable to install $TAB_LABEL.${NC}"; flock -u "$FD"; exit 5; fi
+	if [ "$am_webui_page" = "none" ]; then echo -e "\n$RD[!] ERROR: Unable to install $TAB_LABEL.$NC"; flock -u "$FD"; exit 5; fi
 	cp "$WEB_PAGE" "/www/user/$am_webui_page" 2>/dev/null
 	echo "INSTALLED_PAGE=$am_webui_page" >> "$CONFIG"
 	if [ ! -f "$TEMP_MENU" ]; then cp "$SYSTEM_MENU" /tmp/; mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"; fi
@@ -710,7 +710,7 @@ inject_menu() {
 }
 
 do_uninstall() {
-    echo -e "\n${RD}[!] WARNING: Removing Wireless Report SSH...${NC}\n"
+    echo -e "\n$RD[!] WARNING: Removing Wireless Report SSH...$NC\n"
     while true; do
         printf "Are you sure? (y/n): "; read -r confirm
         case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac; done
@@ -721,7 +721,7 @@ do_uninstall() {
 		sed -i '/tabName:[[:space:]]*"Wireless Report SSH"/d' "$TEMP_MENU" 2>/dev/null
 		mount --bind "$TEMP_MENU" "$SYSTEM_MENU"
 		logger -p user.info -t "Wireless_Report_SSH" "Unmounting SSH Tab."
-		echo -e "\n${BL}[*] Removing Wireless Report SSH Tab and restoring defaults...${NC}\n"
+		echo -e "\n$BL[*] Removing Wireless Report SSH Tab and restoring defaults...$NC\n"
 	fi
 	if [ -n "$INSTALLED_PAGE" ]; then
 		umount -l "/www/user/$INSTALLED_PAGE" >/dev/null 2>&1
@@ -734,27 +734,27 @@ do_uninstall() {
 	logger -p user.info -t "Wireless_Report_SSH" "(v$SCRIPT_VERSION) successfully uninstalled."
     unset RTIME BACKHAUL CUR_DATE RS_HIST_DATE RS_HIST CUR_RS_HIST CUR_ENTRIES
     unset THEME IPPAD PULSE_MINS DISPLAY_UNIT HOST_COLOR MAIN_COLOR NODE_COLORS
-	echo -e "${GR}[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh${NC}\n"
-	echo -e "${GR}[+] Success: Wireless Report SSH uninstalled.${NC}"
+	echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
+	echo -e "$GR[+] Success: Wireless Report SSH uninstalled.$NC"
 	pause
 }
 
 set_temp_date() {
     while true; do
         show_header
-        echo -e "${BL}=================================================="
-        echo -e "${NC}                  Set Temp/Date                   "
-        echo -e "${BL}=================================================="
-        echo -e "${BL}  Current:${NC} $DN $DU       ${BL}Date:${NC} $CT "
-        echo -e "${BL}=================================================="
-        echo -e "                                                       "
-        echo -e "  $N1  USA   ${GR}(°F)${NC}             ($DATE_USA)    "
-        echo -e "  $N2  INTL  ${GR}(°C)${NC}             ($DATE_INTL)   "
-        echo -e "  $N3  ISO   ${GR}(°C)${NC}           ($DATE_ISO)      "
-        echo -e "                                                       "
-        echo -e "  $LE  Exit back to main menu                          "
-        echo -e "                                                       "
-		echo -e "${BL}=================================================="
+        echo -e "$BL=================================================="
+        echo -e "$NC                  Set Temp/Date                   "
+        echo -e "$BL=================================================="
+        echo -e "$BL  Current:$NC $DN $DU        $BL Date:$NC $CT     "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1  USA   $GR(°F)$NC             ($DATE_USA)      "
+        echo -e "  $N2  INTL  $GR(°C)$NC             ($DATE_INTL)     "
+        echo -e "  $N3  ISO   $GR(°C)$NC           ($DATE_ISO)        "
+        echo -e "                                                     "
+        echo -e "  $LE  Exit back to main menu                        "
+        echo -e "                                                     "
+		echo -e "$BL=================================================="
         while true; do
             selection
             case "$choice" in
@@ -775,20 +775,20 @@ set_temp_date() {
 set_nicknames() {
     while true; do
         show_header
-        echo -e "${BL}=================================================="
-        echo -e "${NC}               Set Device Nicknames               "
-        echo -e "${BL}=================================================="
-        echo -e "                                                       "
-		echo -e "  $N1 Default Nicknames                                "
-		echo -e "  $N2 Location Nicknames                               "
-		echo -e "  $N3 Manual Nicknames                                 "
-		echo -e "                                                       "
-		echo -e "  $LE Exit back to main menu                           "
-		echo -e "                                                       "
-        echo -e "${BL}=================================================="
+        echo -e "$BL=================================================="
+        echo -e "$NC               Set Device Nicknames               "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+		echo -e "  $N1 Default Nicknames                              "
+		echo -e "  $N2 Location Nicknames                             "
+		echo -e "  $N3 Manual Nicknames                               "
+		echo -e "                                                     "
+		echo -e "  $LE Exit back to main menu                         "
+		echo -e "                                                     "
+        echo -e "$BL=================================================="
         MAIN_ROUTER=$(nvram get productid); MAIN_IP=$(nvram get lan_ipaddr)
         MAIN_CLR=$(hex_to_ansi "$MAIN_COLOR")
-        echo -e "\n  ${MAIN_CLR}Main $MAIN_IP -> ${MAIN_NICK:-$MAIN_ROUTER}${NC}"
+        echo -e "\n  ${MAIN_CLR}Main $MAIN_IP -> ${MAIN_NICK:-$MAIN_ROUTER}$NC"
         if [ -n "$SSH_NODES" ] && [ "$SSH_NODES" != " " ]; then
             VALID_NODES=$(echo "$SSH_NODES" | tr ' ' '\n' | grep '|')
             get_node_color() { local idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
@@ -799,20 +799,20 @@ set_nicknames() {
                 eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
                 HEX_CLR=$(get_node_color "$node_idx")
                 NODE_CLR=$(hex_to_ansi "$HEX_CLR")
-                echo -e "  ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}${NC}"
+                echo -e "  ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
                 node_idx=$((node_idx + 1))
             done
         fi
-        echo -e "\n${BL}=================================================="
+        echo -e "\n$BL=================================================="
         while true; do
             selection
             case "$choice" in
                 1)
-                    echo -e "\n${BL}[+] Resetting to hardware defaults...${NC}\n"
+                    echo -e "\n$BL[+] Resetting to hardware defaults...$NC\n"
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     unset MAIN_NICK
-                    echo -e "    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER${NC}"; sleep 1
+                    echo -e "    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER$NC"; sleep 1
                     if [ -n "$SSH_NODES" ] && [ "$SSH_NODES" != " " ]; then
                         node_idx=1
                         for node in $VALID_NODES; do
@@ -823,23 +823,23 @@ set_nicknames() {
                             eval "unset NODE_NICK_$CLEAN_IP"
                             HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
                             NODE_CLR=$(hex_to_ansi "$HEX_CLR")
-                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL${NC}"; sleep 1
+                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
                             node_idx=$((node_idx + 1))
                         done
                     fi
-                    echo -e "\n${GR}[+] Default hardware models restored.${NC}"
+                    echo -e "\n$GR[+] Default hardware models restored.$NC"
                     pause ;;
                 2)
-                    echo -e "\n${BL}[*] Updating nicknames with Locations...${NC}\n"
+                    echo -e "\n$BL[*] Updating nicknames with Locations...$NC\n"
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     NEW_LOC=$(nvram get cfg_alias)
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     if [ -n "$NEW_LOC" ]; then
                         echo "MAIN_NICK=\"$NEW_LOC\"" >> "$CONFIG"
-                        echo -e "    ${MAIN_CLR}$OLD_NAME -> $NEW_LOC${NC}"; sleep 1
+                        echo -e "    ${MAIN_CLR}$OLD_NAME -> $NEW_LOC$NC"; sleep 1
                     else
                         unset MAIN_NICK
-                        echo -e "    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER (Default)${NC}"; sleep 1
+                        echo -e "    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER (Default)$NC"; sleep 1
                     fi
                     node_idx=1
                     for node in $VALID_NODES; do
@@ -852,19 +852,19 @@ set_nicknames() {
                         NODE_CLR=$(hex_to_ansi "$HEX_CLR")
                         if [ -n "$NODE_LOC" ]; then
                             echo "NODE_NICK_$CLEAN_IP=\"$NODE_LOC\"" >> "$CONFIG"
-                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $NODE_LOC${NC}"; sleep 1
+                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $NODE_LOC$NC"; sleep 1
                         else
                             eval "unset NODE_NICK_$CLEAN_IP"
-                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL (Default)${NC}"; sleep 1
+                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL (Default)$NC"; sleep 1
                         fi
                         node_idx=$((node_idx + 1))
                     done
-                    echo -e "\n${GR}[+] Nicknames updated to Locations...${NC}"
+                    echo -e "\n$GR[+] Nicknames updated to Locations...$NC"
                     pause ;;
                 3)
-                    echo -e "\n${BL}[*] Manual Entry Mode${NC}\n"
+                    echo -e "\n$BL[*] Manual Entry Mode$NC\n"
                     OLD_MAIN="${MAIN_NICK:-$MAIN_ROUTER}"
-                    printf "  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:${NC} "; read -r manual_main
+                    printf "  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "; read -r manual_main
                     if [ -n "$manual_main" ]; then
                         manual_main="${manual_main:0:25}"
                         sed -i '/^MAIN_NICK=/d' "$CONFIG"
@@ -877,7 +877,7 @@ set_nicknames() {
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
                         NODE_CLR=$(hex_to_ansi "$HEX_CLR")
-                        printf "  ${NODE_CLR}Node $IP [${OLD_NICK:-$MODEL}]:${NC} "; read -r input_node
+                        printf "  ${NODE_CLR}Node $IP [${OLD_NICK:-$MODEL}]:$NC "; read -r input_node
                         if [ -n "$input_node" ]; then
                             input_node="${input_node:0:25}"
                             sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
@@ -885,7 +885,7 @@ set_nicknames() {
                         fi
                         node_idx=$((node_idx + 1))
                     done
-                    echo -e "\n${GR}[+] Manual nicknames saved (max 25 chars).${NC}"
+                    echo -e "\n$GR[+] Manual nicknames saved (max 25 chars).$NC"
                     pause ;;
                 e|E)
                     return ;;
@@ -934,14 +934,14 @@ set_colors() {
     done
     while true; do
         show_header
-        echo -e "${BL}=================================================="
-        echo -e "${NC}                Set Device Colors                 "
-        echo -e "${BL}=================================================="
-        echo -e "${NC}\n Current Device Configuration:\n"
+        echo -e "$BL=================================================="
+        echo -e "$NC                Set Device Colors                 "
+        echo -e "$BL=================================================="
+        echo -e "$NC\n Current Device Configuration:\n"
         local main_display_name="${MAIN_NICK:-$main_name}"
         local main_display_color=$(hex_to_ansi "$m_color_hex")
         local formatted_main_ip=$(printf "(%s)" "$main_ip")
-        printf "  ${BL}(0) %b%-14s %-16s (Main)${NC}\n" \
+        printf "  $BL(0) %b%-14s %-16s (Main)$NC\n" \
             "$main_display_color" "$main_display_name" "$formatted_main_ip"
         local idx=1
         for node in $SSH_NODES; do
@@ -954,17 +954,17 @@ set_colors() {
             node_display_name="${node_display_name:-$default_nick}"
             local display_color=$(hex_to_ansi "$active_color")
             local formatted_ip=$(printf "(%s)" "$node_ip")
-            printf "  ${BL}(%s) %b%-14s %-16s (Node)${NC}\n" \
+            printf "  $BL(%s) %b%-14s %-16s (Node)$NC\n" \
                 "$idx" "$display_color" "$node_display_name" "$formatted_ip"
             idx=$((idx + 1))
         done
-        echo -e "                                                     "
-        echo -e "  $LR Restore Default Colors                         "
-        echo -e "  $LC Cancel and Discard Changes                     "
-        echo -e "  $LE Exit and Save Changes                          "
-        echo -e "\n${BL}==============================================${NC}"
+        echo -e "                                                      "
+        echo -e "  $LR Restore Default Colors                          "
+        echo -e "  $LC Cancel and Discard Changes                      "
+        echo -e "  $LE Exit and Save Changes                           "
+        echo -e "\n$BL==============================================$NC"
         while true; do
-            printf "\n ${NC}Select a Device number to change color ${BL}(0-$total_nodes): ${NC}"; read -r node_choice
+            printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
             case "$node_choice" in
                 r|R)
                     m_color_hex="#0096ff"
@@ -977,7 +977,7 @@ set_colors() {
                         working_colors="${working_colors:+$working_colors }$next_color"
                         idx=$((idx + 1))
                     done
-                    echo -e "\n${BL}Colors restored to defaults.${NC}"
+                    echo -e "$BL\nColors restored to defaults.$NC"
                     pause
                     continue 2
                     ;;
@@ -1000,21 +1000,21 @@ set_colors() {
                 target_hex=$(echo "$working_colors" | awk -v col="$node_choice" '{print $col}')
             fi
             hex_to_ansi; local target_prompt_color=$(hex_to_ansi "$target_hex")
-            echo -e "\n ${NC}Select a new color for ${target_prompt_color}[${target_name}]${NC}:\n"
-            echo -e "${NB}  (1) Neon-Blue (#0096ff)"
-            echo -e "${LG}  (2) Lime-Green (#30d158)"
-            echo -e "${MP}  (3) Medium-Purple (#bf40bf)"
-            echo -e "${YW}  (4) Yellow (#ffd60a)"
-            echo -e "${SB}  (5) SkyBlue (#64d2ff)"
-            echo -e "${OR}  (6) Orange (#ff9500)"
-            echo -e "${RD}  (7) Red (#ff453a)"
-            echo -e "${WT}  (8) White (#ffffff)"
-            echo -e "${PK}  (9) Light-Pink (#ff70a6)"
-            echo -e "${MT} (10) Mint-Green (#64ffda)"
-            echo -e "${NC}"
+            echo -e "\n$NC Select a new color for ${target_prompt_color}[${target_name}]$NC:\n"
+            echo -e "$NB  (1) Neon-Blue (#0096ff)"
+            echo -e "$LG  (2) Lime-Green (#30d158)"
+            echo -e "$MP  (3) Medium-Purple (#bf40bf)"
+            echo -e "$YW  (4) Yellow (#ffd60a)"
+            echo -e "$SB  (5) SkyBlue (#64d2ff)"
+            echo -e "$OR  (6) Orange (#ff9500)"
+            echo -e "$RD  (7) Red (#ff453a)"
+            echo -e "$WT  (8) White (#ffffff)"
+            echo -e "$PK  (9) Light-Pink (#ff70a6)"
+            echo -e "$MT (10) Mint-Green (#64ffda)"
+            echo -e "$NC"
             local selected_hex=""
             while true; do
-                printf "${NC} Choose option ${BL}(1-10): ${NC}"; read -r color_choice
+                printf "$NC Choose option $BL(1-10): $NC"; read -r color_choice
                 case "$color_choice" in
                     1) selected_hex="#0096ff"; break ;;
                     2) selected_hex="#30d158"; break ;;
@@ -1053,31 +1053,31 @@ set_colors() {
     }
     update_config_var "MAIN_COLOR" "$m_color_hex"
     update_config_var "NODE_COLORS" "$working_colors"
-    echo -e "\n${BL}Device colors successfully saved to CONFIG.${NC}"
+    echo -e "$BL\nDevice colors successfully saved to CONFIG.$NC"
     pause
 }
 
 set_theme() {
     while true; do
         show_header
-        echo -e "${BL}=================================================="
-        echo -e "${NC} Set Theme                    Current: $TM_STAT   "
-        echo -e "${BL}=================================================="
-        echo -e "                                                       "
-        echo -e "  $N1 Original Theme                                   "
-        echo -e "  $N2 Darkmode Theme                                   "
-        echo -e "  $N3 Asus WebUI Theme                                 "
-        echo -e "                                                       "
-        echo -e "  $LE Exit back to Set Options Menu                    "
-        echo -e "                                                       "
-        echo -e "${BL}=================================================="
+        echo -e "$BL=================================================="
+        echo -e "$NC Set Theme                    Current: $TM_STAT   "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1 Original Theme                                 "
+        echo -e "  $N2 Darkmode Theme                                 "
+        echo -e "  $N3 Asus WebUI Theme                               "
+        echo -e "                                                     "
+        echo -e "  $LE Exit back to main menu                         "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
         while true; do
             selection
             case "$choice" in
                 1) TM="ORIGINAL" ;;
                 2) TM="DARKMODE" ;;
                 3) TM="ASUS_WEBUI" ;;
-                e|E) return 0 ;;
+                e|E) break 2 ;;
                 *) freeze 2; continue ;;
             esac
             if grep -q "^THEME=" "$CONFIG"; then sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
@@ -1090,19 +1090,19 @@ set_theme() {
 set_options() {
     while true; do
         show_header
-        echo -e "${BL}=================================================="
-        echo -e "${NC}                  Set Options                     "
-        echo -e "${BL}=================================================="
-        echo -e "                                                       "
-        echo -e "  $N1  Toggle Runtime Tracking: ($RT_STAT)             "
-        echo -e "  $N2  Toggle Wireless Backhaul: ($WB_STAT)            "
-        echo -e "  $N3  Configure Uptime Alert Pulse: ($UP_STAT)        "
-		echo -e "  $N4  Toggle IP Padding: ($PD_STAT)                   "
-		echo -e "  $N5  Toggle Node Hostname Display: ($HN_STAT)        "
-        echo -e "                                                       "
-        echo -e "  $LE  Exit back to main menu                          "
-        echo -e "                                                       "
-        echo -e "${BL}=================================================="
+        echo -e "$BL=================================================="
+        echo -e "$NC                  Set Options                     "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1  Toggle Runtime Tracking: ($RT_STAT)           "
+        echo -e "  $N2  Toggle Wireless Backhaul: ($WB_STAT)          "
+        echo -e "  $N3  Configure Uptime Alert Pulse: ($UP_STAT)      "
+		echo -e "  $N4  Toggle IP Padding: ($PD_STAT)                 "
+		echo -e "  $N5  Toggle Node Hostname Display: ($HN_STAT)      "
+        echo -e "                                                     "
+        echo -e "  $LE  Exit back to main menu                        "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
         while true; do
             selection
             case "$choice" in
@@ -1119,8 +1119,8 @@ set_options() {
                     else echo 'BACKHAUL="yes"' >> "$CONFIG"; fi ;;
                 3)
                     while true; do
-                        echo -e "\n (${GR}0${NC}) disable (${GR}15${NC}) def (${GR}1440${NC}) max "
-                        printf " ${BL}Enter alert interval in mins:${GR} "; read -r user_mins
+                        echo -e "\n (${GR}0$NC) disable (${GR}15$NC) def (${GR}1440$NC) max "
+                        printf "$BL Enter alert interval in mins:$GR "; read -r user_mins
                         case "$user_mins" in ""|*[!0-9]*) freeze 3; continue ;; esac
                         if [ "$user_mins" -le 1440 ]; then
                             NEW_MINS="$user_mins"
@@ -1138,14 +1138,14 @@ set_options() {
                 4)
                     if grep -q "IPPAD=" "$CONFIG"; then
                         case "$IPPAD" in
-                            1) echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"; NEW_PAD="0" ;;
-                            0) echo -e "\n${GR}[+] Mode 2:${NC} 192.168.50.3 --> ${GR}192.168.050.003${NC} (Last 2 Octets)";  NEW_PAD="2" ;;
-                            *) echo -e "\n${GR}[+] Mode 1:${NC} 192.168.50.3 --> ${GR}192.168.50.003${NC} (Last Octet Only)"; NEW_PAD="1" ;;
+                            1) echo -e "\n$RD[-] Disabled:$NC 192.168.050.003 -->$RD 192.168.50.3$NC"; NEW_PAD="0" ;;
+                            0) echo -e "\n$GR[+] Mode 2:$NC 192.168.50.3 -->$GR 192.168.050.003$NC (Last 2 Octets)";  NEW_PAD="2" ;;
+                            *) echo -e "\n$GR[+] Mode 1:$NC 192.168.50.3 -->$GR 192.168.50.003$NC (Last Octet Only)"; NEW_PAD="1" ;;
                         esac
                         pause
                         sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
                     else
-                        echo -e "\n${RD}[-] Disabled:${NC} 192.168.050.003 --> ${RD}192.168.50.3${NC}"; NEW_PAD="0"
+                        echo -e "\n$RD[-] Disabled:$NC 192.168.050.003 -->$RD 192.168.50.3$NC"; NEW_PAD="0"
                         echo 'IPPAD="0"' >> "$CONFIG"
                         pause
                     fi ;;
@@ -1156,7 +1156,7 @@ set_options() {
                     else echo 'HOST_COLOR="1"' >> "$CONFIG"; fi ;;
                 dev)
                     while true; do
-                        printf "\n ${NC}Current Branch: [${GR}$BRANCH_NAME${NC}] Swap Branch (y/n): "; read -r toggle
+                        printf "\n$NC Current Branch: [$GR$BRANCH_NAME$NC] Swap Branch (y/n): "; read -r toggle
                         case "$toggle" in y|Y) break ;; n|N) return 2 ;; *) freeze 2 ;; esac; done
                     BRANCH="0"; break # remove if Develpoment exsists
                     if [ "${BRANCH:-0}" = "1" ]; then BRANCH="0"; else BRANCH="1"; fi
@@ -1164,16 +1164,16 @@ set_options() {
                     else echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"; fi
                     DEV=""; if [ "$BRANCH" = "1" ]; then DEV="D"; fi
                     check_github
-                    printf "\nPress ${BL}[Enter]${NC} to switch to [${GR}$BRANCH_NAME${NC}] branch & restart script..."; read -r restart
+                    printf "\nPress $BL[Enter]$NC to switch to [$GR$BRANCH_NAME$NC] branch & restart script..."; read -r restart
                     if do_update; then exec "$REPORT_SCRIPT" install "$@"
-                    else echo -e "${RD}Error: Branch update failed!${NC}" >&2; exit 1; fi ;;
+                    else echo -e "$RD[!]Error: Branch update failed!$NC" >&2; exit 1; fi ;;
                 i|I)
                     if grep -q 'INJECT="2"' "$CONFIG"; then
-                        echo -e "\n${YL}[+] INJECT=\"2\" already exists in CONFIG${NC}"
+                        echo -e "\n$YL[+] INJECT=\"2\" already exists in CONFIG$NC"
                     else
                         if grep -q "INJECT=" "$CONFIG"; then sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
                         else echo 'INJECT="2"' >> "$CONFIG"; fi
-                        echo -e "\n${GR}[+] Adding INJECT=\"2\" to CONFIG${NC}"
+                        echo -e "\n$GR[+] Adding INJECT=\"2\" to CONFIG$NC"
                     fi
                     pause; continue 2 ;;
                 e|E)
@@ -1189,18 +1189,18 @@ set_options() {
 set_rssi() {
 	while true; do
 		show_header
-		echo -e "${BL}=================================================="
-        echo -e "${NC}           RSSI History Configuration             "
-		echo -e "${BL}=================================================="
-		echo -e "                                                       "
-		echo -e "  $N1 Toggle RSSI History: [$CH]                       "
-		echo -e "  $N2 Set History Depth:   [$CE] entries               "
-		echo -e "  $N3 Toggle Timestamps:   [$TS]                       "
-		echo -e "                                                       "
-		echo -e "  $LC Cancel and Discard Changes                       "
-		echo -e "  $LE Exit and Save Changes                            "
-		echo -e "                                                       "
-		echo -e "${BL}=================================================="
+		echo -e "$BL=================================================="
+        echo -e "$NC           RSSI History Configuration             "
+		echo -e "$BL=================================================="
+		echo -e "                                                     "
+		echo -e "  $N1 Toggle RSSI History: [$CH]                     "
+		echo -e "  $N2 Set History Depth:   [$CE] entries             "
+		echo -e "  $N3 Toggle Timestamps:   [$TS]                     "
+		echo -e "                                                     "
+		echo -e "  $LC Cancel and Discard Changes                     "
+		echo -e "  $LE Exit and Save Changes                          "
+		echo -e "                                                     "
+		echo -e "$BL=================================================="
         while true; do
             selection
             case "$choice" in
@@ -1209,7 +1209,7 @@ set_rssi() {
                     break ;;
                 2)
                     while true; do
-                        printf "\n ${NC}Enter new depth (${BL}5-20${NC}) [Current: $CE]: "; read -r new_depth
+                        printf "\n$NC Enter new depth (${BL}5-20$NC) [Current: $CE]: "; read -r new_depth
                         case "$new_depth" in *[!0-9]*|"") freeze 2; continue ;; esac
                         if [ "$new_depth" -ge 5 ] && [ "$new_depth" -le 20 ]; then
                             CUR_ENTRIES="$new_depth"
@@ -1237,7 +1237,7 @@ set_rssi() {
                         fi
                     done
                     if [ -f "$HISTORY_DB" ]; then rm -f "$HISTORY_DB"; fi
-                    echo -e "\n${GR}[+] Configuration saved and DB cleared.${NC}"
+                    echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
                     unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     pause; return 0 ;;
                 *)
@@ -1247,11 +1247,11 @@ set_rssi() {
     done
 }
 
-selection() { printf "\n ${NC}Selection: "; read -r choice; }
+selection() { printf "\n$NC Selection: "; read -r choice; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
-pause() { printf "\nPress ${BL}[Enter]${NC} to return..."; read -r discard; }
+pause() { printf "\nPress $BL[Enter]$NC to return..."; read -r discard; }
 
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 
@@ -1378,7 +1378,7 @@ do_numbered_node() {
 }
 
 hasta() {
-echo -e "\n\n\n${BL}" #===========================================================================================================
+echo -e "\n\n\n$BL" #=============================================================================================================
 echo -e "                                                                                                                        "
 echo -e "                                                                                                                        "
 echo -e "             ██╗  ██╗ █████╗ ███████╗████████╗ █████╗      ██╗      █████╗      ██╗   ██╗██╗███████╗████████╗ █████╗    "
@@ -1389,7 +1389,7 @@ echo -e "    ██║      ██║  ██║██║  ██║████
 echo -e "    ██║      ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝     ╚══════╝╚═╝  ╚═╝       ╚═══╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝   "
 echo -e "    ╚═╝                                                                                                                 "
 echo -e "                                                                                                                        "
-echo -e "${NC}\n\n\n" #===========================================================================================================
+echo -e "$NC\n\n\n" #=============================================================================================================
 }
 
 #====================#
