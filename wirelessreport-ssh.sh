@@ -146,7 +146,7 @@ check_version() {
             esac ;;
         do_install)
             case "$STATE" in
-                OFFLINE)       echo -e "\n$RD[!] Github Unreachable$NC\n"
+                OFFLINE)       echo -e "\n$RD[!] Github Offline.$NC\n"
                                UP="try again later?" ;;
                 OUTDATED)      echo -e "\n$GR[i] A new version (${NC}v$REMOTE_VERSION$GR) is available!$NC\n"
                                UP="update version?" ;;
@@ -157,7 +157,7 @@ check_version() {
             esac ;;
         *)
             case "$STATE" in
-                OFFLINE)       echo -e "$STATUS [Offline]$RD         Could not reach GitHub$NC" ;;
+                OFFLINE)       echo -e "$STATUS [Offline]           $RD GitHub Unreachable$NC" ;;
                 NOT_INSTALLED) echo -e "$STATUS [Not Installed]$BL Latest Available:$NC v$REMOTE_VERSION"; N1="$BL(1)" ;;
                 OUTDATED)      echo -e "$STATUS [v$REMOTE_VERSION Available]     $CURRENT" ;;
                 HASH_DIFF)     echo -e "$STATUS [Hash Update Available]$CURRENT" ;;
@@ -280,7 +280,7 @@ do_install() {
 
 do_update() {
     TEMP_SCRIPT="/tmp/wirelessreport.sh"
-    if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" && [ -s "$TEMP_SCRIPT" ]; then
+    if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" 2>/dev/null && [ -s "$TEMP_SCRIPT" ]; then
         mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
         chmod +x "$REPORT_SCRIPT" 2>/dev/null
         return 0
@@ -296,13 +296,13 @@ do_update() {
         TARGET_PATH=$(readlink -f "$REPORT_SCRIPT" 2>/dev/null)
         [ -z "$TARGET_PATH" ] && TARGET_PATH="$REPORT_SCRIPT"
         if [ "$CURRENT_PATH" != "$TARGET_PATH" ]; then
-            echo -e "\n$YL[!] GitHub unreachable. Installing current local copy...$NC\n"
+            echo -e "\n$YL[!] GitHub unreachable. Installing current local copy...$NC"
             cp "$0" "$REPORT_SCRIPT"
             chmod +x "$REPORT_SCRIPT" 2>/dev/null
-            return 0
+            pause; return 0
         else
-            echo -e "$RD[!] GitHub unreachable and script is already in place.$NC"
-            return 1
+            echo -e "\n$YL[!] GitHub unreachable and script is already in place.$NC"
+            pause; return 1
         fi
     fi
 }
