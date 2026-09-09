@@ -1,4 +1,4 @@
-Wireless Report SSH - can run side by side with Wireless Report API.<br>
+Wireless Report SSH<br>
 \
 \
 to install script:
