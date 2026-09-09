@@ -1137,10 +1137,12 @@ set_options() {
                         echo -e "$NC Runtime Tracking: ($RT_STAT)"; pause
                     fi ;;
                 2)
-                    if grep -q "BACKHAUL=" "$CONFIG"; then
-                        case "$BACKHAUL" in yes) NEW_BACK="no" ;; *) NEW_BACK="yes" ;; esac
-                        sed -i "s/BACKHAUL=.*/BACKHAUL=\"$NEW_BACK\"/" "$CONFIG"
-                    else echo 'BACKHAUL="yes"' >> "$CONFIG"; fi ;;
+                    if grep -q "^BACKHAUL=" "$CONFIG"; then
+                        case "$BACKHAUL" in 1) NEW_BACK="0" ;; *) NEW_BACK="1" ;; esac
+                        sed -i "s/^BACKHAUL=.*/BACKHAUL=\"$NEW_BACK\"/" "$CONFIG"
+                    else
+                        echo 'BACKHAUL="1"' >> "$CONFIG"
+                    fi ;;
                 3)
                     while true; do
                         echo -e "\n (${GR}0$NC) disable (${GR}15$NC) def (${GR}1440$NC) max "
@@ -1469,7 +1471,7 @@ get_mac_address() {
 	is_node_pfx=0; bh="no"
 	case "$NODE_PFX" in *"$mac_prefix"*) is_node_pfx=1 ;; esac
 	if [ "$mac_prefix" = "$MAIN_PFX" ] || [ "$is_node_pfx" -eq 1 ]; then
-		    if [ "$BACKHAUL" != "yes" ]; then return 1; fi
+		    if [ "$BACKHAUL" != "1" ]; then return 1; fi
 			bh="yes"
 	fi
 	case "$bh" in yes) mac_check="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_check="$mac" ;; esac
@@ -1525,7 +1527,12 @@ get_ip() {
     if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
     if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
     if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
-	case "$name" in *-BH*) ip="" ;; esac
+	case "$name" in
+        *-BH*)
+            base_name="${name%-BH*}"
+            ip=$(awk -F'>' -v target="$base_name" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
+            ;;
+    esac
 	case "$ip" in ""|*[!0-9.]*) ip=$(printf "900.000.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 	case "$IPPAD" in
         1)
