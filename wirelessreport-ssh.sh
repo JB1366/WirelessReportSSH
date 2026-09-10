@@ -1484,7 +1484,7 @@ get_mac_address() {
 }
 
 get_name() {
-	name=""
+	name=""; ip=""
 	# YazDHCP
 	if [ -f "$YAZ_CACHE" ]; then
 		local entry=$(grep -m1 "^$mac|" "$YAZ_CACHE")
@@ -1514,6 +1514,7 @@ get_name() {
 			if [ -n "$node_match" ]; then
 				node_alias=$(echo "$node_match" | cut -d'>' -f2)
 				name="${node_alias:-NODE}-BH"
+                ip=$(awk -F'>' -v target="$node_alias" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
 			fi
 		fi
 	fi
@@ -1522,12 +1523,15 @@ get_name() {
 }
 
 get_ip() {
-	ip=""
-	if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
-    if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
-    if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
-    if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
-	case "$name" in *-BH*) base_name="${name%-BH*}"; ip=$(awk -F'>' -v target="$base_name" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE") ;; esac
+	if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE") && [ -n "$line" ]; then
+        ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE") && [ -n "$line" ]; then
+        ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE") && [ -n "$line" ]; then
+        ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE") && [ -n "$line" ]; then
+        ip="${line#*|}"; ip="${ip%%|*}"
+    fi
 	case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 	case "$IPPAD" in
         1)
