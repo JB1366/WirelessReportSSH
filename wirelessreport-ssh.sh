@@ -709,10 +709,10 @@ inject_menu() {
 		\n},"
 		sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"<#1558#>\",/ i $INSERT_DATA
 		}" "$TEMP_MENU"
-		sys_log "Mounting Menu [$TAB_LABEL] as $am_webui_page"
+		sys_log "Mounting Menu $TAB_LABEL as $am_webui_page"
 	else
 		sed -i "/index: \"menu_Wireless\"/,/{url: \"NULL\", tabName: \"__INHERIT__\"}/ s|{url: \"NULL\", tabName: \"__INHERIT__\"}|{url: \"$am_webui_page\", tabName: \"$TAB_LABEL\"},\n&|" "$TEMP_MENU"
-		sys_log "Mounting TAB [$TAB_LABEL] as $am_webui_page"
+		sys_log "Mounting TAB $TAB_LABEL as $am_webui_page"
 	fi
 	umount "$SYSTEM_MENU" && mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"
 	umount "/www/user/$am_webui_page" 2>/dev/null
