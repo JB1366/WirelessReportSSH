@@ -1195,7 +1195,7 @@ set_options() {
                     printf "\nPress $BL[Enter]$NC to switch to [$GR$BRANCH_NAME$NC] branch & restart script..."; read -r restart
                     if do_update; then exec "$REPORT_SCRIPT" install "$@"
                     else echo -e "$RD[!]Error: Branch update failed!$NC" >&2; exit 1; fi ;;
-                i|I)
+                inject)
                     if grep -q 'INJECT="2"' "$CONFIG"; then
                         echo -e "\n$YL[+] INJECT=\"2\" already exists in CONFIG$NC"
                     else
