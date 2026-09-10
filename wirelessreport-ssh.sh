@@ -473,11 +473,13 @@ node_auth() {
     elif [ "$RETRY" = "1" ]; then node_choice="2"; RETRY="0"
     else
         echo -e "$BL Node Source Selection: \n"
-        echo -e "  $N1 Use saved node(s) from CONFIG"
+        echo -e "  $N1 Scan saved node(s) from CONFIG"
         echo -e "  $N2 Rescan NVRAM (Check for IP changes)"
+        echo -e ""
+        echo -e "  $LE Exit back to SSH menu"
         while true; do
-            printf "\n Choice [1-2]: "; read -r node_choice
-            case "$node_choice" in 1) break ;; 2) break ;; *) freeze 2 ;; esac; done
+            printf "\n$NC Selection: "; read -r node_choice
+            case "$node_choice" in 1) break ;; 2) break ;; e|E) return ;; *) freeze 2 ;; esac; done
     fi
     case "$node_choice" in
         1)
@@ -565,14 +567,14 @@ node_auth() {
             [ "$new_nodes" -eq 1 ] && suffix="" || suffix="s"
             echo -e "\n$YL[!] $new_nodes new node$suffix successfully authenticated.$NC"
         fi
-        if [ "$NODESSH" = "0" ]; then echo -e "$BL\n[+] Adding Node(s) to CONFIG."; fi
+        if [ "$NODESSH" = "0" ]; then echo -e "$BL\n[+] Adding Node(s) to CONFIG.$NC"; fi
         pause; return
     else
         if [ "$any_success" -gt 0 ]; then
             echo -e "\n$YL[!] Partial Success: Only $any_success of $TOTAL_NODES nodes authenticated.$NC"
             ACTION_MSG="Continue with current nodes only"
             KEY_LBL="$LC"
-            echo -e "$BL\n[+] Adding Node(s) to CONFIG."
+            echo -e "$BL\n[+] Adding Node(s) to CONFIG.$NC"
         else
             echo -e "\n$RD[!] CRITICAL: SSH authentication failed on all nodes.$NC\n"
             ACTION_MSG="Force ROUTER-ONLY configuration"
@@ -581,7 +583,7 @@ node_auth() {
         echo -e "\n Choices:\n"
         echo -e "  $BL(Enter)$NC Retry authentication"
         echo -e "  $BL$KEY_LBL$NC     $ACTION_MSG"
-        echo -e "  $BL$LE     Exit to main menu\n"
+        echo -e "  $LE     Exit to main menu\n"
         selection
         case "$choice" in
             [rR]|[cC])
