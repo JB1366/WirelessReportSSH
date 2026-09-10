@@ -1527,13 +1527,8 @@ get_ip() {
     if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
     if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
     if [ -z "$ip" ]; then line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); if [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi; fi
-	case "$name" in
-        *-BH*)
-            base_name="${name%-BH*}"
-            ip=$(awk -F'>' -v target="$base_name" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
-            ;;
-    esac
-	case "$ip" in ""|*[!0-9.]*) ip=$(printf "900.000.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
+	case "$name" in *-BH*) base_name="${name%-BH*}"; ip=$(awk -F'>' -v target="$base_name" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE") ;; esac
+	case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 	case "$IPPAD" in
         1)
             last_octet="${ip##*.}"
