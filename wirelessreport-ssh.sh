@@ -1118,7 +1118,7 @@ set_options() {
                                 if grep -q "RTIME_LOG=" "$CONFIG"; then sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
                                 else echo 'RTIME_LOG="0"' >> "$CONFIG"; fi
                                 rm -f "$USB_PATH/runtime.db"; menu_vars
-                                echo -e "$NC Runtime Tracking: ($RT_STAT)"; pause ;;
+                                echo -e "$NC Runtime Tracking: ($RT_STAT)" ;;
                             *)
                                 while true; do
                                     printf "\n Write stats to Syslog? (y/n): "; read -r choice
@@ -1127,15 +1127,16 @@ set_options() {
                                 if grep -q "RTIME_LOG=" "$CONFIG"; then sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$RTIME_LOG\"/" "$CONFIG"
                                 else echo "RTIME_LOG=\"$RTIME_LOG\"" >> "$CONFIG"; fi
                                 sed -i 's/RTIME=.*/RTIME="1"/' "$CONFIG"; menu_vars
-                                echo -e "$NC Runtime Tracking: ($RT_STAT) Stats RESET."; pause ;;
+                                echo -e "$NC Runtime Tracking: ($RT_STAT) Stats RESET." ;;
                         esac
                     else
                         echo 'RTIME="0"' >> "$CONFIG"
                         if grep -q "RTIME_LOG=" "$CONFIG"; then sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
                         else echo 'RTIME_LOG="0"' >> "$CONFIG"; fi
                         rm -f "$USB_PATH/runtime.db"; menu_vars
-                        echo -e "$NC Runtime Tracking: ($RT_STAT)"; pause
-                    fi ;;
+                        echo -e "$NC Runtime Tracking: ($RT_STAT)"
+                    fi
+                    pause ;;
                 2)
                     if grep -q "^BACKHAUL=" "$CONFIG"; then
                         case "$BACKHAUL" in 1) NEW_BACK="0" ;; *) NEW_BACK="1" ;; esac
@@ -1168,13 +1169,12 @@ set_options() {
                             0) echo -e "\n$GR[+] Mode 2:$NC 192.168.50.3 -->$GR 192.168.050.003$NC (Last 2 Octets)";  NEW_PAD="2" ;;
                             *) echo -e "\n$GR[+] Mode 1:$NC 192.168.50.3 -->$GR 192.168.50.003$NC (Last Octet Only)"; NEW_PAD="1" ;;
                         esac
-                        pause
                         sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
                     else
                         echo -e "\n$RD[-] Disabled:$NC 192.168.050.003 -->$RD 192.168.50.3$NC"; NEW_PAD="0"
                         echo 'IPPAD="0"' >> "$CONFIG"
-                        pause
-                    fi ;;
+                    fi
+                    pause ;;
                 5)
                     if grep -q "HOST_COLOR=" "$CONFIG"; then
                         case "$HOST_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
