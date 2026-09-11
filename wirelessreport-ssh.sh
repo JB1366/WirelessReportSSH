@@ -121,7 +121,6 @@ install_menu() {
 
 check_version() {
     local mode="$1" version_cmp=""; froze() { return 0; }
-    case "$BRANCH" in 1) DEV="D" ;; *) DEV="" ;; esac
     if [ ! -f "$REPORT_SCRIPT" ]; then STATE="NOT_INSTALLED"; froze() { freeze 2; return 1; }
     elif [ -z "$REMOTE_VERSION" ]; then STATE="OFFLINE"
     else
@@ -184,7 +183,6 @@ version_compare() {
 
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
-    case "$BRANCH" in 1) DEV="D" ;; *) DEV="" ;; esac
 	trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
@@ -368,7 +366,7 @@ wr_sha256() {
 }
 
 check_github() {
-    case "$BRANCH" in 1) BRANCH_NAME="Development" ;; *) BRANCH_NAME="main" ;; esac
+    case "$BRANCH" in 1) BRANCH_NAME="Development"; DEV="D" ;; *) BRANCH_NAME="main"; DEV="" ;; esac
     GITHUB="https://raw.githubusercontent.com/JB1366/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
@@ -1190,7 +1188,6 @@ set_options() {
                     case "${BRANCH:-0}" in 1) BRANCH="0" ;; *) BRANCH="1" ;; esac
                     if grep -q "^BRANCH=" "$CONFIG"; then sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
                     else echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"; fi
-                    case "$BRANCH" in 1) DEV="D" ;; *) DEV="" ;; esac
                     check_github
                     printf "\nPress $BL[Enter]$NC to switch to [$GR$BRANCH_NAME$NC] branch & restart script..."; read -r restart
                     if do_update; then exec "$REPORT_SCRIPT" install "$@"
