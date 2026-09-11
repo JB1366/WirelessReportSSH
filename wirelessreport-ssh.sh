@@ -1236,8 +1236,7 @@ set_rssi() {
             selection
             case "$choice" in
                 1)
-                    case "$CUR_RS_HIST" in 1) CUR_RS_HIST="0" ;; *) CUR_RS_HIST="1" ;; esac
-                    break ;;
+                    case "$CUR_RS_HIST" in 1) CUR_RS_HIST="0" ;; *) CUR_RS_HIST="1" ;; esac ;;
                 2)
                     while true; do
                         printf "\n$NC Enter new depth (${BL}5-20$NC) [Current: $CE]: "; read -r new_depth
@@ -1250,8 +1249,7 @@ set_rssi() {
                         fi
                     done ;;
                 3)
-                    case "$CUR_DATE" in 1) CUR_DATE="0" ;; *) CUR_DATE="1" ;; esac
-                    break ;;
+                    case "$CUR_DATE" in 1) CUR_DATE="0" ;; *) CUR_DATE="1" ;; esac ;;
                 c|C)
                     unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     return 0 ;;
@@ -1274,6 +1272,7 @@ set_rssi() {
                 *)
                     freeze 2; continue ;;
             esac
+            break
         done
     done
 }
