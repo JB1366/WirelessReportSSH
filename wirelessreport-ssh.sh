@@ -1526,15 +1526,10 @@ get_name() {
 }
 
 get_ip() {
-	if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE") && [ -n "$line" ]; then
-        ip="${line#*|}"; ip="${ip%%|*}"
-    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE") && [ -n "$line" ]; then
-        ip="${line#*|}"; ip="${ip%%|*}"
-    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE") && [ -n "$line" ]; then
-        ip="${line#*|}"; ip="${ip%%|*}"
-    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE") && [ -n "$line" ]; then
-        ip="${line#*|}"; ip="${ip%%|*}"
-    fi
+	if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}";  fi
 	case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 	case "$IPPAD" in
         1)
@@ -1897,7 +1892,7 @@ EOF
 }
 
 parse_node_data() {
-    IFS='|' read -r _ mac rssi iface uptime ssid lrd_val lrd width _ <<ROW
+    IFS='|' read -r _ mac rssi iface uptime ssid tx rx width _ <<ROW
 $1
 ROW
 }
@@ -1961,11 +1956,7 @@ for line in $SSH_NODES; do
                                     w = w ? w : \"20\"
                                     rxd = (rx_raw == 0) ? \"1\" : sprintf(\"%.0f\", rx_raw)
                                     txd = (tx_raw == 0) ? \"1\" : sprintf(\"%.0f\", tx_raw)
-                                    lrd = (rxd == \"1\" && txd == \"1\") ? \"1 / 72\" : rxd \" / \" txd
-                                    v1 = rxd; gsub(/[^0-9]/, \"\", v1); v2 = txd; gsub(/[^0-9]/, \"\", v2)
-                                    if (v1 != \"\" && v2 != \"\" && (v1 + 0) > (v2 + 0)) { tmp = rxd; rxd = txd; txd = tmp; lrd = rxd \" / \" txd }
-                                    tx = (txd != \"\") ? txd : 0
-				                    printf \"DATA|%s|%s|%s|%s|%s|%04d|%s|%s|\\n\", mac, rssi, iface, up, sn, tx, lrd, w
+				                    printf \"DATA|%s|%s|%s|%s|%s|%s|%s|%s|\\n\", mac, rssi, iface, up, sn, txd, rxd, w
                                 }'
                             NODE_COUNT=\$((NODE_COUNT + 1))
                         done
@@ -1980,9 +1971,7 @@ for line in $SSH_NODES; do
 							TX=\$(echo \"\$ROW\" | awk '{print \$5}' | tr -dc '0-9')
 							RX=\$(echo \"\$ROW\" | awk '{print \$6}' | tr -dc '0-9')
 							W=\"20\"; echo \"\$iface\" | grep -q \"ath1\" && W=\"80\"
-							LRD=\"\${RX} / \${TX}\"
-							TXV=\$(printf \"%04d\" \"\${TX:-0}\")
-							echo \"DATA|\$mac|\$RSSI|\$iface|UP_QCA|\$SN|\$TXV|\$LRD|\$W|\"
+							echo \"DATA|\$mac|\$RSSI|\$iface|UP_QCA|\$SN|\$TX|\$RX|\$W|\"
 							NODE_COUNT=\$((NODE_COUNT + 1))
 						done
 						;;
@@ -2022,13 +2011,9 @@ for line in $SSH_NODES; do
                                 /connected time:/ { s=\$3; gsub(/[^0-9]/, \"\", s); uptime=s }
 								END { if (mac != \"\") print mac, rssi, tx, rx, uptime, c_width }' | while read -r c_mac c_rssi c_tx c_rx c_uptime c_width; do
 								[ -z \"\$c_mac\" ] && continue
-								TX_INT=\$(echo \"\$c_tx\" | cut -d. -f1); RX_INT=\$(echo \"\$c_rx\" | cut -d. -f1)
-								[ -z \"\$TX_INT\" ] && TX_INT=0; [ -z \"\$RX_INT\" ] && RX_INT=0
-                                if [ \"\$RX_INT\" -eq 0 ] && [ \"\$TX_INT\" -eq 0 ]; then LRD=\"1\"
-                                elif [ \"\$RX_INT\" -gt \"\$TX_INT\" ]; then LRD=\"\$TX_INT / \$RX_INT\"
-                                else LRD=\"\$RX_INT / \$TX_INT\"; fi
-								TX=\$(printf \"%04d\" \"\${TX_INT:-0}\")
-								echo \"DATA|\$c_mac|\$c_rssi|\$iface|\$c_uptime|\$DISPLAY_SSID|\$TX|\$LRD|\$c_width|\"
+								TX_INT=\$(echo \"\$c_tx\" | cut -d. -f1)
+                                RX_INT=\$(echo \"\$c_rx\" | cut -d. -f1)
+								echo \"DATA|\$c_mac|\$c_rssi|\$iface|\$c_uptime|\$DISPLAY_SSID|\$X_INT|\$RX_INT|\$c_width|\"
 								NODE_COUNT=\$((NODE_COUNT + 1))
 							done
 						fi
@@ -2170,6 +2155,7 @@ for line in $SSH_NODES; do
 			parse_node_data "$ssh_node_data"
 			get_mac_address || continue
 			get_ip
+            get_rx_tx
 			final_chk
             is_mac_new=$(check_new_mac "$mac")
 			trend=$(get_trend "$mac" "$rssi" "$NODE_NAME")
