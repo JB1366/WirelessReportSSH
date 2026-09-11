@@ -126,9 +126,9 @@ check_version() {
     else
         version_cmp=$(version_compare "$SCRIPT_VERSION" "$REMOTE_VERSION")
         case "$version_cmp" in -1|0|1) ;; *) version_cmp=0 ;; esac
-        if [ "$version_cmp" -gt 0 ]; then  STATE="UP_TO_DATE"
+        if [ "$version_cmp" -gt 0 ]; then STATE="UP_TO_DATE"
         elif [ "$version_cmp" -lt 0 ]; then STATE="OUTDATED"
-        elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then  STATE="HASH_DIFF"
+        elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then STATE="HASH_DIFF"
         else STATE="UP_TO_DATE"; fi
     fi
     case "$mode" in
@@ -152,7 +152,7 @@ check_version() {
                 HASH_DIFF)     echo -e "\n$GR[i] There is a Hash Update for (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
                                UP="update Hash?" ;;
                 UP_TO_DATE|*)  echo -e "\n$GR[i] You are already on the latest version (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
-                               UP="reinstall/overwrite anyway?";;
+                               UP="reinstall/overwrite anyway?" ;;
             esac ;;
         *)
             case "$STATE" in
@@ -1743,8 +1743,8 @@ get_band() {
 	local class="" sort="0"
 	case "$Label" in
 		2.4G*)  class="band-24g"; sort="2.4" ;;
-		5G*)    class="band-5g"; sort="5"   ;;
-		6G*)    class="band-6g"; sort="6"   ;;
+		5G*)    class="band-5g"; sort="5" ;;
+		6G*)    class="band-6g"; sort="6" ;;
 	esac
 	case "$4" in
         band) echo "$Label" ;;
@@ -1769,7 +1769,7 @@ device_uptime() {
     fi
     local check_mins="${PULSE_MINS:-15}"; local pulse_sec=$((check_mins * 60))
     if [ "$check_mins" -ne 0 ] && [ "$T" -lt "$pulse_sec" ]; then pulse="pulse-blue"; fi
-    local d=$((T / 86400));  local rem=$((T % 86400))
+    local d=$((T / 86400)); local rem=$((T % 86400))
     local h=$((rem / 3600)); local m=$(((rem % 3600) / 60))
     if [ "$d" -gt 0 ]; then
         printf "<span class='%s' data-sort='%s'>%02dd %02dh</span>" "$pulse" "$T" "$d" "$h"
@@ -2192,7 +2192,6 @@ ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
-UPDATED_TIME="<span class="total-count">Updated: $CUR_TIME</span>"
 get_rssi_boxes; do_numbered_node; get_theme
 check_version header_box; do_runtime
 JS_DIFF="${DIFF:-5.00}"
@@ -2234,7 +2233,7 @@ cat <<HTML >> "$WEB_PAGE"
 	.header-box { visibility: hidden; width: max-content; min-width: 120px; background: rgba(0,0,0,0.9); color: white; text-align: center; border: 1px solid #475a68; border-radius: 6px; padding: 8px; position: absolute; z-index: 999; bottom: 135%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.6s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.85rem; font-weight: bold; box-shadow: 0 4px 12px #000; pointer-events: none; line-height: 1.4; }
 	.header-tooltip { position: relative; display: inline-block; }
 	.header-tooltip:hover .header-box { visibility: visible; opacity: 1; bottom: 145%; }
-    .section-header { color: #ffffff; font-weight: bold; padding: 12px; text-align: center; border-bottom: 1px solid #475a68; }
+    .section-header { color: #ffffff; font-size: 13px; font-weight: bold; letter-spacing: 0.5px; padding: 12px; text-align: center; border-bottom: 1px solid #475a68; }
     .report-column { width: 100%; border-radius: 8px; border: 1px solid #475a68; overflow: hidden; display: flex; flex-direction: column; }
 	.rssi-quality-bar { display: flex; justify-content: center; gap: 12px; align-items: center; width: 100%; margin: -5px auto -5px auto; padding: 0; background: transparent; border: none; height: auto; }
 	.rssi-quality-box { display: inline-block; height: 28px; line-height: 26px; text-align: center; padding: 0 12px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid #475a68; font-weight: bold; box-sizing: border-box; transition: all 0.2s ease; }
@@ -2767,8 +2766,8 @@ document.addEventListener('mouseout', function(e) {
                         <div id="splitView">
                             <div id="mainCol" class="report-column">
                                 <div class="section-header">
-                                    $MAIN_NAME<br>
-                                    $UPDATED_TIME
+                                    <span>$MAIN_NAME</span><br>
+                                    <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
                                     <div class="temp-load-row">
                                         <span>Temp: $MAIN_TEMP</span>
@@ -2798,12 +2797,12 @@ document.addEventListener('mouseout', function(e) {
                                 </table>
                             </div>
                             <div class="rssi-quality-bar">
-                                $RSSI_BOXES
+                                <span>$RSSI_BOXES</span>
                             </div>
                             <div id="nodeCol" class="report-column" style="$ROUTER_ONLY">
                                 <div class="section-header">
-                                    $NODE_NAMES<br>
-                                    $UPDATED_TIME
+                                    <span>$NODE_NAMES</span><br>
+                                    <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
                                     <div class="temp-load-row">
                                         <span>Temp: $NODE_TEMPS</span>
@@ -2835,8 +2834,8 @@ document.addEventListener('mouseout', function(e) {
                         </div>
                         <div id="allCol" class="report-column" style="$ROUTER_ONLY">
                             <div class="section-header">
-                                $ALL_NAMES<br>
-                                $UPDATED_TIME
+                                <span>$ALL_NAMES</span><br>
+                                <span>Updated: $CUR_TIME</span>
                                 <hr class="separator-line">
                                 <div class="temp-load-row" style="$TEMP_STYLE">
                                     <span>Temp: $ALL_TEMP</span>
@@ -2866,7 +2865,7 @@ document.addEventListener('mouseout', function(e) {
                             </table>
                         </div>
                         <div id="allDevicesQualityBar" class="rssi-quality-bar" style="$ROUTER_ONLY">
-                            $RSSI_BOXES
+                            <span>$RSSI_BOXES</span>
                         </div>
                     </div>
                 </div>
