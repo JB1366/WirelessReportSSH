@@ -1577,6 +1577,18 @@ check_new_mac() {
     fi
 }
 
+get_rx_tx() {
+    rx_disp="${rx:-1}"; [ "$rx_disp" = "0" ] && rx_disp="1"
+    tx_disp="${tx:-${max:-1}}"; [ "$tx_disp" = "0" ] && tx_disp="1"
+    if [ "$rx_disp" = "1" ] && [ "$tx_disp" = "1" ]; then lrd="1 / 72"
+    else lrd="${rx_disp} / ${tx_disp}"; fi
+    if [ "$rx_disp" -gt "$tx_disp" ] 2>/dev/null; then
+        T=$rx_disp; rx_disp=$tx_disp; tx_disp=$T
+        lrd="$rx_disp / $tx_disp"
+    fi
+    lrd_val=$(printf "%04d" "${tx_disp:-0}")
+}
+
 get_trend() {
     local mac="$1"; local current_rssi="$2"; local rssi_name="${3:-""}"
 	if [ "$RS_HIST" = "1" ]; then
@@ -1866,18 +1878,6 @@ $({ wl -i "$iface" sta_info "$mac" 2>/dev/null || wl -i "$alt_iface" sta_info "$
 EOF
 }
 
-get_rx_tx() {
-    rx_disp="${rx:-1}"; [ "$rx_disp" = "0" ] && rx_disp="1"
-    tx_disp="${tx:-${max:-1}}"; [ "$tx_disp" = "0" ] && tx_disp="1"
-    if [ "$rx_disp" = "1" ] && [ "$tx_disp" = "1" ]; then lrd="1 / 72"
-    else lrd="${rx_disp} / ${tx_disp}"; fi
-    if [ "$rx_disp" -gt "$tx_disp" ] 2>/dev/null; then
-        T=$rx_disp; rx_disp=$tx_disp; tx_disp=$T
-        lrd="$rx_disp / $tx_disp"
-    fi
-    lrd_val=$(printf "%04d" "${tx_disp:-0}")
-}
-
 parse_node_out() {
     N_TEMP_RAW="" N_LOAD="" N_UPTIME_RAW="" N_UPTIME=""
     while IFS='|' read -r key val; do
@@ -1892,12 +1892,12 @@ EOF
 }
 
 parse_node_data() {
-    IFS='|' read -r _ mac rssi iface uptime ssid tx rx width _ <<ROW
+    IFS='|' read -r _ mac rssi iface uptime ssid tx rx max width _ <<ROW
 $1
 ROW
 }
 
-startup() { ssh_init; get_usb; check_github; update_time; }
+ssh_init; get_usb; check_github; update_time
 
 run_report() {
 #=================#
@@ -1952,11 +1952,12 @@ for line in $SSH_NODES; do
                                 /in network/ { up = \$3 }
                                 /rate of last rx pkt/ { rx_raw = \$6 / 1000 }
                                 /rate of last tx pkt/ { split(\$0, a, \": \"); tx_raw = a[2] / 1000 }
+                                /Max Rate =/ { max = \$4 }
                                 END {
                                     w = w ? w : \"20\"
                                     rxd = (rx_raw == 0) ? \"1\" : sprintf(\"%.0f\", rx_raw)
                                     txd = (tx_raw == 0) ? \"1\" : sprintf(\"%.0f\", tx_raw)
-				                    printf \"DATA|%s|%s|%s|%s|%s|%s|%s|%s|\\n\", mac, rssi, iface, up, sn, txd, rxd, w
+				                    printf \"DATA|%s|%s|%s|%s|%s|%s|%s|%s|%s|\\n\", mac, rssi, iface, up, sn, txd, rxd, max, w
                                 }'
                             NODE_COUNT=\$((NODE_COUNT + 1))
                         done
@@ -2121,9 +2122,9 @@ wait
 #========================#
 #  Node Device Assembly  #
 #========================#
-N_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a}"
-BULLET_LG=" <span style='color:white; font-size: 20px;'>•</span> "
+N_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
 BULLET=" <span style='color:white; font-size: 14px;'>•</span> "
+BULLET_LG=" <span style='color:white; font-size: 20px;'>•</span> "
 NODE_NAMES=""; NODE_TEMPS=""; NODE_LOADS=""; NODE_BOOTTIMES=""; NODE_UPTIMES=""
 NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0
 for line in $SSH_NODES; do
@@ -2886,7 +2887,6 @@ rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$DEVICE_LIST_CACHE" "$NODE_DATA_DIR
 }
 case "$1" in
     install)
-        startup
         install_menu
         ;;
     inject|inject1|inject2|inject3)
@@ -2904,7 +2904,6 @@ case "$1" in
         exit "$?"
         ;;
 	*)
-		startup
 		run_report
         ;;
 esac
