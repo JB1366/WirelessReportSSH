@@ -2013,7 +2013,7 @@ for line in $SSH_NODES; do
 								[ -z \"\$c_mac\" ] && continue
 								TX_INT=\$(echo \"\$c_tx\" | cut -d. -f1)
                                 RX_INT=\$(echo \"\$c_rx\" | cut -d. -f1)
-								echo \"DATA|\$c_mac|\$c_rssi|\$iface|\$c_uptime|\$DISPLAY_SSID|\$X_INT|\$RX_INT|\$c_width|\"
+								echo \"DATA|\$c_mac|\$c_rssi|\$iface|\$c_uptime|\$DISPLAY_SSID|\$TX_INT|\$RX_INT|\$c_width|\"
 								NODE_COUNT=\$((NODE_COUNT + 1))
 							done
 						fi
