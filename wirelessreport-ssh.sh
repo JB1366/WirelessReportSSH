@@ -226,8 +226,8 @@ do_install() {
             printf "Do you want to $UP (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac; done
     fi
-    do_update || return 1
     echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
+    do_update || return 1
 	if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
 		printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
@@ -240,9 +240,9 @@ do_install() {
         pause; return 1
     fi
 	if [ "${USB_PATH#*/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n$GR[+] USB Found: Using $USB_PATH for reports and history.$NC\n"
+        echo -e "\n$BL[+] USB Found: Using $USB_PATH for reports and history.$NC"
     else
-        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC\n"
+        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
     if [ -f "$SSH_KEY" ]; then node_auth
 	else
@@ -445,12 +445,12 @@ check_ssh() {
                                 cat "$ERROR_LOG"
                                 echo -e "\n\n$BL==================================================$NC"
                                 printf "\nRemove error log? (y/n): "; read -r rm_log
-                                case "$rm_log" in [yY]) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC"; pause ;; esac
+                                case "$rm_log" in [yY]) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC" ;; esac
                             else
                                 echo -e "$YL[!] File not found.$NC"
                                 echo -e "\n$BL==================================================$NC"
-                                pause
-                            fi ;;
+                            fi
+                            pause ;;
                         7)
                             node_auth ;;
                     esac
@@ -471,7 +471,7 @@ node_auth() {
     elif [ "$RETRY" = "1" ]; then node_choice="2"; RETRY="0"
     else
         echo -e "$BL Node Source Selection: \n"
-        echo -e "  $N1 Scan saved node(s) from CONFIG"
+        echo -e "  $N1$NC Scan saved node(s) from CONFIG"
         echo -e "  $N2 Rescan NVRAM (Check for IP changes)"
         echo -e ""
         echo -e "  $LE Exit back to SSH menu"
