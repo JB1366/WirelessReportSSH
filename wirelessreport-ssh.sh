@@ -508,16 +508,12 @@ node_auth() {
 		any_success=0; VALID_NODES=""; new_nodes=0
         for line in $AIMESH_NODES; do
 			ROUTER="${line%%|*}"; IP="${line#*|}"
-            [ -z "$IP" ] || [ "$IP" = "$ROUTER" ] && continue
+            case "$IP" in ""|"$ROUTER") continue ;; esac
 			if [ -z "$ROUTER" ]; then ROUTER="Node_$IP"; fi
 			printf "$NC[*] Testing $GR%-14s$NC (%s) " "$ROUTER" "$IP"
             SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
 			SSH_RC=$?
-			if [ -n "$SSH_ERR" ]; then
-				echo "$SSH_ERR" | while read -r line; do
-					ssh_error "$line"
-				done
-			fi
+			if [ -n "$SSH_ERR" ]; then echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done; fi
 			if [ "$SSH_RC" -eq 0 ]; then
 				echo -e "$GR[✓] AUTHENTICATED$NC"
 				any_success=$((any_success + 1))
@@ -531,21 +527,13 @@ node_auth() {
 						echo -e "$GR[✓] DONE$NC"
 						new_nodes=$((new_nodes + 1))
 						TARGET_KEY=$(awk -v ip="$IP" '$1 ~ ip {print $2, $3}' /jffs/.ssh/known_hosts 2>/dev/null)
-						if [ -n "$TARGET_KEY" ]; then
-							echo -e "    Node Host Key: $BL$TARGET_KEY$NC"
-						fi
-					else
-						echo -e "$RD[✗] FAILED$NC"
-					fi
+						if [ -n "$TARGET_KEY" ]; then echo -e "    Node Host Key: $BL$TARGET_KEY$NC"; fi
+					else echo -e "$RD[✗] FAILED$NC"; fi
 				fi
 			else
-				if echo "$SSH_ERR" | grep -q "No auth methods"; then
-					echo -e "$RD[✗] Failed: Invalid Username or SSH Key.$NC"
-				elif echo "$SSH_ERR" | grep -q "Connection refused"; then
-					echo -e "$RD[✗] Failed: SSH Connection refused.$NC"
-				else
-					echo -e "$RD[✗] Failed: Unknown connection issue.$NC"
-				fi
+				if echo "$SSH_ERR" | grep -q "No auth methods"; then echo -e "$RD[✗] Failed: Invalid Username or SSH Key.$NC"
+				elif echo "$SSH_ERR" | grep -q "Connection refused"; then echo -e "$RD[✗] Failed: SSH Connection refused.$NC"
+				else echo -e "$RD[✗] Failed: Unknown connection issue.$NC"; fi
 			fi
 		done
     fi
@@ -817,11 +805,11 @@ set_nicknames() {
             selection
             case "$choice" in
                 1)
-                    echo -e "\n$BL[+] Resetting to hardware defaults...$NC\n"
+                    echo -e "\n$BL[+] Resetting to hardware defaults...$NC"
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     unset MAIN_NICK
-                    echo -e "    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER$NC"; sleep 1
+                    printf "\n    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER$NC"; sleep 1
                     if [ -n "$SSH_NODES" ] && [ "$SSH_NODES" != " " ]; then
                         node_idx=1
                         for node in $VALID_NODES; do
@@ -831,23 +819,22 @@ set_nicknames() {
                             eval "unset NODE_NICK_$CLEAN_IP"
                             HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
                             NODE_CLR=$(hex_to_ansi "$HEX_CLR")
-                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
+                            printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
                             node_idx=$((node_idx + 1))
                         done
                     fi
-                    echo -e "\n$GR[+] Default hardware models restored.$NC"
-                    pause ;;
+                    printf "\n\n$GR[+] Default hardware models restored.$NC\n" ;;
                 2)
-                    echo -e "\n$BL[*] Updating nicknames with Locations...$NC\n"
+                    echo -e "\n$BL[*] Updating nicknames with Locations...$NC"
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     NEW_LOC=$(nvram get cfg_alias)
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     if [ -n "$NEW_LOC" ]; then
                         echo "MAIN_NICK=\"$NEW_LOC\"" >> "$CONFIG"
-                        echo -e "    ${MAIN_CLR}$OLD_NAME -> $NEW_LOC$NC"; sleep 1
+                        printf "\n    ${MAIN_CLR}$OLD_NAME -> $NEW_LOC$NC"; sleep 1
                     else
                         unset MAIN_NICK
-                        echo -e "    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER (Default)$NC"; sleep 1
+                        printf "\n    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER (Default)$NC"; sleep 1
                     fi
                     node_idx=1
                     for node in $VALID_NODES; do
@@ -859,19 +846,18 @@ set_nicknames() {
                         NODE_CLR=$(hex_to_ansi "$HEX_CLR")
                         if [ -n "$NODE_LOC" ]; then
                             echo "NODE_NICK_$CLEAN_IP=\"$NODE_LOC\"" >> "$CONFIG"
-                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $NODE_LOC$NC"; sleep 1
+                            printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $NODE_LOC$NC"; sleep 1
                         else
                             eval "unset NODE_NICK_$CLEAN_IP"
-                            echo -e "    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL (Default)$NC"; sleep 1
+                            printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL (Default)$NC"; sleep 1
                         fi
                         node_idx=$((node_idx + 1))
                     done
-                    echo -e "\n$GR[+] Nicknames updated to Locations...$NC"
-                    pause ;;
+                    printf "\n\n$GR[+] Nicknames updated to Locations...$NC\n" ;;
                 3)
-                    echo -e "\n$BL[*] Manual Entry Mode$NC\n"
+                    echo -e "\n$BL[*] Manual Entry Mode$NC"
                     OLD_MAIN="${MAIN_NICK:-$MAIN_ROUTER}"
-                    printf "  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "; read -r manual_main
+                    printf "\n  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "; read -r manual_main
                     if [ -n "$manual_main" ]; then
                         manual_main="${manual_main:0:25}"
                         sed -i '/^MAIN_NICK=/d' "$CONFIG"
@@ -891,14 +877,13 @@ set_nicknames() {
                         fi
                         node_idx=$((node_idx + 1))
                     done
-                    echo -e "\n$GR[+] Manual nicknames saved (max 25 chars).$NC"
-                    pause ;;
+                    printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n" ;;
                 e|E)
                     return ;;
                 *)
                     freeze 2; continue ;;
             esac
-            break
+            pause; break
         done
     done
 }
@@ -1893,7 +1878,7 @@ EOF
 }
 
 parse_node_data() {
-    IFS='|' read -r _ mac rssi iface uptime ssid tx rx max width _ <<ROW
+    IFS='|' read -r _ mac rssi tx rx max ssid iface width uptime _ <<ROW
 $1
 ROW
 }
@@ -1958,7 +1943,7 @@ for line in $SSH_NODES; do
                                     w = w ? w : \"20\"
                                     rxd = (rx_raw == 0) ? \"1\" : sprintf(\"%.0f\", rx_raw)
                                     txd = (tx_raw == 0) ? \"1\" : sprintf(\"%.0f\", tx_raw)
-				                    printf \"DATA|%s|%s|%s|%s|%s|%s|%s|%s|%s|\\n\", mac, rssi, iface, up, sn, txd, rxd, max, w
+				                    printf \"DATA|%s|%s|%s|%s|%s|%s|%s|%s|%s|\\n\", mac, rssi, txd, rxd, max, sn, iface, w, up
                                 }'
                             NODE_COUNT=\$((NODE_COUNT + 1))
                         done
@@ -1973,7 +1958,7 @@ for line in $SSH_NODES; do
 							TX=\$(echo \"\$ROW\" | awk '{print \$5}' | tr -dc '0-9')
 							RX=\$(echo \"\$ROW\" | awk '{print \$6}' | tr -dc '0-9')
 							W=\"20\"; echo \"\$iface\" | grep -q \"ath1\" && W=\"80\"
-							echo \"DATA|\$mac|\$RSSI|\$iface|UP_QCA|\$SN|\$TX|\$RX|\$W|\"
+                            echo \"DATA|\$mac|\$RSSI|\$TX|\$RX|MAX_QCA|\$SN|\$iface|\$W|UP_QCA|\"
 							NODE_COUNT=\$((NODE_COUNT + 1))
 						done
 						;;
@@ -2015,7 +2000,7 @@ for line in $SSH_NODES; do
 								[ -z \"\$c_mac\" ] && continue
 								TX_INT=\$(echo \"\$c_tx\" | cut -d. -f1)
                                 RX_INT=\$(echo \"\$c_rx\" | cut -d. -f1)
-								echo \"DATA|\$c_mac|\$c_rssi|\$iface|\$c_uptime|\$DISPLAY_SSID|\$TX_INT|\$RX_INT|\$c_width|\"
+                                echo \"DATA|\$c_mac|\$c_rssi|\$TX_INT|\$RX_INT|MAX_MTK|\$DISPLAY_SSID|\$iface|\$c_width|\$c_uptime|\"
 								NODE_COUNT=\$((NODE_COUNT + 1))
 							done
 						fi
