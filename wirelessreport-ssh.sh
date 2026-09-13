@@ -2276,6 +2276,8 @@ cat <<HTML >> "$WEB_PAGE"
 	#splitView { display: flex; flex-direction: column; gap: 15px; width: 100%; }
     #allCol { display: none; width: 100% ; align-self: flex-start; }
     .router-style { color: $MAIN_COLOR; font-size: 20px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-bottom: 4px; }
+    @keyframes routerPulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    .router-style.pulse-active { animation: routerPulse 1.5s infinite ease-in-out; }
     .temp-load-row { display: block; font-size: 14px; color: #f2f2f7; margin-top: 11px; font-weight: bold; white-space: nowrap; width: 100%; overflow: visible !important; }
     .temp-load-row > span:not(:last-child) { margin-right: 1px; }
     .uptime-row { text-align: center; justify-content: center; font-size: 14px; }
@@ -2382,6 +2384,28 @@ function initial() {
 var timeLeft = 0; var refreshTimer = null; var isRefreshing = false;
 function triggerRefresh() {
     if (isRefreshing) return; isRefreshing = true;
+    var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
+    if (mainHeaderSpan) {
+        mainHeaderSpan.className = "router-style pulse-active";
+        mainHeaderSpan.innerText = "Loading Main Router Devices...";
+    }
+    var nodeHeaderSpan = document.querySelector('#nodeCol .section-header span');
+    if (nodeHeaderSpan) {
+        nodeHeaderSpan.className = "router-style pulse-active";
+        nodeHeaderSpan.innerText = "Loading Node Devices...";
+    }
+    var allHeaderSpan = document.querySelector('#allCol .section-header span');
+    if (allHeaderSpan) {
+        allHeaderSpan.className = "router-style pulse-active";
+        allHeaderSpan.innerText = "Loading All Devices...";
+    }
+    var tableIds = ['mainTable', 'nodeTable', 'allTable'];
+    tableIds.forEach(function(id) {
+        var table = document.getElementById(id);
+        if (table && table.tBodies[0]) {
+            table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
+        }
+    });
     var btn = document.querySelector('.button-trigger');
     if (btn) {
         btn.innerText = "Refreshing...";
