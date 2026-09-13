@@ -2276,7 +2276,7 @@ cat <<HTML >> "$WEB_PAGE"
     tfoot td > span:not(:last-child) { margin-right: 6px; }
 	#splitView { display: flex; flex-direction: column; gap: 15px; width: 100%; }
     #allCol { display: none; width: 100% ; align-self: flex-start; }
-    .router-style { color: $MAIN_COLOR; font-size: 20px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-bottom: 4px; }
+    .router-style { color: $MAIN_COLOR; font-size: 20px; font-weight: bold; display: inline-block; margin-bottom: 4px; }
     @keyframes routerPulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     .router-style.pulse-active { animation: routerPulse 1.5s infinite ease-in-out; }
     .temp-load-row { display: block; font-size: 14px; color: #f2f2f7; margin-top: 11px; font-weight: bold; white-space: nowrap; width: 100%; overflow: visible !important; }
