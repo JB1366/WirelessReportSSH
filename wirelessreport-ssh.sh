@@ -1184,6 +1184,7 @@ set_options() {
                         if grep -q "INJECT=" "$CONFIG"; then sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
                         else echo 'INJECT="2"' >> "$CONFIG"; fi
                         echo -e "\n$GR[+] Adding INJECT=\"2\" to CONFIG$NC"
+                        INJECT="2"; inject_menu
                     fi
                     if ! grep -q "$REPORT_SCRIPT.*inject2" "$SS_FILE" 2>/dev/null; then
                         if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
