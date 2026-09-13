@@ -2393,7 +2393,7 @@ function triggerRefresh() {
     var nodeHeaderSpan = document.querySelector('#nodeCol .section-header span');
     if (nodeHeaderSpan) {
         nodeHeaderSpan.className = "router-style pulse-active";
-        nodeHeaderSpan.innerText = "Loading Node Devices...";
+        nodeHeaderSpan.innerText = "Loading AiMesh Node Devices...";
     }
     var allHeaderSpan = document.querySelector('#allCol .section-header span');
     if (allHeaderSpan) {
