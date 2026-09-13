@@ -244,7 +244,7 @@ do_install() {
     else
         echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
-    if [ -f "$SSH_KEY" ]; then node_auth
+    if [ -f "$SSH_KEY" ]; then RETRY="1"; node_auth
 	else
 		install="1"
 		printf "$BL[+] Press $WH[Enter]$BL to proceed to SSH Environment Setup$NC\n"
