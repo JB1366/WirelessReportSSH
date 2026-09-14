@@ -2381,9 +2381,8 @@ function triggerRefresh() {
         }
         var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
         timestampSpans.forEach(function(span) {
-            // Check if it's a timestamp span (contains "Updated:")
             if (span.innerText.includes("Updated:")) {
-                span.innerText = "Updated: ---";
+                span.innerText = "Updated: --- ---";
             }
         });
         var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
@@ -2417,6 +2416,10 @@ function triggerRefresh() {
                 if (spans[1]) spans[1].innerText = "Load: --";
                 if (spans[2]) spans[2].innerText = "Devices: 0";
             }
+        });
+        var rssiSpans = document.querySelectorAll('.rssi-quality-bar .rssi-font');
+        rssiSpans.forEach(function(span) {
+            span.innerText = "0";
         });
     }
     var btn = document.querySelector('.button-trigger');
