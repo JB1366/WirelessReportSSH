@@ -1366,11 +1366,11 @@ do_numbered_node() {
     case "$NUMBERED_NODE" in 1) NTOTAL="" ;; *) NTOTAL="<span class='right-arrow'>—›</span> $NODE_TOTALS" ;; esac
 	case "$NUMBERED_NODE" in
         [1-9])
-            ALL_DEVICES="Devices: <span class='stat-cool'>$ALL_DEVICES</span> \
+            ALL_DEVICES="<span class='stat-cool'>$ALL_DEVICES</span> \
             <span class='right-arrow'>—›</span> \
             $MAIN_DEVICE_TOTAL$BULLET$NODE_TOTALS" ;;
         *)
-            ALL_DEVICES="Devices: $MAIN_DEVICE_TOTAL" ;;
+            ALL_DEVICES="$MAIN_DEVICE_TOTAL" ;;
     esac
 	case "$NUMBERED_NODE" in
         4)     TS=13; US=10 ;;
@@ -2375,6 +2375,17 @@ var timeLeft = 0; var refreshTimer = null; var isRefreshing = false;
 function triggerRefresh() {
     if (isRefreshing) return; isRefreshing = true;
     if ("$TABLE_HEADERS" === "1") {
+        var totalCountEl = document.querySelector('.total-count');
+        if (totalCountEl) {
+            totalCountEl.innerHTML = 'Total Wireless Devices: <span class="count-highlight">0</span>';
+        }
+        var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
+        timestampSpans.forEach(function(span) {
+            // Check if it's a timestamp span (contains "Updated:")
+            if (span.innerText.includes("Updated:")) {
+                span.innerText = "Updated: ---";
+            }
+        });
         var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
         if (mainHeaderSpan) {
             mainHeaderSpan.className = "router-style pulse-active";
@@ -2395,6 +2406,16 @@ function triggerRefresh() {
             var table = document.getElementById(id);
             if (table && table.tBodies[0]) {
                 table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
+            }
+        });
+        var columns = ['#mainCol', '#nodeCol', '#allCol'];
+        columns.forEach(function(colId) {
+            var row = document.querySelector(colId + ' .temp-load-row');
+            if (row) {
+                var spans = row.querySelectorAll(':scope > span');
+                if (spans[0]) spans[0].innerText = "Temp: --";
+                if (spans[1]) spans[1].innerText = "Load: --";
+                if (spans[2]) spans[2].innerText = "Devices: 0";
             }
         });
     }
@@ -2840,7 +2861,7 @@ document.addEventListener('mouseout', function(e) {
                                 <div class="temp-load-row" style="$TEMP_STYLE">
                                     <span>Temp: $ALL_TEMP</span>
                                     <span>Load: $ALL_LOAD</span>
-                                    <span>$ALL_DEVICES</span>
+                                    <span>Devices: $ALL_DEVICES</span>
                                 </div>
                             </div>
                             <table id="allTable" class="report_table show-ip">
