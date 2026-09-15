@@ -2404,7 +2404,8 @@ function triggerRefresh() {
         tableIds.forEach(function(id) {
             var table = document.getElementById(id);
             if (table && table.tBodies[0]) {
-                table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
+                table.tBodies[0].innerHTML = '';
+                //table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
             }
         });
         var columns = ['#mainCol', '#nodeCol', '#allCol'];
