@@ -87,10 +87,10 @@ install_menu() {
 		echo -e "  $N3  Set Temp/Date ($DU) ($CT)                     "
 		echo -e "  $N4  Set Device Nicknames                          "
         echo -e "  $N5  Set Device Colors                             "
-        echo -e "  $N6  Set Theme  ($TM_STAT)                         "
+        echo -e "  $N6  Set Theme ($TM_STAT)                          "
 		echo -e "  $N7  Set Options                                   "
-        echo -e "  $N8  Configure RSSI History ($RH_STAT)             "
-		echo -e "  $N9  Configure SSH Options  Key:($KEY)             "
+        echo -e "  $N8  RSSI History Tooltip Config ($RH_STAT)        "
+		echo -e "  $N9  SSH Config/Options  Key:($KEY)                "
 		echo -e "                                                     "
         echo -e "  $LE  Exit                                          "
 		echo -e "                                                     "
@@ -1141,32 +1141,7 @@ set_options() {
                     done
                     pause ;;
                 4)
-                    echo -e "\n$BL IP Column Padding$NC --> ($PD_STAT)\n"
-                    echo -e "  $N1 192.168.50.3     $RD(Disabled)       "
-                    echo -e "  $N2 192.168.50.003   $BL(Last Octet)     "
-                    echo -e "  $N3 192.168.050.003  $GR(Last 2 Octets)  "
-                    echo -e "                                           "
-                    echo -e "  $LE Exit back to Set Options Menu        "
-                    while true; do
-                        selection
-                        case "$choice" in
-                            1) NEW_PAD="0" ;;
-                            2) NEW_PAD="1" ;;
-                            3) NEW_PAD="2" ;;
-                            e|E) break 2 ;;
-                            *) freeze 2; continue ;;
-                        esac
-                        break
-                    done
-                    if grep -q "IPPAD=" "$CONFIG"; then sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
-                    else echo 'IPPAD="'"$NEW_PAD"'"' >> "$CONFIG"; fi
-                    case "$NEW_PAD" in
-                        0) echo -e "\n[+] 192.168.50.3 $RD(Disabled)$NC" ;;
-                        1) echo -e "\n[+] 192.168.50.003 $BL(Last Octet)$NC" ;;
-                        2) echo -e "\n[+] 192.168.050.003 $GR(Last 2 Octets)$NC" ;;
-                    esac
-                    echo -e "\n$YL[!] CONFIG Updated.$NC"
-                    pause ;;
+                    set_ippad ;;
                 5)
                     if grep -q "HOST_COLOR=" "$CONFIG"; then
                         case "$HOST_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
@@ -1215,11 +1190,41 @@ set_options() {
     done
 }
 
+set_ippad() {
+    while true; do
+        show_header
+        echo -e "$BL=================================================="
+        echo -e "$NC IP Column Padding       Current: ($PD_STAT)      "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1 192.168.50.3     $RD(Disabled)                 "
+        echo -e "  $N2 192.168.50.003   $BL(Last Octet)               "
+        echo -e "  $N3 192.168.050.003  $GR(Last 2 Octets)            "
+        echo -e "                                                     "
+        echo -e "  $LE Exit back to Set Options Menu                  "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
+        while true; do
+            selection
+            case "$choice" in
+                1) NEW_PAD="0" ;;
+                2) NEW_PAD="1" ;;
+                3) NEW_PAD="2" ;;
+                e|E) break 2 ;;
+                *) freeze 2; continue ;;
+            esac
+            break
+        done
+        if grep -q "IPPAD=" "$CONFIG"; then sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
+        else echo 'IPPAD="'"$NEW_PAD"'"' >> "$CONFIG"; fi
+    done
+}
+
 set_rssi() {
 	while true; do
 		show_header
 		echo -e "$BL=================================================="
-        echo -e "$NC           RSSI History Configuration             "
+        echo -e "$NC           RSSI History Tooltip Config            "
 		echo -e "$BL=================================================="
 		echo -e "                                                     "
 		echo -e "  $N1 Toggle RSSI History: [$CH]                     "
