@@ -2416,12 +2416,7 @@ function triggerRefresh() {
         if (totalCountEl) {
             totalCountEl.innerHTML = 'Total Wireless Devices: <span class="count-highlight">0</span>';
         }
-        var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
-        timestampSpans.forEach(function(span) {
-            if (span.innerText.includes("Updated:")) {
-                span.innerText = "Updated: --";
-            }
-        });
+
         var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
         if (mainHeaderSpan) {
             mainHeaderSpan.className = "router-style pulse-active";
@@ -2437,14 +2432,14 @@ function triggerRefresh() {
             allHeaderSpan.className = "router-style pulse-active";
             allHeaderSpan.innerText = "Loading All Devices...";
         }
-        var tableIds = ['mainTable', 'nodeTable', 'allTable'];
-        tableIds.forEach(function(id) {
-            var table = document.getElementById(id);
-            if (table && table.tBodies[0]) {
-                table.tBodies[0].innerHTML = '';
-                //table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
+
+        var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
+        timestampSpans.forEach(function(span) {
+            if (span.innerText.includes("Updated:")) {
+                span.innerText = "Updated: --";
             }
         });
+
         var columns = ['#mainCol', '#nodeCol', '#allCol'];
         columns.forEach(function(colId) {
             var row = document.querySelector(colId + ' .temp-load-row');
@@ -2463,6 +2458,16 @@ function triggerRefresh() {
                 }
             });
         });
+
+        var tableIds = ['mainTable', 'nodeTable', 'allTable'];
+        tableIds.forEach(function(id) {
+            var table = document.getElementById(id);
+            if (table && table.tBodies[0]) {
+                table.tBodies[0].innerHTML = '';
+                //table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
+            }
+        });
+
         var rssiSpans = document.querySelectorAll('.rssi-quality-bar .rssi-font');
         rssiSpans.forEach(function(span) {
             span.innerText = "0";
@@ -2929,7 +2934,7 @@ document.addEventListener('mouseout', function(e) {
                                 <tbody>$ALL_ROWS</tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="7" class="allcol-style" style="font-size: ${US}px;">
+                                        <td colspan="7" class="uptime-row allcol-style" style="font-size: ${US}px;">
                                             <span>Uptime: $ALL_UPTIME</span>
                                             <span>Reboot: $ALL_BOOTTIME</span>
                                         </td>
