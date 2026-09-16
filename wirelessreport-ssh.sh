@@ -792,19 +792,16 @@ set_nicknames() {
         MAIN_ROUTER=$(nvram get productid); MAIN_IP=$(nvram get lan_ipaddr)
         MAIN_CLR=$(hex_to_ansi "$MAIN_COLOR")
         echo -e "\n  ${MAIN_CLR}Main $MAIN_IP -> ${MAIN_NICK:-$MAIN_ROUTER}$NC"
-        if [ -n "$SSH_NODES" ] && [ "$SSH_NODES" != " " ]; then
-            VALID_NODES=$(echo "$SSH_NODES" | tr ' ' '\n' | grep '|')
-            get_node_color() { local idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
-            node_idx=1
-            for node in $VALID_NODES; do
-                MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
-                eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
-                HEX_CLR=$(get_node_color "$node_idx")
-                NODE_CLR=$(hex_to_ansi "$HEX_CLR")
-                echo -e "  ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
-                node_idx=$((node_idx + 1))
-            done
-        fi
+        get_node_color() { local idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
+        node_idx=1
+        for node in $SSH_NODES; do
+            MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
+            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
+            HEX_CLR=$(get_node_color "$node_idx")
+            NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+            echo -e "  ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+            node_idx=$((node_idx + 1))
+        done
         echo -e "\n$BL=================================================="
         while true; do
             selection
@@ -815,19 +812,17 @@ set_nicknames() {
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     unset MAIN_NICK
                     printf "\n    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER$NC"; sleep 1
-                    if [ -n "$SSH_NODES" ] && [ "$SSH_NODES" != " " ]; then
-                        node_idx=1
-                        for node in $VALID_NODES; do
-                            MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
-                            eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
-                            sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
-                            eval "unset NODE_NICK_$CLEAN_IP"
-                            HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
-                            NODE_CLR=$(hex_to_ansi "$HEX_CLR")
-                            printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
-                            node_idx=$((node_idx + 1))
-                        done
-                    fi
+                    node_idx=1
+                    for node in $SSH_NODES; do
+                        MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
+                        eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
+                        sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
+                        eval "unset NODE_NICK_$CLEAN_IP"
+                        HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
+                        NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+                        printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
+                        node_idx=$((node_idx + 1))
+                    done
                     printf "\n\n$GR[+] Default hardware models restored.$NC\n" ;;
                 2)
                     echo -e "\n$BL[*] Updating nicknames with Locations...$NC"
@@ -842,7 +837,7 @@ set_nicknames() {
                         printf "\n    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER (Default)$NC"; sleep 1
                     fi
                     node_idx=1
-                    for node in $VALID_NODES; do
+                    for node in $SSH_NODES; do
                         MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
                         NODE_LOC=$(cat /jffs/.sys/cfg_mnt/re.info 2>/dev/null | sed 's/},/}\n/g' | grep "$IP" | sed -n 's/.*"alias":"\([^"]*\)".*/\1/p')
@@ -869,7 +864,7 @@ set_nicknames() {
                         echo "MAIN_NICK=\"$manual_main\"" >> "$CONFIG"
                     fi
                     node_idx=1
-                    for node in $VALID_NODES; do
+                    for node in $SSH_NODES; do
                         MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
