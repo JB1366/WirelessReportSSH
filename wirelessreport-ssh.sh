@@ -2419,7 +2419,7 @@ function triggerRefresh() {
         var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
         timestampSpans.forEach(function(span) {
             if (span.innerText.includes("Updated:")) {
-                span.innerText = "Updated: --- ---";
+                span.innerText = "Updated: --";
             }
         });
         var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
