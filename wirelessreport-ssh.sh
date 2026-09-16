@@ -89,7 +89,7 @@ install_menu() {
         echo -e "  $N5  Set Device Colors                             "
         echo -e "  $N6  Set Theme ($TM_STAT)                          "
 		echo -e "  $N7  Set Options                                   "
-        echo -e "  $N8  RSSI History Tooltip Config ($RH_STAT)        "
+        echo -e "  $N8  Config RSSI Tooltip History ($RH_STAT)        "
 		echo -e "  $N9  SSH Config/Options  Key:($KEY)                "
 		echo -e "                                                     "
         echo -e "  $LE  Exit                                          "
@@ -214,6 +214,7 @@ menu_vars() {
 	IPPAD=${IPPAD:-1}; case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets$NC" ;; 1) PD_STAT="${BL}Last Octet$NC" ;; *) PD_STAT="${RD}Disabled$NC" ;; esac
 	HOST_COLOR=${HOST_COLOR:-0}; case "$HOST_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
     TABLE_HEADERS=${TABLE_HEADERS:-1}; case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
+    BN="[$GR$BRANCH_NAME$NC]"
 }
 
 do_install() {
@@ -367,8 +368,11 @@ wr_sha256() {
 }
 
 check_github() {
-    case "$BRANCH" in 1) BRANCH_NAME="Development"; DEV="D" ;; *) BRANCH_NAME="main"; DEV="" ;; esac
-    GITHUB="https://raw.githubusercontent.com/JB1366/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
+    case "$BRANCH" in
+        1) GIT="JB1366"; BRANCH_NAME="Development"; DEV="D" ;;
+        *) GIT="JB1366"; BRANCH_NAME="main"; DEV="" ;;
+    esac
+    GITHUB="https://raw.githubusercontent.com/$GIT/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
         REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
@@ -1153,17 +1157,8 @@ set_options() {
                         sed -i "s/TABLE_HEADERS=.*/TABLE_HEADERS=\"$NEW_TH\"/" "$CONFIG"
                     else echo 'TABLE_HEADERS="0"' >> "$CONFIG"; fi ;;
                 dev)
-                    while true; do
-                        printf "\n$NC Current Branch: [$GR$BRANCH_NAME$NC] Swap Branch (y/n): "; read -r toggle
-                        case "$toggle" in y|Y) break ;; n|N) return 2 ;; *) freeze 2 ;; esac; done
-                    BRANCH="0"; break # remove if Develpoment exsists
-                    case "${BRANCH:-0}" in 1) BRANCH="0" ;; *) BRANCH="1" ;; esac
-                    if grep -q "^BRANCH=" "$CONFIG"; then sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
-                    else echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"; fi
-                    check_github
-                    printf "\nPress $BL[Enter]$NC to switch to [$GR$BRANCH_NAME$NC] branch & restart script..."; read -r restart
-                    if do_update; then exec "$REPORT_SCRIPT" install "$@"
-                    else echo -e "$RD[!]Error: Branch update failed!$NC" >&2; exit 1; fi ;;
+                    freeze 2; continue ;;
+                    # set_branch ;;
                 inject)
                     if grep -q 'INJECT="2"' "$CONFIG"; then
                         echo -e "\n$YL[+] INJECT=\"2\" already exists in CONFIG$NC"
@@ -1220,11 +1215,45 @@ set_ippad() {
     done
 }
 
+set_branch() {
+    while true; do
+        show_header
+        echo -e "$BL=================================================="
+        echo -e "$NC                Set Github Branch                 "
+        echo -e "$BL=================================================="
+        echo -e "$NC  Branch: $BN               v$SCRIPT_VERSION$DEV  "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1 main (JB1366)                                  "
+        echo -e "  $N2 Development (JB1366)                           "
+        echo -e "                                                     "
+        echo -e "  $LE Exit back to Set Options Menu                  "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
+        while true; do
+            selection
+            case "$choice" in
+                1) BRANCH="0" ;;
+                2) BRANCH="1" ;;
+                e|E) return 0 ;;
+                *) freeze 2; continue ;;
+            esac
+            break
+        done
+        if grep -q "^BRANCH=" "$CONFIG"; then sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
+        else echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"; fi
+        check_github; BN="[$GR$BRANCH_NAME$NC]"
+        printf "$NC\nPress $BL[Enter]$NC to switch to $BN branch & restart script..."; read -r restart
+        if do_update; then exec "$REPORT_SCRIPT" install "$@"
+        else echo -e "$RD[!]Error: Branch update failed!$NC" >&2; exit 1; fi
+    done
+}
+
 set_rssi() {
 	while true; do
 		show_header
 		echo -e "$BL=================================================="
-        echo -e "$NC           RSSI History Tooltip Config            "
+        echo -e "$NC         Config RSSI Tooltip History              "
 		echo -e "$BL=================================================="
 		echo -e "                                                     "
 		echo -e "  $N1 Toggle RSSI History: [$CH]                     "
@@ -1396,8 +1425,6 @@ do_numbered_node() {
         [5-9]) TS=10; US=8 ;;
         *)     TS=14; US=12 ;;
     esac
-    TEMP_STYLE="text-align: center; justify-content: flex-start; font-size: ${TS}px;"
-    UPTIME_STYLE="text-align: center; justify-content: flex-start; font-size: ${US}px;"
 }
 
 hasta() {
@@ -1830,10 +1857,10 @@ get_row() {
 			<span class='mac-val' data-sort='$mac'>$mac</span>
 			<span class='ip-val' data-sort='$ip_sort'>$ip</span>
 		</td>
-		<td data-sort='$rssi' class='rssi-container'>
+		<td class='rssi-container' data-sort='$rssi'>
 			$bars <span style='$rssi_style'>$rssi</span> $trend
 		</td>
-		<td data-sort='$lrd_val' style='$rssi_style; text-align:center;'>$lrd</td>
+		<td style='$rssi_style;' data-sort='$lrd_val'>$lrd</td>
 		<td>
 			<span class='ssid-val' data-sort='$ssid'>$ssid</span>
 			<span class='iface-val' data-sort='$iface'>$iface</span>
@@ -1841,13 +1868,6 @@ get_row() {
 		$band
 		<td>$uptime</td>
 	</tr>"
-}
-
-get_rssi_boxes() {
-    RSSI_BOXES="<div class='rssi-quality-box rssi-excl'>Excellent: <span style='background:#30d158;' class='rssi-font'>$T_EXCL</span></div>
-    <div class='rssi-quality-box rssi-good'>Good: <span style='background:#64d2ff;' class='rssi-font'>$T_GOOD</span></div>
-    <div class='rssi-quality-box rssi-fair'>Fair: <span style='background:#ffd60a;' class='rssi-font'>$T_FAIR</span></div>
-    <div class='rssi-quality-box rssi-poor'>Poor: <span style='background:#ff453a;' class='rssi-font'>$T_POOR</span></div>"
 }
 
 router_uptime() {
@@ -1866,8 +1886,8 @@ $({ wl -i "$iface" sta_info "$mac" 2>/dev/null || wl -i "$alt_iface" sta_info "$
     /rate of last rx pkt/ { rx = int($6 / 1000) }
     /rate of last tx pkt/ { split($0, a, ": "); split(a[2], b, " "); tx = int(b[1] / 1000) }
     /Max Rate =/          { max = $4 }
-    /in network/          { for(i=1;i<=NF;i++) if($i=="network") uptime=$(i+1) }
     /link bandwidth/      { for(i=1;i<=NF;i++) if($i=="bandwidth") { w=($(i+1)=="="?$(i+2):$(i+1)); gsub(/[^0-9]/,"",w); width=w } }
+    /in network/          { for(i=1;i<=NF;i++) if($i=="network") uptime=$(i+1) }
     END                   { if (rssi != "") print rssi, (rx?rx:0), (tx?tx:0), (max?max:0), (width?width:"-"), (uptime?uptime:0) }
 ')
 EOF
@@ -1877,9 +1897,9 @@ parse_node_out() {
     N_TEMP_RAW="" N_LOAD="" N_UPTIME_RAW="" N_UPTIME=""
     while IFS='|' read -r key val; do
         case "$key" in
-            "TEMP")       N_TEMP_RAW=$val ;;
-            "LOAD")       N_LOAD=$val ;;
-            "UPTIME")     N_UPTIME_RAW=$val ;;
+            "TEMP")   N_TEMP_RAW=$val ;;
+            "LOAD")   N_LOAD=$val ;;
+            "UPTIME") N_UPTIME_RAW=$val ;;
         esac
     done <<EOF
 $1
@@ -1943,11 +1963,11 @@ for line in $SSH_NODES; do
                             RAW=\$(wl -i \"\$iface\" sta_info \"\$mac\" 2>/dev/null)
                             echo \"\$RAW\" | awk -v mac=\"\$mac\" -v iface=\"\$iface\" -v sn=\"\$SN\" '
                                 /smoothed rssi:/ { split(\$0, a, \": \"); rssi = a[2] }
+                                /rate of last tx pkt/ { split(\$0, a, \": \"); tx_raw = a[2] / 1000 }
+                                /rate of last rx pkt/ { rx_raw = \$6 / 1000 }
+                                /Max Rate =/ { max = \$4 }
                                 /bandwidth/ && !w { gsub(/[^0-9]/, \"\", \$0); if (\$0 != \"\") w = \$0 }
                                 /in network/ { up = \$3 }
-                                /rate of last rx pkt/ { rx_raw = \$6 / 1000 }
-                                /rate of last tx pkt/ { split(\$0, a, \": \"); tx_raw = a[2] / 1000 }
-                                /Max Rate =/ { max = \$4 }
                                 END {
                                     w = w ? w : \"20\"
                                     rxd = (rx_raw == 0) ? \"1\" : sprintf(\"%.0f\", rx_raw)
@@ -2049,7 +2069,8 @@ M_BOOT=$(date -d @$M_TIME "$D_FMT")
 MAIN_PFX=$(nvram get lan_hwaddr | cut -c 4-14 | tr '[:lower:]' '[:upper:]')
 NODE_PFX=$(nvram get cfg_relist | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' | cut -c 4-14 | sort -u | tr '[:lower:]' '[:upper:]')
 ROUTER=$(nvram get productid)
-MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"; if [ "${#MAIN_NAME}" -gt 25 ]; then MAIN_NAME="${MAIN_NAME:0:25}"; fi
+MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
+if [ "${#MAIN_NAME}" -gt 25 ]; then MAIN_NAME="${MAIN_NAME:0:25}"; fi
 case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
 > "$SEEN_MACS"; > "$NEW_HISTORY"
 SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
@@ -2127,7 +2148,8 @@ for line in $SSH_NODES; do
 	ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	eval CUSTOM_NICK=\$NODE_NICK_$CLEAN_IP
-	NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"; if [ "${#NODE_NAME}" -gt 25 ]; then NODE_NAME="${NODE_NAME:0:25}"; fi
+	NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"
+    if [ "${#NODE_NAME}" -gt 25 ]; then NODE_NAME="${NODE_NAME:0:25}"; fi
 	if [ -f "$NODE_DATA_DIR/${CLEAN_IP}.out" ]; then NODE_OUT=$(cat "$NODE_DATA_DIR/${CLEAN_IP}.out"); fi
 	if [ -n "$NODE_OUT" ]; then
         NUMBERED_NODE=$((NUMBERED_NODE + 1))
@@ -2185,8 +2207,8 @@ ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
-get_rssi_boxes; do_numbered_node; get_theme
-check_version header_box; do_runtime
+do_numbered_node; get_theme; do_runtime
+check_version header_box
 JS_DIFF="${DIFF:-5.00}"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 
@@ -2290,6 +2312,7 @@ cat <<HTML >> "$WEB_PAGE"
     .temp-load-row { display: block; font-size: 14px; color: #f2f2f7; margin-top: 11px; font-weight: bold; white-space: nowrap; width: 100%; overflow: visible !important; }
     .temp-load-row > span:not(:last-child) { margin-right: 1px; }
     .uptime-row { text-align: center; justify-content: center; font-size: 14px; }
+    .allcol-style { text-align: center; justify-content: flex-start; }
 	.stat-cool { color: #0096ff !important; font-weight: bold; }
     .stat-warm { color: #ffa500 !important; font-weight: bold; }
 	.stat-hot { color: #ff453a !important; font-weight: bold; }
@@ -2841,7 +2864,10 @@ document.addEventListener('mouseout', function(e) {
                                 </table>
                             </div>
                             <div class="rssi-quality-bar">
-                                <span>$RSSI_BOXES</span>
+                                <div class='rssi-quality-box rssi-excl'>Excellent: <span style='background:#30d158;' class='rssi-font'>$T_EXCL</span></div>
+                                <div class='rssi-quality-box rssi-good'>Good: <span style='background:#64d2ff;' class='rssi-font'>$T_GOOD</span></div>
+                                <div class='rssi-quality-box rssi-fair'>Fair: <span style='background:#ffd60a;' class='rssi-font'>$T_FAIR</span></div>
+                                <div class='rssi-quality-box rssi-poor'>Poor: <span style='background:#ff453a;' class='rssi-font'>$T_POOR</span></div>
                             </div>
                             <div id="nodeCol" class="report-column" style="$ROUTER_ONLY">
                                 <div class="section-header">
@@ -2881,7 +2907,7 @@ document.addEventListener('mouseout', function(e) {
                                 <span>$ALL_NAMES</span><br>
                                 <span>Updated: $CUR_TIME</span>
                                 <hr class="separator-line">
-                                <div class="temp-load-row" style="$TEMP_STYLE">
+                                <div class="temp-load-row allcol-style" style="font-size: ${TS}px;">
                                     <span>Temp: $ALL_TEMP</span>
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
@@ -2900,7 +2926,7 @@ document.addEventListener('mouseout', function(e) {
                                 <tbody>$ALL_ROWS</tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="7" style="$UPTIME_STYLE">
+                                        <td colspan="7" class="allcol-style" style="font-size: ${US}px;">
                                             <span>Uptime: $ALL_UPTIME</span>
                                             <span>Reboot: $ALL_BOOTTIME</span>
                                         </td>
@@ -2909,7 +2935,10 @@ document.addEventListener('mouseout', function(e) {
                             </table>
                         </div>
                         <div id="allDevicesQualityBar" class="rssi-quality-bar" style="$ROUTER_ONLY">
-                            <span>$RSSI_BOXES</span>
+                            <div class='rssi-quality-box rssi-excl'>Excellent: <span style='background:#30d158;' class='rssi-font'>$T_EXCL</span></div>
+                            <div class='rssi-quality-box rssi-good'>Good: <span style='background:#64d2ff;' class='rssi-font'>$T_GOOD</span></div>
+                            <div class='rssi-quality-box rssi-fair'>Fair: <span style='background:#ffd60a;' class='rssi-font'>$T_FAIR</span></div>
+                            <div class='rssi-quality-box rssi-poor'>Poor: <span style='background:#ff453a;' class='rssi-font'>$T_POOR</span></div>
                         </div>
                     </div>
                 </div>
