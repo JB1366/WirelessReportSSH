@@ -2454,6 +2454,14 @@ function triggerRefresh() {
                 if (spans[1]) spans[1].innerText = "Load: --";
                 if (spans[2]) spans[2].innerText = "Devices: 0";
             }
+            var footerSpans = document.querySelectorAll(colId + ' tfoot span');
+            footerSpans.forEach(function(span) {
+                if (span.textContent.trim().startsWith("Uptime")) {
+                    span.innerText = "Uptime: --";
+                } else if (span.textContent.trim().startsWith("Reboot")) {
+                    span.innerText = "Reboot: --";
+                }
+            });
         });
         var rssiSpans = document.querySelectorAll('.rssi-quality-bar .rssi-font');
         rssiSpans.forEach(function(span) {
