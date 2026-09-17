@@ -2368,14 +2368,17 @@ cat <<HTML >> "$WEB_PAGE"
 <script>
 function initial() {
     show_menu();
+
     var savedView = localStorage.getItem('ssh_wifiReportView') || 'split';
     switchTab(savedView);
     if (localStorage.getItem('ssh_wifiReportPopoutOpen') === 'true') {
         openPopout();
     }
+
     var savedRate = localStorage.getItem('ssh_wifiReportAutoRefresh') || "0";
     document.getElementById('refresh-option').value = savedRate;
     initAutoRefresh(parseInt(savedRate));
+
     var ids = ['allTable', 'mainTable', 'nodeTable', 'popMainTable', 'popNodeTable'];
     ids.forEach(function(id) {
         var tableObj = document.getElementById(id);
@@ -2420,6 +2423,7 @@ function initial() {
 var timeLeft = 0; var refreshTimer = null; var isRefreshing = false;
 function triggerRefresh() {
     if (isRefreshing) return; isRefreshing = true;
+
     if ("$TABLE_HEADERS" === "1") {
         var totalCountEl = document.querySelector('.total-count');
         if (totalCountEl) {
@@ -2431,11 +2435,13 @@ function triggerRefresh() {
             mainHeaderSpan.className = "router-style pulse-active";
             mainHeaderSpan.innerText = "Loading Main Router Devices...";
         }
+
         var nodeHeaderSpan = document.querySelector('#nodeCol .section-header span');
         if (nodeHeaderSpan) {
             nodeHeaderSpan.className = "router-style pulse-active";
             nodeHeaderSpan.innerText = "Loading AiMesh Node Devices...";
         }
+
         var allHeaderSpan = document.querySelector('#allCol .section-header span');
         if (allHeaderSpan) {
             allHeaderSpan.className = "router-style pulse-active";
@@ -2482,17 +2488,20 @@ function triggerRefresh() {
             span.innerText = "0";
         });
     }
+
     var btn = document.querySelector('.button-trigger');
     if (btn) {
         btn.innerText = "Refreshing...";
         btn.classList.add('refresh-pulse');
     }
+
     var expires = new Date(Date.now() + 30000).toUTCString();
     document.cookie = "report_done=true; expires=" + expires + "; path=/";
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_wireless_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     });
+
     var scanTime = parseFloat("$JS_DIFF") || 5.0;
     var delay = Math.max(2500, Math.ceil((scanTime * 1000) + 1500));
     setTimeout(function() { window.location.reload(); }, delay);
@@ -2768,37 +2777,28 @@ document.addEventListener('contextmenu', function(e) {
     }
 });
 
-document.addEventListener('mouseover', function(e) {
-    const container = e.target.closest('.rssi-container');
-    if (container) {
+['mouseover', 'mousemove', 'mouseout'].forEach(eventType => {
+    document.addEventListener(eventType, function(e) {
+        const container = e.target.closest('.rssi-container');
+        if (!container) return;
         const tooltip = container.querySelector('.rssi-tooltip');
-        if (tooltip) {
-            tooltip.style.visibility = 'visible';
-            tooltip.style.opacity = '1';
-        }
-    }
-});
+        if (!tooltip) return;
 
-document.addEventListener('mousemove', function(e) {
-    const container = e.target.closest('.rssi-container');
-    if (container) {
-        const tooltip = container.querySelector('.rssi-tooltip');
-        if (tooltip) {
-            tooltip.style.left = (e.clientX + 15) + 'px';
-            tooltip.style.top = (e.clientY - tooltip.offsetHeight - 15) + 'px';
+        switch (e.type) {
+            case 'mouseover':
+                tooltip.style.visibility = 'visible';
+                tooltip.style.opacity = '1';
+                break;
+            case 'mousemove':
+                tooltip.style.left = (e.clientX + 15) + 'px';
+                tooltip.style.top = (e.clientY - tooltip.offsetHeight - 15) + 'px';
+                break;
+            case 'mouseout':
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.opacity = '0';
+                break;
         }
-    }
-});
-
-document.addEventListener('mouseout', function(e) {
-    const container = e.target.closest('.rssi-container');
-    if (container) {
-        const tooltip = container.querySelector('.rssi-tooltip');
-        if (tooltip) {
-            tooltip.style.visibility = 'hidden';
-            tooltip.style.opacity = '0';
-        }
-    }
+    });
 });
 </script>
 </head>
