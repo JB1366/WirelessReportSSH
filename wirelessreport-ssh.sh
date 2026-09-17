@@ -475,11 +475,12 @@ node_auth() {
     if [ "$INSTALL" = "1" ] || [ -z "$SSH_NODES" ] || [ "$SSH_NODES" = " " ]; then node_choice="2"; EMPTY_NODES="1"
     elif [ "$RETRY" = "1" ]; then node_choice="2"; RETRY="0"
     else
-        echo -e "$BL Node Source Selection: \n"
-        echo -e "  $N1$NC Scan saved node(s) from CONFIG"
+        echo -e "$BL Node Source Selection:               "
+        echo -e "                                         "
+        echo -e "  $N1$NC Scan saved node(s) from CONFIG  "
         echo -e "  $N2 Rescan NVRAM (Check for IP changes)"
-        echo -e ""
-        echo -e "  $LE Exit back to SSH menu"
+        echo -e "                                         "
+        echo -e "  $LE Exit back to SSH menu              "
         while true; do
             printf "\n$NC Selection: "; read -r node_choice
             case "$node_choice" in 1) break ;; 2) break ;; e|E) return ;; *) freeze 2 ;; esac; done
@@ -949,11 +950,12 @@ set_colors() {
                 "$idx" "$display_color" "$node_display_name" "$formatted_ip"
             idx=$((idx + 1))
         done
-        echo -e "                                                      "
-        echo -e "  $LR Restore Default Colors                          "
-        echo -e "  $LC Cancel and Discard Changes                      "
-        echo -e "  $LE Exit and Save Changes                           "
-        echo -e "\n$BL==============================================$NC"
+        echo -e "                                                        "
+        echo -e "  $LR Restore Default Colors                            "
+        echo -e "  $LC Cancel and Discard Changes                        "
+        echo -e "  $LE Exit and Save Changes                             "
+        echo -e "                                                        "
+        echo -e "$BL==================================================$NC"
         while true; do
             printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
             case "$node_choice" in
@@ -1187,9 +1189,9 @@ set_ippad() {
         echo -e "$NC IP Column Padding       Current: ($PD_STAT)      "
         echo -e "$BL=================================================="
         echo -e "                                                     "
-        echo -e "  $N1 192.168.50.3     $RD(Disabled)                 "
-        echo -e "  $N2 192.168.50.003   $BL(Last Octet)               "
-        echo -e "  $N3 192.168.050.003  $GR(Last 2 Octets)            "
+        echo -e "  $N1 192.168.50.3     (${RD}Disabled$NC)            "
+        echo -e "  $N2 192.168.50.003   (${BL}Last Octet$NC)          "
+        echo -e "  $N3 192.168.050.003  (${GR}Last 2 Octets$NC)       "
         echo -e "                                                     "
         echo -e "  $LE Exit back to Set Options Menu                  "
         echo -e "                                                     "
@@ -2834,7 +2836,7 @@ document.addEventListener('mouseout', function(e) {
                             <button id="btnMain" class="button-tables active" onclick="switchTab('split')" style="$ROUTER_ONLY">Main</button>
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" style="$ROUTER_ONLY">All Devices</button>
                             <button class="button-tables" onclick="openPopout()" style="$ROUTER_ONLY">Side by Side ◫</button>
-                            <button id="btnWide" class="button-tables" onclick="toggleWideView()" style="$ROUTER_ONLY">Wide View ⛶</button>
+                            <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
                         </div>
                     </div>
                     <div class="grid-container">
@@ -2850,7 +2852,7 @@ document.addEventListener('mouseout', function(e) {
                                         <span>Devices: $MAIN_DEVICE_TOTAL</span>
                                     </div>
                                 </div>
-                                <table id="mainTable" class="report_table show-ip">
+                                <table id="mainTable" class="report_table">
                                     <thead><tr>
                                         <th onclick="sortTable(0, 'mainTable')">HOSTNAME</th>
                                         <th onclick="toggleCols('mainTable', 'show-ip', this, 'MAC ADDRESS', 'IP ADDRESS')">IP ADDRESS</th>
@@ -2888,7 +2890,7 @@ document.addEventListener('mouseout', function(e) {
                                         <span>Devices: $NODE_DEVICE_TOTAL $NTOTAL</span>
                                     </div>
                                 </div>
-                                <table id="nodeTable" class="report_table show-ip">
+                                <table id="nodeTable" class="report_table">
                                     <thead><tr>
                                         <th onclick="sortTable(0, 'nodeTable')">HOSTNAME</th>
                                         <th onclick="toggleCols('nodeTable', 'show-ip', this, 'MAC ADDRESS', 'IP ADDRESS')">IP ADDRESS</th>
@@ -2921,7 +2923,7 @@ document.addEventListener('mouseout', function(e) {
                                     <span>Devices: $ALL_DEVICES</span>
                                 </div>
                             </div>
-                            <table id="allTable" class="report_table show-ip">
+                            <table id="allTable" class="report_table">
                                 <thead><tr>
                                     <th onclick="sortTable(0, 'allTable')">HOSTNAME</th>
                                     <th onclick="toggleCols('allTable', 'show-ip', this, 'MAC ADDRESS', 'IP ADDRESS')">IP ADDRESS</th>
