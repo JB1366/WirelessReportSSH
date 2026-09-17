@@ -475,12 +475,16 @@ node_auth() {
     if [ "$INSTALL" = "1" ] || [ -z "$SSH_NODES" ] || [ "$SSH_NODES" = " " ]; then node_choice="2"; EMPTY_NODES="1"
     elif [ "$RETRY" = "1" ]; then node_choice="2"; RETRY="0"
     else
-        echo -e "$BL Node Source Selection:               "
-        echo -e "                                         "
-        echo -e "  $N1$NC Scan saved node(s) from CONFIG  "
-        echo -e "  $N2 Rescan NVRAM (Check for IP changes)"
-        echo -e "                                         "
-        echo -e "  $LE Exit back to SSH menu              "
+        echo -e "$BL=================================================="
+        echo -e "$NC             Node Source Selection                "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1$NC Scan saved node(s) from CONFIG              "
+        echo -e "  $N2 Rescan NVRAM (Check for IP changes)            "
+        echo -e "                                                     "
+        echo -e "  $LE Exit back to SSH menu                          "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
         while true; do
             printf "\n$NC Selection: "; read -r node_choice
             case "$node_choice" in 1) break ;; 2) break ;; e|E) return ;; *) freeze 2 ;; esac; done
@@ -929,7 +933,9 @@ set_colors() {
         echo -e "$BL=================================================="
         echo -e "$NC                Set Device Colors                 "
         echo -e "$BL=================================================="
-        echo -e "$NC\n Current Device Configuration:\n"
+        echo -e "                                                     "
+        echo -e "$NC  Current Device Configuration:                   "
+        echo -e "                                                     "
         local main_display_name="${MAIN_NICK:-$main_name}"
         local main_display_color=$(hex_to_ansi "$m_color_hex")
         local formatted_main_ip=$(printf "(%s)" "$main_ip")
@@ -950,12 +956,12 @@ set_colors() {
                 "$idx" "$display_color" "$node_display_name" "$formatted_ip"
             idx=$((idx + 1))
         done
-        echo -e "                                                        "
-        echo -e "  $LR Restore Default Colors                            "
-        echo -e "  $LC Cancel and Discard Changes                        "
-        echo -e "  $LE Exit and Save Changes                             "
-        echo -e "                                                        "
-        echo -e "$BL==================================================$NC"
+        echo -e "                                                     "
+        echo -e "  $LR Restore Default Colors                         "
+        echo -e "  $LC Cancel and Discard Changes                     "
+        echo -e "  $LE Exit and Save Changes                          "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
         while true; do
             printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
             case "$node_choice" in
@@ -989,20 +995,21 @@ set_colors() {
                 target_name="${target_name:-$(echo "$target_node" | cut -d'|' -f1)}"
                 target_hex=$(echo "$working_colors" | awk -v col="$node_choice" '{print $col}')
             fi
-            hex_to_ansi; local target_prompt_color=$(hex_to_ansi "$target_hex")
-            echo -e "\n$NC Select a new color for ${target_prompt_color}[${target_name}]$NC:\n"
-            echo -e "$NB  (1) Neon-Blue (#0096ff)"
-            echo -e "$LG  (2) Lime-Green (#30d158)"
+            hex_to_ansi; local selected_hex=""
+            local target_prompt_color=$(hex_to_ansi "$target_hex")
+            echo -e "$NC Select a new color for ${target_prompt_color}[${target_name}]:"
+            echo -e "                                "
+            echo -e "$NB  (1) Neon-Blue (#0096ff)    "
+            echo -e "$LG  (2) Lime-Green (#30d158)   "
             echo -e "$MP  (3) Medium-Purple (#bf40bf)"
-            echo -e "$YW  (4) Yellow (#ffd60a)"
-            echo -e "$SB  (5) SkyBlue (#64d2ff)"
-            echo -e "$OR  (6) Orange (#ff9500)"
-            echo -e "$RD  (7) Red (#ff453a)"
-            echo -e "$WT  (8) White (#ffffff)"
-            echo -e "$PK  (9) Light-Pink (#ff70a6)"
-            echo -e "$MT (10) Mint-Green (#64ffda)"
-            echo -e ""
-            local selected_hex=""
+            echo -e "$YW  (4) Yellow (#ffd60a)       "
+            echo -e "$SB  (5) SkyBlue (#64d2ff)      "
+            echo -e "$OR  (6) Orange (#ff9500)       "
+            echo -e "$RD  (7) Red (#ff453a)          "
+            echo -e "$WT  (8) White (#ffffff)        "
+            echo -e "$PK  (9) Light-Pink (#ff70a6)   "
+            echo -e "$MT (10) Mint-Green (#64ffda)   "
+            echo -e "                                "
             while true; do
                 printf "$NC Choose option $BL(1-10): $NC"; read -r color_choice
                 case "$color_choice" in
