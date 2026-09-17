@@ -1923,8 +1923,11 @@ run_report() {
 #  Node Scan(s)   #
 #=================#
 read -r START_RUNTIME _ < /proc/uptime
+
 NODE_DATA_DIR="/tmp/node_data"
-rm -rf "$NODE_DATA_DIR" 2>/dev/null; mkdir -p "$NODE_DATA_DIR"
+rm -rf "$NODE_DATA_DIR" 2>/dev/null
+mkdir -p "$NODE_DATA_DIR"
+
 for line in $SSH_NODES; do
 	ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
     case "$IP" in ""|"$ROUTER") continue ;; esac
@@ -2052,6 +2055,10 @@ done
 #=============================#
 IPPAD=${IPPAD:-1}; HOST_COLOR=${HOST_COLOR:-0}; TABLE_HEADERS=${TABLE_HEADERS:-1}
 YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
+SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
+T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0; MAIN_DEVICE_TOTAL=0
+> "$SEEN_MACS"; > "$NEW_HISTORY"
+
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
 if [ -f "$KNOWN_DB" ]; then cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null; else > "$KNOWN_CACHE"; fi
 if [ -f "$HISTORY_DB" ]; then cp "$HISTORY_DB" "$HISTORY_CACHE" 2>/dev/null; else > "$HISTORY_CACHE"; fi
@@ -2061,6 +2068,15 @@ nvram get dhcp_staticlist | sed 's/>>/  /g; s/[<>]/ /g' | \
 awk '{print toupper($1)"|"$2}' > "$DHCPSTATIC_CACHE" 2>/dev/null || > "$DHCPSTATIC_CACHE"
 nvram get asus_device_list | sed 's/</\n/g' > "$DEVICE_LIST_CACHE" 2>/dev/null || > "$DEVICE_LIST_CACHE"
 nvram get custom_clientlist | sed 's/</\n/g' | awk -F'>' '{if($2!="") print toupper($2)"|"$1}' > "$CUSTOM_CLIENTS_CACHE" 2>/dev/null || > "$CUSTOM_CLIENTS_CACHE"
+
+MAIN_PFX=$(nvram get lan_hwaddr | cut -c 4-14 | tr '[:lower:]' '[:upper:]')
+NODE_PFX=$(nvram get cfg_relist | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' | cut -c 4-14 | sort -u | tr '[:lower:]' '[:upper:]')
+
+ROUTER=$(nvram get productid)
+MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
+if [ "${#MAIN_NAME}" -gt 25 ]; then MAIN_NAME="${MAIN_NAME:0:25}"; fi
+case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
+
 read -r M_LOAD _ < /proc/loadavg
 MC_LOAD=$(get_load_class "$M_LOAD")
 read -r M_T < /sys/class/thermal/thermal_zone0/temp 2>/dev/null
@@ -2070,15 +2086,7 @@ read -r s _ < /proc/uptime; s=${s%.*}
 M_UPTIME=$(router_uptime "$s")
 M_TIME=$(( $(date +%s) - s ))
 M_BOOT=$(date -d @$M_TIME "$D_FMT")
-MAIN_PFX=$(nvram get lan_hwaddr | cut -c 4-14 | tr '[:lower:]' '[:upper:]')
-NODE_PFX=$(nvram get cfg_relist | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' | cut -c 4-14 | sort -u | tr '[:lower:]' '[:upper:]')
-ROUTER=$(nvram get productid)
-MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
-if [ "${#MAIN_NAME}" -gt 25 ]; then MAIN_NAME="${MAIN_NAME:0:25}"; fi
-case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
-> "$SEEN_MACS"; > "$NEW_HISTORY"
-SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
-T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0; MAIN_DEVICE_TOTAL=0; NODE_DEVICE_TOTAL=0
+
 WL_BASES=$(nvram get wl_ifnames); set -- $WL_BASES
 WL0_PHYS=$1; WL1_PHYS=$2; WL2_PHYS=$3; WL3_PHYS=$4
 RAW_IFACES=$(printf "%s\n" $WL_BASES $(ifconfig -a | grep -oE "wl[0-9]+\.[0-9]+") | sort -u)
@@ -2089,6 +2097,7 @@ for iface in $RAW_IFACES; do
     fi
 done
 IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
+
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
 	case "$iface" in
@@ -2098,6 +2107,7 @@ for iface in $IFACE_LIST; do
 		${WL3_PHYS:+"$WL3_PHYS"*}) data_iface="wl3" ;;
 		*) data_iface="$iface" ;;
 	esac
+
     MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null); MAC_LIST=${MAC_LIST//assoclist /}
 	if [ -z "$MAC_LIST" ]; then
 		BRIDGE=$(brctl show 2>/dev/null | grep "$iface" | awk '{print $1}')
@@ -2105,6 +2115,7 @@ for iface in $IFACE_LIST; do
 		if [ -n "$BRIDGE" ]; then MAC_LIST=$(brctl showmacs "$BRIDGE" 2>/dev/null | grep -v "yes" | awk '{print $2}'); fi
 	fi
     case "$MAC_LIST" in "") continue ;; esac
+
     ssid=$(nvram get "${iface}_ssid")
 	if [ -z "$ssid" ] || [ "${#ssid}" -ge 16 ]; then
         idx=${iface#*.}
@@ -2113,6 +2124,7 @@ for iface in $IFACE_LIST; do
 	if [ -z "$ssid" ] && [ -n "$data_iface" ]; then ssid=$(nvram get "${data_iface}_ssid"); fi
 	if [ -z "$ssid" ]; then ssid=$(nvram get "${iface%.*}_ssid"); fi
 	if [ -z "$ssid" ] && [ -n "$data_iface" ]; then ssid=$(nvram get "${data_iface%.*}_ssid"); fi
+
 	for mac in $MAC_LIST; do
 		case "$mac" in ""|"mac") continue ;; esac
 		get_mac_address || continue
@@ -2132,6 +2144,7 @@ for iface in $IFACE_LIST; do
 		MAIN_DEVICE_TOTAL=$((MAIN_DEVICE_TOTAL + 1))
 	done
 done
+
 MAIN_NAME="<span class='router-style'>$MAIN_NAME</span>"
 MAIN_TEMP="<span class='${MC_TEMP}'>${M_TEMP}</span>"
 MAIN_LOAD="<span class='${MC_LOAD}'>${M_LOAD}</span>"
@@ -2146,7 +2159,8 @@ N_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff
 BULLET=" <span style='color:white; font-size: 14px;'>•</span> "
 BULLET_LG=" <span style='color:white; font-size: 20px;'>•</span> "
 NODE_NAMES=""; NODE_TEMPS=""; NODE_LOADS=""; NODE_BOOTTIMES=""; NODE_UPTIMES=""
-NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0
+NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0; NODE_DEVICE_TOTAL=0
+
 for line in $SSH_NODES; do
 	NODE_OUT=""
 	ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
@@ -2155,7 +2169,8 @@ for line in $SSH_NODES; do
 	NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"
     if [ "${#NODE_NAME}" -gt 25 ]; then NODE_NAME="${NODE_NAME:0:25}"; fi
 	if [ -f "$NODE_DATA_DIR/${CLEAN_IP}.out" ]; then NODE_OUT=$(cat "$NODE_DATA_DIR/${CLEAN_IP}.out"); fi
-	if [ -n "$NODE_OUT" ]; then
+
+    if [ -n "$NODE_OUT" ]; then
         NUMBERED_NODE=$((NUMBERED_NODE + 1))
 		COLOR_INDEX=$((COLOR_INDEX + 1))
         NODE_COLOR=$(echo $N_COLORS | cut -d' ' -f$((COLOR_INDEX)))
@@ -2164,7 +2179,8 @@ for line in $SSH_NODES; do
 		case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
         NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NNS</span>"
 		case "$NODE_NAMES" in "") NODE_NAMES="$NODE_BRAND" ;; *) NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;; esac
-		parse_node_out "$NODE_OUT"
+
+        parse_node_out "$NODE_OUT"
 		if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
         N_UPTIME=$(router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
@@ -2172,6 +2188,7 @@ for line in $SSH_NODES; do
         NC_LOAD=$(get_load_class "$N_LOAD")
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW:-0} )) "$D_FMT")
         NODE_DEVICES=0
+
         while read -r ssh_node_data; do
 			case "$ssh_node_data" in "") continue ;; esac
 			parse_node_data "$ssh_node_data"
@@ -2201,6 +2218,7 @@ EOF
         NODE_TOTALS="${NODE_TOTALS}${NODE_TOTALS:+$BULLET}<span style='color:$NODE_COLOR;'>$NODE_DEVICES</span>"
     fi
 done
+
 ALL_ROWS="${MAIN_ROWS}${NODE_ROWS}"
 ALL_TEMP="$MAIN_TEMP$BULLET$NODE_TEMPS"
 ALL_LOAD="$MAIN_LOAD$BULLET$NODE_LOADS"
@@ -2208,11 +2226,14 @@ ALL_UPTIME="$MAIN_UPTIME$BULLET$NODE_UPTIMES"
 ALL_BOOTTIME="$MAIN_BOOTTIME$BULLET$NODE_BOOTTIMES"
 ALL_NAMES="$MAIN_NAME$BULLET_LG$NODE_NAMES"
 ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
+
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
+
 do_numbered_node; get_theme; do_runtime
 check_version header_box
+
 JS_DIFF="${DIFF:-5.00}"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 
@@ -2587,6 +2608,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
     } else if (window.event && window.event.type === 'click') {
         localStorage.removeItem('ssh_savedSortNodeMode_' + tId);
     }
+
     var headers = table.querySelectorAll('th');
     headers.forEach(function(h, idx) {
         var txt = h.innerText.toUpperCase();
@@ -2602,10 +2624,12 @@ function sortTable(n, tId, keepDir, forceDesc) {
             h.innerHTML = table.classList.contains('show-iface') ? "IFACE ⇵" : "SSID ⇵";
         }
     });
+
     rows.sort(function(a, b) {
         var valA, valB;
         var cellA = a.cells[n];
         var cellB = b.cells[n];
+
         if (n === 0) {
 			var getNodeNum = function(cell) {
 				var match = cell.innerHTML.match(/<sup>(\d+)<\/sup>/);
@@ -2627,6 +2651,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
 			var txtB = getCleanTxt(cellB);
 			return dir === "asc" ? txtA.localeCompare(txtB) : txtB.localeCompare(txtA);
 		}
+
         if (n === 1) {
             var sel = table.classList.contains('show-ip') ? '.ip-val' : '.mac-val';
             valA = cellA.querySelector(sel).getAttribute('data-sort');
@@ -2634,6 +2659,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
             if (sel === '.mac-val') {
                 return dir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
             }
+
         } else if (n === 3) {
             // Custom RX/TX parsing for column 3: extracts both numbers (e.g., "52 / 65" -> RX: 52, TX: 65)
             var parseRxTx = function(cell) {
@@ -2658,10 +2684,12 @@ function sortTable(n, tId, keepDir, forceDesc) {
                 return dir === "asc" ? valA.tx - valB.tx : valB.tx - valA.tx;
             }
             return dir === "asc" ? valA.rx - valB.rx : valB.rx - valA.rx;
+
         } else if (n === 4) {
             var sel = table.classList.contains('show-iface') ? '.iface-val' : '.ssid-val';
             valA = cellA.querySelector(sel).innerText.trim().toLowerCase();
             valB = cellB.querySelector(sel).innerText.trim().toLowerCase();
+
         } else if (n === 5) {
             // Custom Band & Width parsing for column 5
             var parseBand = function(cell) {
@@ -2684,6 +2712,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
             var scoreA = parseBand(cellA);
             var scoreB = parseBand(cellB);
             return dir === "asc" ? scoreA - scoreB : scoreB - scoreA;
+
         } else if (n === 6) {
             var spanA = cellA.querySelector('span[data-sort]');
             valA = spanA ? parseInt(spanA.getAttribute('data-sort'), 10) : 0;
@@ -2703,6 +2732,7 @@ function sortTable(n, tId, keepDir, forceDesc) {
         }
         return dir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
     });
+
     rows.forEach(function(r) {
         tbody.appendChild(r);
     });
@@ -2716,12 +2746,14 @@ function openPopout() {
     if (!mCol || !nCol) return;
     mCol = mCol.cloneNode(true);
     nCol = nCol.cloneNode(true);
+
     [mCol, nCol].forEach(c => {
         let h = c.querySelector('.temp-load-row'), s = c.querySelector('.section-header'), r = c.querySelector('.separator-line');
         if(h) Object.assign(h.style, { fontSize: "14px", lineHeight: "1.1", padding: "1px 0", margin: "0", height: "auto" });
         if(s) Object.assign(s.style, { paddingBottom: "0px", height: "auto" });
         if(r) Object.assign(r.style, { margin: "8px -11px 2px -11px" });
     });
+
     mCol.querySelector('table').id = "popMainTable";
     nCol.querySelector('table').id = "popNodeTable";
     mCol.querySelectorAll('th').forEach(function(th, i) {
@@ -2729,11 +2761,13 @@ function openPopout() {
         else if(i===4) th.onclick = function() { toggleCols('popMainTable', 'show-iface', this, 'SSID', 'IFACE'); };
         else th.onclick = function() { sortTable(i, 'popMainTable'); };
     });
+
     nCol.querySelectorAll('th').forEach(function(th, i) {
         if(i===1) th.onclick = function() { toggleCols('popNodeTable', 'show-ip', this, 'MAC ADDRESS', 'IP ADDRESS'); };
         else if(i===4) th.onclick = function() { toggleCols('popNodeTable', 'show-iface', this, 'SSID', 'IFACE'); };
         else th.onclick = function() { sortTable(i, 'popNodeTable'); };
     });
+
     var mainWrapper = document.createElement('div');
     Object.assign(mainWrapper.style, { display: "flex", flexDirection: "column", flex: "1", maxWidth: "49.5%" });
     Object.assign(mCol.style, { maxWidth: "100%", width: "100%" });
@@ -2822,9 +2856,7 @@ document.addEventListener('contextmenu', function(e) {
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
                         <div class="top-buttons">
                             <div class="button-refresh">
-                                <button class="button-trigger button-tables" onclick="triggerRefresh()">
-                                Refresh <span>${RUNTIME}</span>
-                                </button>
+                                <button class="button-trigger button-tables" onclick="triggerRefresh()">Refresh <span>${RUNTIME}</span></button>
                                 <div class="button-auto-refresh">
                                     <span>Auto:</span>
                                     <select id="refresh-option">
