@@ -559,7 +559,7 @@ node_auth() {
                 return ;;
             *)
                 printf "\n$BL[i] Retrying authentication...$NC"; sleep 5
-                echo -e ""; node_auth; return ;;
+                node_auth; return ;;
         esac
     fi
 }
@@ -610,7 +610,7 @@ ssh_keys() {
 	echo -e "$BL[*] TIP: If a node is missing after authentication,                    "
 	echo -e "$BL[*]      use option #7 to reauthenticate.                           $NC"
 	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check..."; read -r discard
-	RETRY="1"; node_auth
+	node_auth
 }
 
 del_ssh_keys() {
