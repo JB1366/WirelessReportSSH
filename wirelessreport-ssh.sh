@@ -121,6 +121,7 @@ install_menu() {
 
 check_version() {
     local mode="$1" version_cmp=""; froze() { return 0; }
+
     if [ ! -f "$REPORT_SCRIPT" ]; then STATE="NOT_INSTALLED"; froze() { freeze 2; return 1; }
     elif [ -z "$REMOTE_VERSION" ]; then STATE="OFFLINE"
     else
@@ -131,6 +132,7 @@ check_version() {
         elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then STATE="HASH_DIFF"
         else STATE="UP_TO_DATE"; fi
     fi
+
     case "$mode" in
         header_box)
             case "$STATE" in
@@ -183,67 +185,96 @@ version_compare() {
 
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
-	trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
+
+    trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
+
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
+
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
-	for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
+
+    for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
 	for i in E C R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
+
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
-    ON="${GR}ON$NC"; OFF="${RD}OFF$NC"; echo -e "$BL"
-	: "${MAIN_COLOR:=#0096ff}"
+
+    : "${MAIN_COLOR:=#0096ff}"
     : "${NODE_COLORS:=#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
+
+    ON="${GR}ON$NC"; OFF="${RD}OFF$NC"; echo -e "$BL"
     STATUS="$BL STATUS:$NC"; CURRENT="$BL CURRENT:$NC v$SCRIPT_VERSION$DEV"
+
     SS_FILE="/jffs/scripts/services-start"; SE_FILE="/jffs/scripts/service-event"
+
     case "$SSH_KEY" in "") KEY="${RD}NO$NC" ;; *) KEY="${GR}YES$NC" ;; esac
+
     REPORT_UNIT="${REPORT_UNIT:-F}"; CT="$GR$CUR_TIME$NC"
 	case "$REPORT_UNIT" in ISO) DN="ISO"; DU="$GR°C$NC" ;; C) DN="INTL"; DU="$GR°C$NC" ;; *) DN="USA"; DU="$GR°F$NC" ;; esac
+
     DATE_ISO="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"; DATE_INTL="$GR$(date +"%-d-%b %-H:%M:%S")$NC"
     DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"; PORT="$GR$SSH_PORT$NC"
-	RTIME=${RTIME:-1}; case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
+
+    RTIME=${RTIME:-1}; case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
+
     BACKHAUL=${BACKHAUL:-0}; case "$BACKHAUL" in 0) WB_STAT="$OFF" ;; *) WB_STAT="$ON" ;; esac
+
     PULSE_MINS=${PULSE_MINS:-15}; case "$PULSE_MINS" in 0) UP_STAT="$OFF" ;; *) UP_STAT="$GR${PULSE_MINS} Mins$NC" ;; esac
+
     RS_HIST=${RS_HIST:-0}; CUR_RS_HIST=${CUR_RS_HIST:-$RS_HIST}
 	CUR_ENTRIES=${CUR_ENTRIES:-${RS_HIST_ENTRIES:-5}}
 	CUR_DATE=${CUR_DATE:-${RS_HIST_DATE:-0}}; CE="$GR$CUR_ENTRIES$NC"
     case "$RS_HIST" in 1) RH_STAT="$ON" ;; *) RH_STAT="$OFF" ;; esac
     case "$CUR_RS_HIST" in 1) CH="$ON" ;; *) CH="$OFF" ;; esac
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
+
     THEME=${THEME:-ORIGINAL}; TM_STAT="$GR$THEME$NC"
-	IPPAD=${IPPAD:-1}; case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets$NC" ;; 1) PD_STAT="${BL}Last Octet$NC" ;; *) PD_STAT="${RD}Disabled$NC" ;; esac
-	HOST_COLOR=${HOST_COLOR:-0}; case "$HOST_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
+
+    IPPAD=${IPPAD:-1}; case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets$NC" ;; 1) PD_STAT="${BL}Last Octet$NC" ;; *) PD_STAT="${RD}Disabled$NC" ;; esac
+
+    HOST_COLOR=${HOST_COLOR:-0}; case "$HOST_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
+
     TABLE_HEADERS=${TABLE_HEADERS:-1}; case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
+
     BN="[$GR$BRANCH_NAME$NC]"
 }
 
 do_install() {
 	mkdir -p "$INSTALL_DIR" 2>/dev/null
+
     if [ ! -f "$CONFIG" ]; then touch "$CONFIG"; fi
-	local is_update=0
+
+    local is_update=0
 	if [ -f "$REPORT_SCRIPT" ]; then is_update=1; fi
-	if [ "$is_update" = "1" ]; then
+
+    if [ "$is_update" = "1" ]; then
         while true; do
             check_version do_install
             printf "Do you want to $UP (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac; done
     fi
+
     echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
+
     do_update || return 1
-	if [ "$is_update" = "1" ]; then
+
+    if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
 		printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
 		sys_log "(v$REMOTE_VERSION) successfully installed."
 		exec "$REPORT_SCRIPT" install "$@"
 		echo -e "$RD[!]Error: Failed to restart script!$NC" >&2; exit 1
 	fi
+
     if [ "$(nvram get jffs2_scripts)" != "1" ]; then
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"; pause; return 1; fi
-	if [ "${USB_PATH#*/tmp/mnt/}" != "$USB_PATH" ]; then
+
+    if [ "${USB_PATH#*/tmp/mnt/}" != "$USB_PATH" ]; then
         echo -e "\n$BL[+] USB Found: Using $USB_PATH for reports and history.$NC"
     else
         echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
+
     if [ -f "$SSH_KEY" ]; then
         RETRY="1"; node_auth
 	else
@@ -252,19 +283,25 @@ do_install() {
 		printf "$BL[+] (1) Generate RSA Keys or (2) Provision router-only$NC"; read -r discard
         check_ssh || return 1
 	fi
+
     echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
+
     inject_menu
     echo -e "$GR[+] Mounting Tab Wireless Report SSH$NC\n"
+
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
     echo "$REPORT_SCRIPT inject & # Inject Wireless Report SSH" >> "$SS_FILE"
     chmod +x "$SS_FILE"
+
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "/wireless_report/d" "$SE_FILE" 2>/dev/null
     echo 'if [ "$1" = "restart" ] && [ "$2" = "wireless_report" ]; then '$REPORT_SCRIPT' & fi # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
+
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
+
     echo -e "$GR[✓] SUCCESS: Installation complete!$NC\n"
     echo -e "$YL[i] To access Report, navigate to Advanced Settings > Wireless "
     echo -e "$YL    in the ASUS WebGUI and select the Wireless Report SSH tab on the far right.$NC\n"
@@ -281,12 +318,17 @@ do_update() {
         return 0
     else
         rm -f "$TEMP_SCRIPT"
+
         if [ ! -f "$0" ]; then echo -e "$RD[!] Download failed. Aborting installation.$NC"; return 1; fi
+
         local CURRENT_PATH; local TARGET_PATH
+
         CURRENT_PATH=$(readlink -f "$0" 2>/dev/null)
         [ -z "$CURRENT_PATH" ] && CURRENT_PATH="$0"
+
         TARGET_PATH=$(readlink -f "$REPORT_SCRIPT" 2>/dev/null)
         [ -z "$TARGET_PATH" ] && TARGET_PATH="$REPORT_SCRIPT"
+
         if [ "$CURRENT_PATH" != "$TARGET_PATH" ]; then
             echo -e "\n$YL[!] GitHub unreachable. Installing current local copy...$NC"
             cp "$0" "$REPORT_SCRIPT"
@@ -301,9 +343,12 @@ do_update() {
 
 ScriptUpdateFromAMTM() {
     doScriptUpdateFromAMTM=true
+
     if [ "$doScriptUpdateFromAMTM" != "true" ]; then
         printf "Automatic updates via AMTM are currently disabled."; return 1; fi
+
     if [ "$1" = "check" ]; then return 0; fi
+
     if check_github && do_update; then
         echo -e "  [+] Downloading latest version (v$REMOTE_VERSION)\n\n"
         echo -e "  [✓] Wireless Report SSH successfully updated.\n"
@@ -315,9 +360,12 @@ ScriptUpdateFromAMTM() {
 
 get_usb() {
 	if [ -n "$USB_PATH" ]; then return; fi
-	read -r uptime_val _ < /proc/uptime
-	local BUP="${uptime_val%%.*}"
+
+    read -r uptime_val _ < /proc/uptime
+
+    local BUP="${uptime_val%%.*}"
     local mount; local FOUND=0; local attempt=0
+
     while [ "$attempt" -lt 2 ]; do
         for mount in /tmp/mnt/*; do
             [ -d "$mount" ] || continue
@@ -327,28 +375,35 @@ get_usb() {
                 break 2
             fi
         done
+
         attempt=$((attempt + 1))
         if [ "$FOUND" -eq 0 ] && [ "$BUP" -lt 300 ] && [ "$attempt" -eq 1 ]; then sleep 2
         else break; fi
     done
+
     if [ "$FOUND" -eq 1 ] && [ -d "$INSTALL_DIR/data" ] && [ ! -L "$INSTALL_DIR/data" ]; then
         [ -n "$(ls -A "$INSTALL_DIR/data")" ] && cp -a "$INSTALL_DIR/data/." "$USB_PATH/"
         rm -rf "$INSTALL_DIR/data"
     fi
+
     if [ "$FOUND" -eq 0 ]; then
         local ROOT_PATH
         ROOT_PATH=$(ls -d /tmp/mnt/*/ 2>/dev/null | grep -v "defaults" | head -n 1 | sed 's/\/$//')
+
         if [ -n "$ROOT_PATH" ]; then
             USB_PATH="$ROOT_PATH/wirelessreport-ssh"
         else
             USB_PATH="$INSTALL_DIR/data"
         fi
     fi
+
     if [ -n "$USB_PATH" ] && [ ! -d "$USB_PATH" ]; then mkdir -p "$USB_PATH"; fi
+
     if [ -n "$USB_PATH" ]; then
         touch "$USB_PATH/rssi_history.db"
         touch "$USB_PATH/known_macs.db"
     fi
+
     KNOWN_DB="$USB_PATH/known_macs.db"; HISTORY_DB="$USB_PATH/rssi_history.db"
     ERROR_LOG="$USB_PATH/ssh_error.log"
 }
@@ -356,6 +411,7 @@ get_usb() {
 wr_sha256() {
     local file="$1" hash=""
     [ -f "$file" ] || return 1
+
     if command -v sha256sum >/dev/null 2>&1; then
         hash=$(sha256sum "$file" 2>/dev/null | awk '{print $1}')
     elif command -v busybox >/dev/null 2>&1 && busybox sha256sum "$file" >/dev/null 2>&1; then
@@ -363,7 +419,9 @@ wr_sha256() {
     elif command -v openssl >/dev/null 2>&1; then
         hash=$(openssl dgst -sha256 "$file" 2>/dev/null | awk '{print $NF}')
     fi
+
     [ "${#hash}" -eq 64 ] || return 1
+
     printf '%s\n' "$hash"
 }
 
@@ -372,8 +430,11 @@ check_github() {
         1) GIT="JB1366"; BRANCH_NAME="Development"; DEV="D" ;;
         *) GIT="JB1366"; BRANCH_NAME="main"; DEV="" ;;
     esac
+
     GITHUB="https://raw.githubusercontent.com/$GIT/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
+
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
+
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
         REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
         LOCAL_HASH=$(wr_sha256 "$REPORT_SCRIPT" 2>/dev/null)
@@ -385,13 +446,15 @@ check_github() {
             fi
         fi
     else REMOTE_VERSION=""; REMOTE_HASH=""; fi
+
     rm -f "$REMOTE_TMP"
 }
 
 ssh_init () {
 	NODE_USER=$(nvram get http_username)
 	SSH_PORT=$(nvram get sshd_port); SSH_PORT=${SSH_PORT:-22}
-	if [ -f "/root/.ssh/id_dropbear" ]; then SSH_KEY="/root/.ssh/id_dropbear"
+
+    if [ -f "/root/.ssh/id_dropbear" ]; then SSH_KEY="/root/.ssh/id_dropbear"
 	else  SSH_KEY=""; fi
 }
 
@@ -434,18 +497,23 @@ check_ssh() {
                             del_ssh_keys ;;
                         4)
                             echo -e "\n$BL================ Authorized Keys =================$NC\n"
+
                             if [ -f "/root/.ssh/authorized_keys" ]; then cat /root/.ssh/authorized_keys
                             else echo -e "$YL[!] File not found.$NC"; fi
+
                             echo -e "\n\n$BL==================================================$NC"
                             pause ;;
                         5)
                             echo -e "\n$BL================== Known Hosts  ==================$NC\n"
+
                             if [ -f "/jffs/.ssh/known_hosts" ]; then cat /jffs/.ssh/known_hosts
                             else echo -e "$YL[!] File not found.$NC"; fi
+
                             echo -e "\n$BL==================================================$NC"
                             pause ;;
                         6)
                             echo -e "\n$BL================= SSH Error Log ==================$NC\n"
+
                             if [ -f "$ERROR_LOG" ]; then
                                 cat "$ERROR_LOG"
                                 echo -e "\n\n$BL==================================================$NC"
@@ -455,6 +523,7 @@ check_ssh() {
                                 echo -e "$YL[!] File not found.$NC"
                                 echo -e "\n$BL==================================================$NC"
                             fi
+
                             pause ;;
                         7)
                             node_auth ;;
@@ -476,7 +545,8 @@ node_auth() {
 
     echo -e "$BL=================================================="
     echo -e "$NC         Verifying Node Authentication            "
-    echo -e "$BL==================================================\n"
+    echo -e "$BL=================================================="
+    echo -e ""
 
     AIMESH_NODES=$(nvram get asus_device_list | sed 's/</\n/g' | grep '>2$' | awk -F '>' '{print $2 "|" $3}' |  sort -t . -k 4,4n)
 
@@ -487,22 +557,29 @@ node_auth() {
     else
         TOTAL_NODES=$(echo "$AIMESH_NODES" | grep -o "|" | wc -l)
 		any_success=0; VALID_NODES=""; new_nodes=0
+
         for line in $AIMESH_NODES; do
 			ROUTER="${line%%|*}"; IP="${line#*|}"
             case "$IP" in ""|"$ROUTER") continue ;; esac
 			if [ -z "$ROUTER" ]; then ROUTER="Node_$IP"; fi
-			printf "$NC[*] Testing $GR%-14s$NC (%s) " "$ROUTER" "$IP"
+
+            printf "$NC[*] Testing $GR%-14s$NC (%s) " "$ROUTER" "$IP"
+
             SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
-			SSH_RC=$?
+
+            SSH_RC=$?
 			if [ -n "$SSH_ERR" ]; then echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done; fi
-			if [ "$SSH_RC" -eq 0 ]; then
+
+            if [ "$SSH_RC" -eq 0 ]; then
 				echo -e "$GR[✓] AUTHENTICATED$NC"
 				any_success=$((any_success + 1))
 				VALID_NODES="$VALID_NODES $ROUTER|$IP"
-				if ! grep -q "$IP" /jffs/.ssh/known_hosts 2>/dev/null; then
+
+                if ! grep -q "$IP" /jffs/.ssh/known_hosts 2>/dev/null; then
 					echo -ne "    Capturing fingerprint & updating known_hosts "
 					dbclient -y -p "$SSH_PORT" "$IP" "exit" > /dev/null 2>&1
-					if grep -q "$IP" /root/.ssh/known_hosts 2>/dev/null; then
+
+                    if grep -q "$IP" /root/.ssh/known_hosts 2>/dev/null; then
 						grep "$IP" /root/.ssh/known_hosts >> /jffs/.ssh/known_hosts
 						sort -u /jffs/.ssh/known_hosts -o /jffs/.ssh/known_hosts
 						echo -e "$GR[✓] DONE$NC"
@@ -566,33 +643,43 @@ node_auth() {
 
 ssh_keys() {
     if [ -f "$SSH_KEY" ]; then echo -e "\n$YL[!] Main Router SSH Key already exists.$NC"; pause; return 0; fi
-	if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
+
+    if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
 		while true; do
             printf "$BL\n[i]$NC Stored key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
         echo -e "\n$GR[!]  Linking and configuring...$NC"
 	fi
+
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
         while true; do
             printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
+
         echo -e "\n$YL[i] Creating RSA Key in /jffs/.ssh/$NC\n"
+
         mkdir -p /jffs/.ssh
         dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
     fi
-	rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
+
+    rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
     mkdir -p /root/.ssh
     cp /jffs/.ssh/id_dropbear /root/.ssh/id_dropbear
+
     echo -e "\n$BL[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear$NC\n"
-	SSH_KEY="/root/.ssh/id_dropbear"
+
+    SSH_KEY="/root/.ssh/id_dropbear"
     local pub_key=$(dropbearkey -y -f "/root/.ssh/id_dropbear" | grep "^ssh-rsa")
     local current_keys=$(nvram get sshd_authkeys)
 	local combined_keys=$(printf "%s\n%s" "$current_keys" "$pub_key" | sed '/^$/d' | sort -u)
-	echo -e "$YL[i] Injecting Key into NVRAM...$NC\n"
-	nvram set sshd_authkeys="$combined_keys"
+
+    echo -e "$YL[i] Injecting Key into NVRAM...$NC\n"
+
+    nvram set sshd_authkeys="$combined_keys"
     nvram commit
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
     chmod 600 /root/.ssh/authorized_keys
+
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
     if ! grep -q "id_dropbear" "$SS_FILE"; then
         echo -e "\n$YL[i] Adding SSH Key to services-start for persistence on reboots...$NC"
@@ -600,7 +687,8 @@ ssh_keys() {
 		echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
-	echo -e "$BL=================================================="
+
+    echo -e "$BL=================================================="
 	echo -e "$NC               ACTION REQUIRED NOW                "
     echo -e "$BL=================================================="
     echo -e "                                                     "
@@ -623,22 +711,28 @@ del_ssh_keys() {
 		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
 		pause; return
 	fi
-	echo -e "\n$YL[i] Purging RSA key footprint from environment...$NC"
-	if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
+
+    echo -e "\n$YL[i] Purging RSA key footprint from environment...$NC"
+
+    if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
 		PUB_STRING=$(awk '{print $2}' /jffs/.ssh/id_dropbear.pub)
 	else
 		PUB_STRING=""
 	fi
-	if [ -n "$PUB_STRING" ] && [ -f "/root/.ssh/authorized_keys" ]; then
+
+    if [ -n "$PUB_STRING" ] && [ -f "/root/.ssh/authorized_keys" ]; then
 		sed -i "\|$PUB_STRING|d" /root/.ssh/authorized_keys
 	fi
-	NVRAM_KEYS=$(nvram get sshd_authkeys)
-	if [ -n "$PUB_STRING" ] && echo "$NVRAM_KEYS" | grep -q "$PUB_STRING"; then
+
+    NVRAM_KEYS=$(nvram get sshd_authkeys)
+
+    if [ -n "$PUB_STRING" ] && echo "$NVRAM_KEYS" | grep -q "$PUB_STRING"; then
 		CLEANED_KEYS=$(echo "$NVRAM_KEYS" | grep -v "$PUB_STRING")
 		nvram set sshd_authkeys="$CLEANED_KEYS"
 		nvram commit
 	fi
-	rm -f "/jffs/.ssh/id_dropbear" "/jffs/.ssh/id_dropbear.pub" "/root/.ssh/id_dropbear"
+
+    rm -f "/jffs/.ssh/id_dropbear" "/jffs/.ssh/id_dropbear.pub" "/root/.ssh/id_dropbear"
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
 	chmod 600 /root/.ssh/authorized_keys
 	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
@@ -648,18 +742,26 @@ del_ssh_keys() {
 inject_menu() {
 	source /usr/sbin/helper.sh
 	TAB_LABEL="Wireless Report SSH"
-	if [ -f "$CONFIG" ]; then sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"; else touch "$CONFIG"; fi
+
+    if [ -f "$CONFIG" ]; then sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"; else touch "$CONFIG"; fi
     if ! nvram get rc_support | grep -q am_addons; then echo -e "\n$RD[!] ERROR: This firmware does not support addons!$NC"; exit 5; fi
     if [ ! -f "$WEB_PAGE" ]; then echo "<html><body>$TAB_LABEL Loading...</body></html>" > "$WEB_PAGE"; fi
-	LOCKFILE=/tmp/addonwebui.lock; FD=386; eval exec "$FD>$LOCKFILE"; flock -x "$FD"
+
+    LOCKFILE=/tmp/addonwebui.lock; FD=386; eval exec "$FD>$LOCKFILE"; flock -x "$FD"
+
     am_get_webui_page "$WEB_PAGE"
 	if [ "$am_webui_page" = "none" ]; then echo -e "\n$RD[!] ERROR: Unable to install $TAB_LABEL.$NC"; flock -u "$FD"; exit 5; fi
-	cp "$WEB_PAGE" "/www/user/$am_webui_page" 2>/dev/null
-	echo "INSTALLED_PAGE=$am_webui_page" >> "$CONFIG"
-	if [ ! -f "$TEMP_MENU" ]; then cp "$SYSTEM_MENU" /tmp/; mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"; fi
-	sed -i 'N; /menuName: "Wireless Report SSH"/ { N; N; N; N; N; N; d; }; P; D' "$TEMP_MENU" 2>/dev/null
+
+    cp "$WEB_PAGE" "/www/user/$am_webui_page" 2>/dev/null
+
+    echo "INSTALLED_PAGE=$am_webui_page" >> "$CONFIG"
+
+    if [ ! -f "$TEMP_MENU" ]; then cp "$SYSTEM_MENU" /tmp/; mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"; fi
+
+    sed -i 'N; /menuName: "Wireless Report SSH"/ { N; N; N; N; N; N; d; }; P; D' "$TEMP_MENU" 2>/dev/null
 	sed -i '/tabName:[[:space:]]*"Wireless Report SSH"/d' "$TEMP_MENU" 2>/dev/null
-	if [ "$INJECT" = "2" ]; then
+
+    if [ "$INJECT" = "2" ]; then
 		INSERT_DATA="{\
 		\nmenuName: \"$TAB_LABEL\",\
 		\nindex: \"menu_AiMesh\",\
@@ -675,10 +777,13 @@ inject_menu() {
 		sed -i "/index: \"menu_Wireless\"/,/{url: \"NULL\", tabName: \"__INHERIT__\"}/ s|{url: \"NULL\", tabName: \"__INHERIT__\"}|{url: \"$am_webui_page\", tabName: \"$TAB_LABEL\"},\n&|" "$TEMP_MENU"
 		sys_log "Mounting TAB $TAB_LABEL as $am_webui_page"
 	fi
-	umount "$SYSTEM_MENU" && mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"
+
+    umount "$SYSTEM_MENU" && mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"
 	umount "/www/user/$am_webui_page" 2>/dev/null
 	mount -o bind "$WEB_PAGE" "/www/user/$am_webui_page"
-	flock -u "$FD"; restart_httpd
+
+    flock -u "$FD"; restart_httpd
+
     case "$NOLOADSCRIPT" in 1) exit 0 ;; *) "$REPORT_SCRIPT" & ;; esac
 }
 
@@ -687,8 +792,10 @@ do_uninstall() {
     while true; do
         printf "Are you sure? (y/n): "; read -r confirm
         case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac; done
-	if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
-	if mount | grep -q "menuTree.js"; then
+
+    if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
+
+    if mount | grep -q "menuTree.js"; then
 		umount -l "$SYSTEM_MENU" >/dev/null 2>&1
 		sed -i 'N; /menuName: "Wireless Report SSH"/ { N; N; N; N; N; N; d; }; P; D' "$TEMP_MENU" 2>/dev/null
 		sed -i '/tabName:[[:space:]]*"Wireless Report SSH"/d' "$TEMP_MENU" 2>/dev/null
@@ -696,18 +803,24 @@ do_uninstall() {
 		sys_log "Unmounting Wireless Report SSH Tab."
 		echo -e "\n$BL[*] Removing Wireless Report SSH Tab and restoring defaults...$NC\n"
 	fi
-	if [ -n "$INSTALLED_PAGE" ]; then
+
+    if [ -n "$INSTALLED_PAGE" ]; then
 		umount -l "/www/user/$INSTALLED_PAGE" >/dev/null 2>&1
 		rm -f /www/user/"${INSTALLED_PAGE}" >/dev/null 2>&1
 	fi
-	sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE"; sed -i "/wireless_report/d" "$SE_FILE"
+
+    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE"; sed -i "/wireless_report/d" "$SE_FILE"
 	restart_httpd; ssh_init
 	rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
-	case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
-	sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
+
+    case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
+
+    sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
+
     unset RTIME BACKHAUL CUR_DATE RS_HIST_DATE RS_HIST CUR_RS_HIST CUR_ENTRIES
     unset THEME IPPAD PULSE_MINS DISPLAY_UNIT HOST_COLOR MAIN_COLOR NODE_COLORS
-	echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
+
+    echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
 	echo -e "$GR[+] Success: Wireless Report SSH uninstalled.$NC"
 	pause
 }
@@ -759,29 +872,39 @@ set_nicknames() {
 		echo -e "  $LE Exit back to main menu                         "
 		echo -e "                                                     "
         echo -e "$BL=================================================="
+
         MAIN_ROUTER=$(nvram get productid); MAIN_IP=$(nvram get lan_ipaddr)
         MAIN_CLR=$(hex_to_ansi "$MAIN_COLOR")
+
         echo -e "\n  ${MAIN_CLR}Main $MAIN_IP -> ${MAIN_NICK:-$MAIN_ROUTER}$NC"
         get_node_color() { local idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
         node_idx=1
+
         for node in $SSH_NODES; do
             MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
             eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
             HEX_CLR=$(get_node_color "$node_idx")
             NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+
             echo -e "  ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+
             node_idx=$((node_idx + 1))
         done
+
         echo -e "\n$BL=================================================="
+
         while true; do
             selection
             case "$choice" in
                 1)
                     echo -e "\n$BL[+] Resetting to hardware defaults...$NC"
+
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     unset MAIN_NICK
+
                     printf "\n    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER$NC"; sleep 1
+
                     node_idx=1
                     for node in $SSH_NODES; do
                         MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
@@ -793,12 +916,15 @@ set_nicknames() {
                         printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
                         node_idx=$((node_idx + 1))
                     done
+
                     printf "\n\n$GR[+] Default hardware models restored.$NC\n" ;;
                 2)
                     echo -e "\n$BL[*] Updating nicknames with Locations...$NC"
+
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     NEW_LOC=$(nvram get cfg_alias)
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
+
                     if [ -n "$NEW_LOC" ]; then
                         echo "MAIN_NICK=\"$NEW_LOC\"" >> "$CONFIG"
                         printf "\n    ${MAIN_CLR}$OLD_NAME -> $NEW_LOC$NC"; sleep 1
@@ -806,14 +932,18 @@ set_nicknames() {
                         unset MAIN_NICK
                         printf "\n    ${MAIN_CLR}$OLD_NAME -> $MAIN_ROUTER (Default)$NC"; sleep 1
                     fi
+
                     node_idx=1
                     for node in $SSH_NODES; do
                         MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
+
                         NODE_LOC=$(cat /jffs/.sys/cfg_mnt/re.info 2>/dev/null | sed 's/},/}\n/g' | grep "$IP" | sed -n 's/.*"alias":"\([^"]*\)".*/\1/p')
+
                         sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
                         NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+
                         if [ -n "$NODE_LOC" ]; then
                             echo "NODE_NICK_$CLEAN_IP=\"$NODE_LOC\"" >> "$CONFIG"
                             printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $NODE_LOC$NC"; sleep 1
@@ -823,23 +953,30 @@ set_nicknames() {
                         fi
                         node_idx=$((node_idx + 1))
                     done
+
                     printf "\n\n$GR[+] Nicknames updated to Locations...$NC\n" ;;
                 3)
                     echo -e "\n$BL[*] Manual Entry Mode$NC"
+
                     OLD_MAIN="${MAIN_NICK:-$MAIN_ROUTER}"
+
                     printf "\n  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "; read -r manual_main
+
                     if [ -n "$manual_main" ]; then
                         manual_main="${manual_main:0:25}"
                         sed -i '/^MAIN_NICK=/d' "$CONFIG"
                         echo "MAIN_NICK=\"$manual_main\"" >> "$CONFIG"
                     fi
+
                     node_idx=1
                     for node in $SSH_NODES; do
                         MODEL="${node%%|*}"; IP="${node#*|}"; CLEAN_IP="${IP//./_}"
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
                         NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+
                         printf "  ${NODE_CLR}Node $IP [${OLD_NICK:-$MODEL}]:$NC "; read -r input_node
+
                         if [ -n "$input_node" ]; then
                             input_node="${input_node:0:25}"
                             sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
@@ -847,6 +984,7 @@ set_nicknames() {
                         fi
                         node_idx=$((node_idx + 1))
                     done
+
                     printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n" ;;
                 e|E)
                     return ;;
@@ -879,20 +1017,25 @@ hex_to_ansi() {
 set_colors() {
     local main_name=$(nvram get productid); local main_ip=$(nvram get lan_ipaddr)
     local m_color_hex="" current_colors=""
+
     if [ -f "$CONFIG" ]; then
         m_color_hex=$(grep "^MAIN_COLOR=" "$CONFIG" | cut -d'"' -f2)
         current_colors=$(grep "^NODE_COLORS=" "$CONFIG" | cut -d'"' -f2)
     fi
+
     [ -z "$m_color_hex" ] && m_color_hex="$MAIN_COLOR"
     [ -z "$current_colors" ] && current_colors="$NODE_COLORS"
+
     local total_nodes=0
     for node in $SSH_NODES; do total_nodes=$((total_nodes + 1)); done
     local working_colors="" i=1
+
     while [ $i -le $total_nodes ]; do
         local c_color=$(echo "$current_colors" | awk -v col="$i" '{print $col}')
         working_colors="${working_colors:+$working_colors }$c_color"
         i=$((i + 1))
     done
+
     while true; do
         show_header
         echo -e "$BL=================================================="
@@ -901,11 +1044,15 @@ set_colors() {
         echo -e "                                                     "
         echo -e "$NC  Current Device Configuration:                   "
         echo -e "                                                     "
+        #=============================================================#
+
         local main_display_name="${MAIN_NICK:-$main_name}"
         local main_display_color=$(hex_to_ansi "$m_color_hex")
         local formatted_main_ip=$(printf "(%s)" "$main_ip")
+
         printf "  $BL(0) %b%-14s %-16s (Main)$NC\n" \
             "$main_display_color" "$main_display_name" "$formatted_main_ip"
+
         local idx=1
         for node in $SSH_NODES; do
             local node_ip="${node#*|}"
@@ -917,16 +1064,21 @@ set_colors() {
             node_display_name="${node_display_name:-$default_nick}"
             local display_color=$(hex_to_ansi "$active_color")
             local formatted_ip=$(printf "(%s)" "$node_ip")
+
             printf "  $BL(%s) %b%-14s %-16s (Node)$NC\n" \
                 "$idx" "$display_color" "$node_display_name" "$formatted_ip"
+
             idx=$((idx + 1))
         done
+
+        #=============================================================#
         echo -e "                                                     "
         echo -e "  $LR Restore Default Colors                         "
         echo -e "  $LC Cancel and Discard Changes                     "
         echo -e "  $LE Exit and Save Changes                          "
         echo -e "                                                     "
         echo -e "$BL=================================================="
+
         while true; do
             printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
             case "$node_choice" in
@@ -934,20 +1086,25 @@ set_colors() {
                     m_color_hex="#0096ff"
                     local default_node_pool="#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda"
                     working_colors=""; local idx=1
+
                     while [ $idx -le $total_nodes ]; do
                         local next_color=$(echo "$default_node_pool" | awk -v col="$idx" '{print $col}')
                         next_color="${next_color:-#30d158}"
                         working_colors="${working_colors:+$working_colors }$next_color"
                         idx=$((idx + 1))
                     done
+
                     echo -e "$BL\nColors restored to defaults.$NC"
                     pause; continue 2 ;;
                 c|C) return 0 ;;
                 e|E) break 2 ;;
             esac
+
             case "$node_choice" in ""|*[!0-9]*) freeze 2; continue ;; esac
+
             if [ "$node_choice" -gt "$total_nodes" ]; then freeze 2; continue; fi
             local target_name="" target_hex=""
+
             if [ "$node_choice" -eq 0 ]; then
                 target_name="${MAIN_NICK:-$main_name}"
                 target_hex="$m_color_hex"
@@ -960,8 +1117,10 @@ set_colors() {
                 target_name="${target_name:-$(echo "$target_node" | cut -d'|' -f1)}"
                 target_hex=$(echo "$working_colors" | awk -v col="$node_choice" '{print $col}')
             fi
+
             hex_to_ansi; local selected_hex=""
             local target_prompt_color=$(hex_to_ansi "$target_hex")
+
             echo -e "$NC Select a new color for ${target_prompt_color}[${target_name}]:"
             echo -e "                                "
             echo -e "$NB  (1) Neon-Blue (#0096ff)    "
@@ -992,6 +1151,7 @@ set_colors() {
                 esac
                 break
             done
+
             if [ "$node_choice" -eq 0 ]; then
                 m_color_hex="$selected_hex"
             else
@@ -1006,6 +1166,7 @@ set_colors() {
             break
         done
     done
+
     update_config_var() {
         local var_name="$1" var_val="$2"
         if grep -q "^${var_name}=" "$CONFIG" 2>/dev/null; then
@@ -1014,8 +1175,10 @@ set_colors() {
             echo "${var_name}=\"${var_val}\"" >> "$CONFIG"
         fi
     }
+
     update_config_var "MAIN_COLOR" "$m_color_hex"
     update_config_var "NODE_COLORS" "$working_colors"
+
     echo -e "$BL\nDevice colors successfully saved to CONFIG.$NC"
     pause
 }
@@ -1077,23 +1240,30 @@ set_options() {
                                 sed -i 's/RTIME=.*/RTIME="0"/' "$CONFIG"
                                 if grep -q "RTIME_LOG=" "$CONFIG"; then sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
                                 else echo 'RTIME_LOG="0"' >> "$CONFIG"; fi
+
                                 rm -f "$USB_PATH/runtime.db"; menu_vars
+
                                 echo -e "$NC Runtime Tracking: ($RT_STAT)" ;;
                             *)
                                 while true; do
                                     printf "\n Write stats to Syslog? (y/n): "; read -r choice
                                     case "$choice" in y|Y) RTIME_LOG="1"; break ;; n|N) RTIME_LOG="0"; break ;; *) freeze 2 ;; esac
                                 done
+
                                 if grep -q "RTIME_LOG=" "$CONFIG"; then sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$RTIME_LOG\"/" "$CONFIG"
                                 else echo "RTIME_LOG=\"$RTIME_LOG\"" >> "$CONFIG"; fi
+
                                 sed -i 's/RTIME=.*/RTIME="1"/' "$CONFIG"; menu_vars
+
                                 echo -e "$NC Runtime Tracking: ($RT_STAT) Stats RESET." ;;
                         esac
                     else
                         echo 'RTIME="0"' >> "$CONFIG"
                         if grep -q "RTIME_LOG=" "$CONFIG"; then sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
                         else echo 'RTIME_LOG="0"' >> "$CONFIG"; fi
+
                         rm -f "$USB_PATH/runtime.db"; menu_vars
+
                         echo -e "$NC Runtime Tracking: ($RT_STAT)"
                     fi
                     pause ;;
@@ -1106,7 +1276,9 @@ set_options() {
                     while true; do
                         echo -e "\n (${GR}0$NC) disable (${GR}15$NC) def (${GR}1440$NC) max "
                         printf "$BL Enter alert interval in mins:$GR "; read -r user_mins
+
                         case "$user_mins" in ""|*[!0-9]*) freeze 3; continue ;; esac
+
                         if [ "$user_mins" -le 1440 ]; then NEW_MINS="$user_mins"
                             if grep -q "PULSE_MINS=" "$CONFIG"; then sed -i "s/PULSE_MINS=.*/PULSE_MINS=\"$NEW_MINS\"/" "$CONFIG"
                             else echo "PULSE_MINS=\"$NEW_MINS\"" >> "$CONFIG"; fi; break 2
@@ -1137,6 +1309,7 @@ set_options() {
                         echo -e "\n$GR[+] Adding INJECT=\"2\" to CONFIG$NC"
                         INJECT="2"; inject_menu
                     fi
+
                     if ! grep -q "$REPORT_SCRIPT.*inject2" "$SS_FILE" 2>/dev/null; then
                         if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
                         sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
@@ -1209,10 +1382,14 @@ set_branch() {
             esac
             break
         done
+
         if grep -q "^BRANCH=" "$CONFIG"; then sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
         else echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"; fi
+
         check_github; BN="[$GR$BRANCH_NAME$NC]"
+
         printf "$NC\nPress $BL[Enter]$NC to switch to $BN branch & restart script..."; read -r restart
+
         if do_update; then exec "$REPORT_SCRIPT" install "$@"
         else echo -e "$RD[!]Error: Branch update failed!$NC" >&2; exit 1; fi
     done
@@ -1242,6 +1419,7 @@ set_rssi() {
                     while true; do
                         printf "\n$NC Enter new depth (${BL}5-20$NC) [Current: $CE]: "; read -r new_depth
                         case "$new_depth" in *[!0-9]*|"") freeze 2; continue ;; esac
+
                         if [ "$new_depth" -ge 5 ] && [ "$new_depth" -le 20 ]; then CUR_ENTRIES="$new_depth"; break 2
                         else freeze 2; continue; fi
                     done ;;
@@ -1254,13 +1432,17 @@ set_rssi() {
                     RS_HIST="$CUR_RS_HIST"
                     RS_HIST_ENTRIES="$CUR_ENTRIES"
                     RS_HIST_DATE="$CUR_DATE"
+
                     for var in RS_HIST RS_HIST_ENTRIES RS_HIST_DATE; do
                         eval "val=\$${var}"
                         if grep -q "^$var=" "$CONFIG"; then sed -i "s|^$var=.*|$var=\"$val\"|" "$CONFIG"
                         else echo "$var=\"$val\"" >> "$CONFIG"; fi
                     done
+
                     rm -f "$HISTORY_DB"; unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
+
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
+
                     pause; return 0 ;;
                 *)
                     freeze 2; continue ;;
@@ -1284,19 +1466,26 @@ do_runtime() {
 	RTIME=${RTIME:-1}
 	if [ "$RTIME" = "1" ]; then
 		read -r END_RUNTIME _ < /proc/uptime
-		STATS_FILE="$USB_PATH/runtime.db"
+
+        STATS_FILE="$USB_PATH/runtime.db"
 		DIFF=$(awk "BEGIN {printf \"%.2f\", $END_RUNTIME - $START_RUNTIME}")
 		RUNTIME="${DIFF}s"
-		if [ ! -f "$STATS_FILE" ] || [ "$(wc -w < "$STATS_FILE")" -lt 4 ]; then echo "0 0 999.99 0.00" > "$STATS_FILE"; fi
-		read -r TOTAL_TIME COUNT MIN_TIME MAX_TIME < "$STATS_FILE"
-		NEW_TOTAL=$(awk "BEGIN {printf \"%.2f\", $TOTAL_TIME + $DIFF}")
+
+        if [ ! -f "$STATS_FILE" ] || [ "$(wc -w < "$STATS_FILE")" -lt 4 ]; then echo "0 0 999.99 0.00" > "$STATS_FILE"; fi
+
+        read -r TOTAL_TIME COUNT MIN_TIME MAX_TIME < "$STATS_FILE"
+
+        NEW_TOTAL=$(awk "BEGIN {printf \"%.2f\", $TOTAL_TIME + $DIFF}")
 		NEW_COUNT=$((COUNT + 1))
 		AVERAGE=$(awk "BEGIN {printf \"%.2f\", $NEW_TOTAL / $NEW_COUNT}")
 		NEW_MIN=$(awk "BEGIN {printf \"%.2f\", ($DIFF < $MIN_TIME) ? $DIFF : $MIN_TIME}")
 		NEW_MAX=$(awk "BEGIN {printf \"%.2f\", ($DIFF > $MAX_TIME) ? $DIFF : $MAX_TIME}")
-		echo "$NEW_TOTAL $NEW_COUNT $NEW_MIN $NEW_MAX" > "$STATS_FILE"
+
+        echo "$NEW_TOTAL $NEW_COUNT $NEW_MIN $NEW_MAX" > "$STATS_FILE"
+
         case "$RTIME_LOG" in 1) sys_log "Report completed in $RUNTIME. AVG: ${AVERAGE}s (L: ${NEW_MIN}s/H: ${NEW_MAX}s) over $NEW_COUNT scans." ;; esac
-		RUNTIME_CSS=".button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }
+
+        RUNTIME_CSS=".button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }
         .button-refresh, .button-refresh select, .button-refresh .button-trigger { position: relative; display: inline-block; }
         .button-refresh:before, .button-refresh .button-trigger:before, .button-refresh select:before { position: absolute; height: 28px; line-height: 28px; padding: 0 15px; background: $RT_TOOLTIP; color: white; font-size: 12px; font-weight: bold; border: 1.5px solid #0096ff; border-radius: 20px; box-shadow: 0 0 10px rgba(0,150,255,0.3); white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 100; pointer-events: none; }
         .button-refresh:after, .button-refresh .button-trigger:after, .button-refresh select:after { content: \"\"; position: absolute; width: 4px; height: 4px; background: #0096ff; border-radius: 50%; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 101; pointer-events: none; }
@@ -1308,10 +1497,12 @@ do_runtime() {
         .button-refresh:has(.button-trigger:hover):after { opacity: 1; visibility: visible; }
         .button-refresh:has(.button-trigger:hover) .button-trigger:before, .button-refresh:has(select:hover) select:before { opacity: 1; visibility: visible; top: 190%; }
         .button-refresh:has(.button-trigger:hover) .button-trigger:after, .button-refresh:has(select:hover) select:after { opacity: 1; visibility: visible; }"
+
         RUNTIME_CSS=$(echo "$RUNTIME_CSS" | sed 's/^    //')
 	else
 		RUNTIME_CSS=".button-tables.button-trigger { color: #ffffff; }
         .button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }"
+
         RUNTIME=""; rm -f "$USB_PATH/runtime.db"
 	fi
 }
@@ -1380,8 +1571,10 @@ get_theme() {
 
 do_numbered_node() {
     case "$NUMBERED_NODE" in 0) ROUTER_ONLY="display: none !important;" ;; *) ROUTER_ONLY="" ;; esac
+
     case "$NUMBERED_NODE" in 1) NTOTAL="" ;; *) NTOTAL="<span class='right-arrow'>—›</span> $NODE_TOTALS" ;; esac
-	case "$NUMBERED_NODE" in
+
+    case "$NUMBERED_NODE" in
         [1-9])
             ALL_DEVICES="<span class='stat-cool'>$ALL_DEVICES</span> \
             <span class='right-arrow'>—›</span> \
@@ -1389,7 +1582,8 @@ do_numbered_node() {
         *)
             ALL_DEVICES="$MAIN_DEVICE_TOTAL" ;;
     esac
-	case "$NUMBERED_NODE" in
+
+    case "$NUMBERED_NODE" in
         4)     TS=13; US=10 ;;
         [5-9]) TS=10; US=8 ;;
         *)     TS=14; US=12 ;;
@@ -1425,7 +1619,9 @@ update_time() {
 
 get_temp_unit() {
     local t_unit=$1
+
     case "$t_unit" in ""|*[!0-9.]*) echo "--"; return ;; esac
+
     case "$TEMP_UNIT" in
         C)
             echo "${t_unit}°C" ;;
@@ -1438,7 +1634,9 @@ get_temp_unit() {
 get_temp_class() {
     local temp=$1
 	local val="${temp%%[^0-9]*}"
+
     case "$val" in ""|*[!0-9]*) echo "stat-cool"; return ;; esac
+
     if [ "$REPORT_UNIT" = "C" ]; then
         if [ "$val" -ge 90 ]; then echo "stat-hot"
         elif [ "$val" -ge 75 ]; then echo "stat-warm"
@@ -1452,7 +1650,9 @@ get_temp_class() {
 
 get_load_class() {
     local load=$1
+
     case "$load" in ""|*[!0-9.]*) echo "stat-cool"; return ;; esac
+
     case "$load" in
         [4-9]*|[0-9][0-9]*) echo "stat-hot" ;;
         1.[5-9]*|[2-3].*)   echo "stat-warm" ;;
@@ -1464,35 +1664,44 @@ get_mac_address() {
 	mac_prefix="${mac#??:}"
     mac_prefix="${mac_prefix%:??}"
 	is_node_pfx=0; bh="no"
-	case "$NODE_PFX" in *"$mac_prefix"*) is_node_pfx=1 ;; esac
-	if [ "$mac_prefix" = "$MAIN_PFX" ] || [ "$is_node_pfx" -eq 1 ]; then
+
+    case "$NODE_PFX" in *"$mac_prefix"*) is_node_pfx=1 ;; esac
+
+    if [ "$mac_prefix" = "$MAIN_PFX" ] || [ "$is_node_pfx" -eq 1 ]; then
 		    if [ "$BACKHAUL" != "1" ]; then return 1; fi
 			bh="yes"
 	fi
-	case "$bh" in yes) mac_check="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_check="$mac" ;; esac
-	case " $SEEN_MACS_VAR " in *" $mac_check "*) return 1 ;; esac
-	get_name "$mac"
-	case "$bh" in yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_final="$mac" ;; esac
-	case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
-	SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
+
+    case "$bh" in yes) mac_check="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_check="$mac" ;; esac
+    case " $SEEN_MACS_VAR " in *" $mac_check "*) return 1 ;; esac
+
+    get_name "$mac"
+
+    case "$bh" in yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_final="$mac" ;; esac
+    case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
+
+    SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
 	return 0
 }
 
 get_name() {
 	name=""; ip=""
-	# YazDHCP
+
+    # YazDHCP
 	if [ -f "$YAZ_CACHE" ]; then
 		local entry=$(grep -m1 "^$mac|" "$YAZ_CACHE")
 		name="${entry##*|}"
 	fi
-	# Custom Client List
+
+    # Custom Client List
 	if [ -z "$name" ] || [ "$name" = "*" ]; then
 		if [ -f "$CUSTOM_CLIENTS_CACHE" ]; then
 			local entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE")
 			name="${entry#*|}"
 		fi
 	fi
-	# Networkmap Client / MLO
+
+    # Networkmap Client / MLO
 	if [ -z "$name" ] || [ "$name" = "*" ]; then
 		local entry=$(sed 's/},"/ \n"/g' /jffs/nmp_cl_json.js | grep -i "$mac" | head -n 1)
 		local raw_parent=$(echo "$entry" | sed -n 's/.*"mlo_all_mac":"<\([^"]*\)".*/\1/p' | tr '[:lower:]' '[:upper:]')
@@ -1500,7 +1709,8 @@ get_name() {
 		if [ -n "$parent_mac" ] && [ "$parent_mac" != "$mac" ]; then mac="$parent_mac"; fi
 		name=$(echo "$entry" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
     fi
-	# Wireless Backhaul
+
+    # Wireless Backhaul
 	if [ -z "$name" ] || [ "$name" = "*" ] || [ "$name" = "$mac" ]; then
 		local temp="${mac#*:}"; local mid_mac="${temp%:*}"
 		if [ -n "$mid_mac" ]; then
@@ -1513,7 +1723,8 @@ get_name() {
 			fi
 		fi
 	fi
-	# Fallback
+
+    # Fallback
 	case "$name" in ""|"*") name="$mac" ;; esac
 }
 
@@ -1522,8 +1733,10 @@ get_ip() {
     elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"
     elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"
     elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE") && [ -n "$line" ]; then ip="${line#*|}"; ip="${ip%%|*}"; fi
-	case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
-	case "$IPPAD" in
+
+    case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
+
+    case "$IPPAD" in
         1)
             last_octet="${ip##*.}"
             ip=$(printf "%s.%03d" "${ip%.*}" "${last_octet:-0}") ;;
@@ -1534,7 +1747,8 @@ get_ip() {
             seg2="${ip_last_two#*.}"
             ip=$(printf "%s.%03d.%03d" "$ip_base" "${seg1:-0}" "${seg2:-0}") ;;
     esac
-	ip_to_num "$ip"; ip_sort="$IP_NUM"
+
+    ip_to_num "$ip"; ip_sort="$IP_NUM"
 }
 
 ip_to_num() {
@@ -1542,14 +1756,17 @@ ip_to_num() {
     o1="${ip%%.*}"; local rest="${ip#*.}"
     o2="${rest%%.*}"; rest="${rest#*.}"
     o3="${rest%%.*}"; o4="${rest#*.}"
+
     case "$o1" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
     case "$o2" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
     case "$o3" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
     case "$o4" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
+
     o1=${o1#${o1%%[!0]*}}; [ -z "$o1" ] && o1=0
     o2=${o2#${o2%%[!0]*}}; [ -z "$o2" ] && o2=0
     o3=${o3#${o3%%[!0]*}}; [ -z "$o3" ] && o3=0
     o4=${o4#${o4%%[!0]*}}; [ -z "$o4" ] && o4=0
+
     IP_NUM=$(printf "%03d%03d%03d%03d" "${o1:-0}" "${o2:-0}" "${o3:-0}" "${o4:-0}")
 }
 
@@ -1561,7 +1778,9 @@ final_chk() {
 
 check_new_mac() {
 	local mac="$1"
+
     if [ ! -f "$KNOWN_DB" ]; then touch "$KNOWN_DB"; fi
+
     if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
         echo "$mac" >> "$KNOWN_DB"
         echo "$mac" >> "$KNOWN_CACHE"
@@ -1572,23 +1791,28 @@ check_new_mac() {
 get_rx_tx() {
     rx_disp="${rx:-1}"; [ "$rx_disp" = "0" ] && rx_disp="1"
     tx_disp="${tx:-${max:-1}}"; [ "$tx_disp" = "0" ] && tx_disp="1"
+
     if [ "$rx_disp" = "1" ] && [ "$tx_disp" = "1" ]; then lrd="1 / 72"
     else lrd="${rx_disp} / ${tx_disp}"; fi
+
     if [ "$rx_disp" -gt "$tx_disp" ] 2>/dev/null; then
         T=$rx_disp; rx_disp=$tx_disp; tx_disp=$T
         lrd="$rx_disp / $tx_disp"
     fi
+
     lrd_val=$(printf "%04d" "${tx_disp:-0}")
 }
 
 get_trend() {
     local mac="$1"; local current_rssi="$2"; local rssi_name="${3:-""}"
-	if [ "$RS_HIST" = "1" ]; then
+
+    if [ "$RS_HIST" = "1" ]; then
 		local rband=$(get_band "$iface" "$width" "$ROUTER" "band")
 		local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
 		local history_str="${entry#*|}"; local prev_entry="${history_str##*,}"
 		local prev_rssi="${prev_entry%%|*}"; local trend_icon=""
-		if [ -z "$prev_rssi" ]; then
+
+        if [ -z "$prev_rssi" ]; then
 			trend_icon="<span class='trend-box'>•</span>"
 		elif [ "$current_rssi" -gt "$prev_rssi" ]; then
 			trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
@@ -1597,46 +1821,60 @@ get_trend() {
 		else
 			trend_icon="<span class='trend-box'>•</span>"
 		fi
-		case "$RS_HIST_DATE" in
+
+        case "$RS_HIST_DATE" in
             1)
                 local new_entry="$current_rssi|$rssi_name|$rband|$CUR_TIME" ;;
             *)
                 local new_entry="$current_rssi|$rssi_name|$rband" ;;
         esac
-		local new_history="${history_str:+$history_str,}$new_entry"
+
+        local new_history="${history_str:+$history_str,}$new_entry"
 		local final_history="$new_history"
 		local commas_only="${final_history//[^,]/}"
 		local count=$(( ${#commas_only} + 1 ))
-		while [ "$count" -gt "$RS_HIST_ENTRIES" ]; do
+
+        while [ "$count" -gt "$RS_HIST_ENTRIES" ]; do
 			final_history="${final_history#*,}"
 			count=$((count - 1))
 		done
-		echo "$mac|$final_history" >> "$NEW_HISTORY"
-		local rssi_history=""; local IFS=','
-		for entry in $final_history; do
+
+        echo "$mac|$final_history" >> "$NEW_HISTORY"
+
+        local rssi_history=""; local IFS=','
+
+        for entry in $final_history; do
 			rssi="${entry%%|*}"; rest="${entry#*|}"
 			name="${rest%%|*}"; rest="${rest#*|}"
-			case "$RS_HIST_DATE" in
+
+            case "$RS_HIST_DATE" in
                 1) rband_val="${rest%%|*}"; time="${rest#*|}" ;;
                 *) rband_val="$rest"; time="" ;;
             esac
-			if [ "$time" = "$rest" ]; then time=""; fi
+
+            if [ "$time" = "$rest" ]; then time=""; fi
+
 			if [ "$rssi" -ge -50 ]; then style="color: #30d158; font-weight: bold;"
 			elif [ "$rssi" -ge -60 ]; then style="color: #64d2ff; font-weight: bold;"
 			elif [ "$rssi" -ge -70 ]; then style="color: #ffd60a; font-weight: bold;"
 			else style="color: #ff453a; font-weight: bold;"; fi
-			rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi [$name] [$rband_val]${time:+ $time}</span>"
+
+            rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi [$name] [$rband_val]${time:+ $time}</span>"
 		done
-		unset IFS
+
+        unset IFS
 		echo -n "$trend_icon<span class='rssi-tooltip'>$rssi_history</span>"
 	else
 		local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
 		local old="${entry##*|}"
-		echo "$mac|$current_rssi" >> "$NEW_HISTORY"
-		if [ -z "$old" ] || [ "$old" -eq 0 ]; then
+
+        echo "$mac|$current_rssi" >> "$NEW_HISTORY"
+
+        if [ -z "$old" ] || [ "$old" -eq 0 ]; then
             echo "<span class='trend-box'>•</span>"
             return
         fi
+
         if [ "$current_rssi" -gt "$old" ]; then
             echo "<span class='trend-box trend-up rssi-excl'>↑</span>"
         elif [ "$current_rssi" -lt "$old" ]; then
@@ -1650,8 +1888,10 @@ get_trend() {
 get_band() {
     local iface=$1; local width=$2; local model=$3
     local w_text=""; local Label="Unknown"
-	if [ -n "$width" ]; then w_text=" ($width)"; fi
+
+    if [ -n "$width" ]; then w_text=" ($width)"; fi
     local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
+
     case "$m" in
 		# Quad-Band Mapping (5G, 6G-1, 6G-2, 2.4G)
 		# Models: GT-BE98(Pro), BQ16
@@ -1663,7 +1903,8 @@ get_band() {
                 wl3*|eth10*) Label="2.4G" ;;
             esac
             ;;
-		# Quad-Band Mapping (5G, 5G-2, 6G, 2.4G)
+
+        # Quad-Band Mapping (5G, 5G-2, 6G, 2.4G)
 		# Models: GT-AXE16000, GT-BE25000
         *AXE16000*|*BE25000*)
             case "$iface" in
@@ -1673,7 +1914,8 @@ get_band() {
                 wl3*|eth10*) Label="2.4G" ;;
             esac
             ;;
-		# Tri-Band ZenWiFi-BT10 Specific
+
+        # Tri-Band ZenWiFi-BT10 Specific
         *BT10*)
             case "$iface" in
                 wl0*) Label="6G" ;;
@@ -1681,7 +1923,8 @@ get_band() {
                 wl2*) Label="2.4G" ;;
             esac
             ;;
-		# Tri-Band Mapping (2.4G, 5G, 6G)
+
+        # Tri-Band Mapping (2.4G, 5G, 6G)
         # Models: RT-BE96U, RT-BE92U, GT-BE19000, GS-BE18000, GS-BE12000, BT6, ZENWIFI-BT8(MTK),
         #         RT-AXE7800, GT-AXE11000, ET8, ET9, ET12
         *BE96U*|*BE92U*|*BE19000*|*BE18000*|*BE12000*|*BT6*|*BT8*|*AXE7800*|*AXE11000*|*ET8*|*ET9*|*ET12*)
@@ -1691,7 +1934,8 @@ get_band() {
                 wl2*|eth6*|eth9*|rax[0-9]*)              Label="6G" ;;
             esac
             ;;
-		# Tri-Band Mapping (2.4G, 5G-1, 5G-2)
+
+        # Tri-Band Mapping (2.4G, 5G-1, 5G-2)
         # Models:  RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
         *AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
@@ -1700,7 +1944,8 @@ get_band() {
                 wl2*|eth6*|eth9*)              Label="5G-2" ;;
             esac
             ;;
-		# Dual-Band DSL-AX82U Specific
+
+        # Dual-Band DSL-AX82U Specific
         *DSL-AX82U*)
             case "$iface" in
                 wl0*|eth5*) Label="2.4G" ;;
@@ -1708,7 +1953,8 @@ get_band() {
                 *)          Label="Unknown" ;;
             esac
             ;;
-		# Dual-Band Mapping
+
+        # Dual-Band Mapping
 		# Models:  RT-AX86U, ZENWIFI-BD4(QCA)
         *)
             case "$iface" in
@@ -1718,8 +1964,10 @@ get_band() {
             esac
             ;;
     esac
+
     # Unsupported: TUF-AX4200(MTK), RT-AX1800S(MTK), ZENWIFI_XD4_PLUS(MTK)
-	# Wireless Backhaul
+
+    # Wireless Backhaul
     if [ -n "$width" ]; then
         if [ "$width" -eq 320 ] && [ "$Label" = "Unknown" ]; then Label="6G"
         elif [ "$width" -ge 80 ] && [ "$width" -le 160 ]; then
@@ -1728,14 +1976,17 @@ get_band() {
             case "$iface" in *0*) Label="2.4G" ;; *) Label="5G" ;; esac
         fi
     fi
+
     # Band UI Renderer
 	local class="" sort="0"
-	case "$Label" in
+
+    case "$Label" in
 		2.4G*)  class="band-24g"; sort="2.4" ;;
 		5G*)    class="band-5g"; sort="5" ;;
 		6G*)    class="band-6g"; sort="6" ;;
 	esac
-	case "$4" in
+
+    case "$4" in
         band) echo "$Label" ;;
         *)    echo "<td data-sort='$sort' style='text-align:center;'><span class='$class'>$Label$w_text</span></td>" ;;
     esac
@@ -1743,23 +1994,31 @@ get_band() {
 
 qca_uptime() {
     [ "$uptime" = "UP_QCA" ] || return 0
+
     case "$iface" in *ath*) ;; *) return 0 ;; esac
+
     local now=$(date +%s); local clean_mac="$mac"
     local start_ts=$(jq -r --arg m "$clean_mac" '.[$m].start // 0' "/jffs/wlcnt.json" 2>/dev/null)
+
     if [ "${start_ts:-0}" -gt 0 ]; then diff=$((now - start_ts)); uptime=${diff#-}
     else uptime="0"; fi
 }
 
 device_uptime() {
     local T=$1; local pulse=""
+
     if [ -z "$T" ] || case "$T" in *[!0-9]*) true ;; *) false ;; esac; then
         echo "<span data-sort='0'>---</span>"
         return
     fi
+
     local check_mins="${PULSE_MINS:-15}"; local pulse_sec=$((check_mins * 60))
+
     if [ "$check_mins" -ne 0 ] && [ "$T" -lt "$pulse_sec" ]; then pulse="pulse-blue"; fi
+
     local d=$((T / 86400)); local rem=$((T % 86400))
     local h=$((rem / 3600)); local m=$(((rem % 3600) / 60))
+
     if [ "$d" -gt 0 ]; then
         printf "<span class='%s' data-sort='%s'>%02dd %02dh</span>" "$pulse" "$T" "$d" "$h"
     elif [ "$h" -gt 0 ]; then
@@ -1842,6 +2101,7 @@ get_row() {
 router_uptime() {
     local s="${1%.*}" d h m
     d=$((s / 86400)); h=$((s % 86400 / 3600)); m=$((s % 3600 / 60))
+
     if [ $d -gt 0 ]; then echo "${d}d ${h}h ${m}m"
     elif [ $h -gt 0 ]; then echo "${h}h ${m}m"
     else echo "${m}m"; fi
@@ -2128,10 +2388,12 @@ NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0; NODE_DEVICE_TOTAL=0
 
 for line in $SSH_NODES; do
 	NODE_OUT=""
-	ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
+
+    ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	eval CUSTOM_NICK=\$NODE_NICK_$CLEAN_IP
-	NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"
+
+    NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"
     if [ "${#NODE_NAME}" -gt 25 ]; then NODE_NAME="${NODE_NAME:0:25}"; fi
 	if [ -f "$NODE_DATA_DIR/${CLEAN_IP}.out" ]; then NODE_OUT=$(cat "$NODE_DATA_DIR/${CLEAN_IP}.out"); fi
 
@@ -2141,12 +2403,16 @@ for line in $SSH_NODES; do
         NODE_COLOR=$(echo $N_COLORS | cut -d' ' -f$((COLOR_INDEX)))
         NODE_SUP="<sup>$NUMBERED_NODE</sup>"
         NODE_NUM="<span style='color:$NODE_COLOR;'>$NODE_SUP</span>"
-		case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
+
+        case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
+
         NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NNS</span>"
-		case "$NODE_NAMES" in "") NODE_NAMES="$NODE_BRAND" ;; *) NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;; esac
+
+        case "$NODE_NAMES" in "") NODE_NAMES="$NODE_BRAND" ;; *) NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;; esac
 
         parse_node_out "$NODE_OUT"
 		if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
+
         N_UPTIME=$(router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class "$N_TEMP")
