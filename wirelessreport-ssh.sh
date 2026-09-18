@@ -559,7 +559,7 @@ node_auth() {
                 return ;;
             *)
                 printf "\n$BL[i] Retrying authentication...$NC"; sleep 5
-                node_auth; return ;;
+                echo -e ""; node_auth; return ;;
         esac
     fi
 }
