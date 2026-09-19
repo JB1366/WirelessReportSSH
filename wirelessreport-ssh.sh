@@ -272,7 +272,8 @@ do_install() {
         while true; do
             check_version do_install
             printf "Do you want to $UP (y/n): "; read -r update
-            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac; done
+            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac
+        done
     fi
 
     echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
@@ -703,7 +704,8 @@ ssh_keys() {
     if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
 		while true; do
             printf "$BL\n[i]$NC Stored key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
-            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
+            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
+        done
         echo -e "\n$GR[!]  Linking and configuring...$NC"
 	fi
 
@@ -764,7 +766,8 @@ del_ssh_keys() {
 		echo -e "\n$YL[!] Main Router SSH Key exists.$NC\n"
         while true; do
             printf "Do you want to delete Key? (y/n): "; read -r delete
-            case "$delete" in y|Y) break ;; n|N) return ;; *) freeze ;; esac; done
+            case "$delete" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
+        done
 	else
 		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
 		pause; return
@@ -872,7 +875,8 @@ do_uninstall() {
     echo -e "\n$RD[!] WARNING: Removing Wireless Report SSH...$NC\n"
     while true; do
         printf "Are you sure? (y/n): "; read -r confirm
-        case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac; done
+        case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
+    done
 
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
 
@@ -1113,8 +1117,9 @@ hex_to_ansi() {
 }
 
 set_colors() {
-    local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node model ip clean_ip hex_clr node_clr
-    local old_name new_loc node_loc old_nick manual_main input_node
+    local main_name main_ip m_color_hex current_colors total_nodes working_colors i
+    local main_display_name main_display_color formatted_main_ip idx node MODEL IP CLEAN_IP active_color nick_var_name node_display_name display_color formatted_ip
+    local node_choice default_node_pool next_color target_name target_hex target_node target_ip target_CLEAN_IP target_nick_var target_prompt_color selected_hex new_string step color_choice
 
     main_name=$(nvram get productid)
     main_ip=$(nvram get lan_ipaddr)
