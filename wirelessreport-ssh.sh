@@ -292,9 +292,9 @@ do_install() {
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"; pause; return 1; fi
 
     if [ "${USB_PATH#/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n$BL[+] USB Found: Using $USB_PATH for reports and history.$NC"
+        echo -e "\n$GR[+] USB Found: Using $USB_PATH for reports and history.$NC\n"
     else
-        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
+        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC\n"
     fi
 
     if [ -f "$SSH_KEY" ]; then
@@ -415,7 +415,6 @@ get_usb() {
     KNOWN_DB="$USB_PATH/known_macs.db"
     HISTORY_DB="$USB_PATH/rssi_history.db"
     ERROR_LOG="$USB_PATH/ssh_error.log"
-    echo $USB_PATH
 }
 
 wr_sha256() {
