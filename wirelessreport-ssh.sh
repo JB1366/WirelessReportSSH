@@ -292,7 +292,7 @@ do_install() {
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"; pause; return 1; fi
 
     if [ "${USB_PATH#/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n$GR[+] USB Found: Using $USB_PATH for reports and history.$NC\n"
+        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC\n"
     else
         echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC\n"
     fi
@@ -320,6 +320,11 @@ do_install() {
     sed -i "/wireless_report/d" "$SE_FILE" 2>/dev/null
     echo 'if [ "$1" = "restart" ] && [ "$2" = "wireless_report" ]; then '$REPORT_SCRIPT' & fi # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
+
+    if ! grep -F "sh /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" /jffs/configs/profile.add >/dev/null 2>/dev/null; then
+        echo "alias wrssh=\"sh /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh install\" # added by Wireless Report SSH" >> /jffs/configs/profile.add
+        echo -e "$GR[+] Adding alias 'wrssh' to /jffs/configs/profile.add$NC\n"
+    fi
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
@@ -479,326 +484,6 @@ ssh_init () {
     fi
 }
 
-check_ssh() {
-	while true; do
-		show_header
-		echo -e "$BL=================================================="
-		echo -e "$NC                SSH Environment                   "
-		echo -e "$BL=================================================="
-		echo -e "$NC SSH-Key: $KEY                         Port: $PORT"
-		echo -e "$BL=================================================="
-		echo -e "                                                     "
-		echo -e "  $N1  Generate RSA Keys & Provision AiMesh Nodes    "
-		echo -e "  $N2  Provision Main Router Only                    "
-		echo -e "  $N3  Remove RSA Keys                               "
-		echo -e "  $N4  View Authorized Keys                          "
-		echo -e "  $N5  View Known Hosts                              "
-		echo -e "  $N6  View SSH Error Log                            "
-		echo -e "  $N7  Node Authentication                           "
-		echo -e "                                                     "
-		echo -e "  $LE  Exit back to main menu                        "
-		echo -e "                                                     "
-		echo -e "$BL=================================================="
-        while true; do
-            selection
-            case "$choice" in
-                1)
-                    ssh_keys
-                    case "$install" in 1) return 0 ;; esac
-                    break
-                    ;;
-                2)
-                    echo -e "\n$YL[i] Setting Up Router-Only...$NC"
-                    sed -i '/^SSH_NODES=/d' "$CONFIG"
-                    echo 'SSH_NODES=" "' >> "$CONFIG"
-                    pause; return
-                    ;;
-                3|4|5|6|7)
-                    froze || continue
-                    case "$choice" in
-                        3)
-                            del_ssh_keys ;;
-                        4)
-                            echo -e "\n$BL================ Authorized Keys =================$NC\n"
-
-                            if [ -f "/root/.ssh/authorized_keys" ]; then
-                                cat /root/.ssh/authorized_keys
-                            else
-                                echo -e "$YL[!] File not found.$NC"
-                            fi
-
-                            echo -e "\n\n$BL==================================================$NC"
-                            pause
-                            ;;
-                        5)
-                            echo -e "\n$BL================== Known Hosts  ==================$NC\n"
-
-                            if [ -f "/jffs/.ssh/known_hosts" ]; then
-                                cat /jffs/.ssh/known_hosts
-                            else
-                                echo -e "$YL[!] File not found.$NC"
-                            fi
-
-                            echo -e "\n$BL==================================================$NC"
-                            pause
-                            ;;
-                        6)
-                            echo -e "\n$BL================= SSH Error Log ==================$NC\n"
-
-                            if [ -f "$ERROR_LOG" ]; then
-                                cat "$ERROR_LOG"
-                                echo -e "\n\n$BL==================================================$NC"
-                                printf "\nRemove error log? (y/n): "; read -r rm_log
-                                case "$rm_log" in [yY]) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC" ;; esac
-                            else
-                                echo -e "$YL[!] File not found.$NC"
-                                echo -e "\n$BL==================================================$NC"
-                            fi
-
-                            pause
-                            ;;
-                        7)
-                            node_auth ;;
-                    esac
-                    break ;;
-                e|E)
-                    return 0 ;;
-                *)
-                    freeze 2; continue ;;
-            esac
-        done
-	done
-}
-
-node_auth() {
-	if [ ! -s "$SSH_KEY" ]; then
-        echo -e "\n$YL[!] Main Router SSH Key not found.$NC"
-        pause
-        return
-    fi
-
-    echo -e "\n$GR[✓] Main Router SSH Key found at: $WH$SSH_KEY$NC\n"
-
-    echo -e "$BL=================================================="
-    echo -e "$NC         Verifying Node Authentication            "
-    echo -e "$BL=================================================="
-    echo -e ""
-
-    AIMESH_NODES=$(nvram get asus_device_list | sed 's/</\n/g' | grep '>2$' | awk -F '>' '{print $2 "|" $3}' |  sort -t . -k 4,4n)
-
-    if [ -z "$AIMESH_NODES" ]; then
-        echo -e "$RD[!] No AiMesh Nodes detected in NVRAM.$NC"
-        TOTAL_NODES=0; any_success=0
-        ACTION_MSG="Force ROUTER-ONLY configuration"; KEY_LBL="r"
-    else
-        TOTAL_NODES=$(echo "$AIMESH_NODES" | grep -o "|" | wc -l)
-		any_success=0; VALID_NODES=""; new_nodes=0
-
-        for line in $AIMESH_NODES; do
-			ROUTER="${line%%|*}"; IP="${line#*|}"
-            case "$IP" in ""|"$ROUTER") continue ;; esac
-			if [ -z "$ROUTER" ]; then ROUTER="Node_$IP"; fi
-
-            printf "$NC[*] Testing $GR%-14s$NC (%s) " "$ROUTER" "$IP"
-
-            SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
-
-            SSH_RC=$?
-			if [ -n "$SSH_ERR" ]; then echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done; fi
-
-            if [ "$SSH_RC" -eq 0 ]; then
-				echo -e "$GR[✓] AUTHENTICATED$NC"
-				any_success=$((any_success + 1))
-				VALID_NODES="$VALID_NODES $ROUTER|$IP"
-
-                if ! grep -q "$IP" /jffs/.ssh/known_hosts 2>/dev/null; then
-					echo -ne "    Capturing fingerprint & updating known_hosts "
-					dbclient -y -p "$SSH_PORT" "$IP" "exit" > /dev/null 2>&1
-
-                    if grep -q "$IP" /root/.ssh/known_hosts 2>/dev/null; then
-						grep "$IP" /root/.ssh/known_hosts >> /jffs/.ssh/known_hosts
-						sort -u /jffs/.ssh/known_hosts -o /jffs/.ssh/known_hosts
-						echo -e "$GR[✓] DONE$NC"
-
-                        new_nodes=$((new_nodes + 1))
-						TARGET_KEY=$(awk -v ip="$IP" '$1 ~ ip {print $2, $3}' /jffs/.ssh/known_hosts 2>/dev/null)
-						if [ -n "$TARGET_KEY" ]; then
-                            echo -e "    Node Host Key: $BL$TARGET_KEY$NC"
-                        fi
-					else
-                        echo -e "$RD[✗] FAILED$NC"
-                    fi
-				fi
-			else
-				if echo "$SSH_ERR" | grep -q "No auth methods"; then
-                    echo -e "$RD[✗] Failed: Invalid Username or SSH Key.$NC"
-				elif
-                    echo "$SSH_ERR" | grep -q "Connection refused"; then
-                        echo -e "$RD[✗] Failed: SSH Connection refused.$NC"
-				else
-                    echo -e "$RD[✗] Failed: Unknown connection issue.$NC"
-                fi
-			fi
-		done
-    fi
-
-    sed -i '/SSH_NODES=/d' "$CONFIG"
-
-    if [ -z "$VALID_NODES" ]; then
-        echo 'SSH_NODES=" "' >> "$CONFIG"
-    else
-        echo "SSH_NODES=\"$VALID_NODES\"" >> "$CONFIG"
-    fi
-
-    if [ "$any_success" -gt 0 ] && [ "$any_success" -eq "$TOTAL_NODES" ]; then
-        echo -e "\n$GR[✓] All nodes ($any_success/$TOTAL_NODES) authenticated successfully!$NC"
-        if [ "$new_nodes" -gt 0 ]; then
-            [ "$new_nodes" -eq 1 ] && suffix="" || suffix="s"
-            echo -e "\n$YL[!] $new_nodes new node$suffix successfully authenticated.$NC"
-        fi
-        pause; return
-    else
-        if [ "$any_success" -gt 0 ]; then
-            echo -e "\n$YL[!] Partial Success: Only $any_success of $TOTAL_NODES nodes authenticated.$NC"
-            ACTION_MSG="Continue with current nodes only"
-            KEY_LBL="$LC"
-        else
-            echo -e "\n$RD[!] CRITICAL: SSH authentication failed on all nodes.$NC"
-            ACTION_MSG="Force ROUTER-ONLY configuration"
-            KEY_LBL="$LR"
-        fi
-
-        echo -e "\n Choices:\n"
-        echo -e "  $BL(Enter)$NC Retry authentication"
-        echo -e "  $BL$KEY_LBL$NC     $ACTION_MSG"
-        echo -e "  $LE     Exit to main menu\n"
-        selection
-        case "$choice" in
-            [rR]|[cC])
-                echo -e "\n\n$YL[!] $ACTION_MSG...$NC\n"
-                if [ "$any_success" -eq 0 ]; then
-                    sed -i '/SSH_NODES=/d' "$CONFIG"
-                    echo 'SSH_NODES=" "' >> "$CONFIG"
-                fi
-                echo -e "$GR[✓] Environment configuration locked in.$NC"
-                pause; return
-                ;;
-            e|E)
-                return ;;
-            *)
-                printf "\n$BL[i] Retrying authentication...$NC"; sleep 5
-                echo -e ""; node_auth; return
-                ;;
-        esac
-    fi
-}
-
-ssh_keys() {
-    if [ -f "$SSH_KEY" ]; then
-        echo -e "\n$YL[!] Main Router SSH Key already exists.$NC"
-        pause
-        return 0
-    fi
-
-    if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
-		while true; do
-            printf "$BL\n[i]$NC Stored key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
-            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
-        done
-        echo -e "\n$GR[!]  Linking and configuring...$NC"
-	fi
-
-    if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
-        while true; do
-            printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
-            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
-
-        echo -e "\n$YL[i] Creating RSA Key in /jffs/.ssh/$NC\n"
-
-        mkdir -p /jffs/.ssh
-        dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
-    fi
-
-    rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
-    mkdir -p /root/.ssh
-    cp /jffs/.ssh/id_dropbear /root/.ssh/id_dropbear
-
-    echo -e "\n$BL[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear$NC\n"
-
-    SSH_KEY="/root/.ssh/id_dropbear"
-
-    local pub_key=$(dropbearkey -y -f "/root/.ssh/id_dropbear" | grep "^ssh-rsa")
-    local current_keys=$(nvram get sshd_authkeys)
-	local combined_keys=$(printf "%s\n%s" "$current_keys" "$pub_key" | sed '/^$/d' | sort -u)
-
-    echo -e "$YL[i] Injecting Key into NVRAM...$NC\n"
-
-    nvram set sshd_authkeys="$combined_keys"
-    nvram commit
-	nvram get sshd_authkeys > /root/.ssh/authorized_keys
-    chmod 600 /root/.ssh/authorized_keys
-
-    if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
-    if ! grep -q "id_dropbear" "$SS_FILE"; then
-        echo -e "\n$YL[i] Adding SSH Key to services-start for persistence on reboots...$NC"
-		echo -e "\n$YL[i] Adding known_hosts to services-start...$NC\n"
-
-        echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
-        echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
-    fi
-
-    echo -e "$BL=================================================="
-	echo -e "$NC               ACTION REQUIRED NOW                "
-    echo -e "$BL=================================================="
-    echo -e "                                                     "
-	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management  "
-	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n      "
-	echo -e "$YL[!] Do not press [Enter] until Nodes are confirmed to be back online.\n"
-	echo -e "$BL[*] TIP: If a node is missing after authentication,                    "
-	echo -e "$BL[*]      use option #7 to reauthenticate.                           $NC"
-	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check..."; read -r discard
-	node_auth
-}
-
-del_ssh_keys() {
-	if [ -f "$SSH_KEY" ]; then
-		echo -e "\n$YL[!] Main Router SSH Key exists.$NC\n"
-        while true; do
-            printf "Do you want to delete Key? (y/n): "; read -r delete
-            case "$delete" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
-        done
-	else
-		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
-		pause; return
-	fi
-
-    echo -e "\n$YL[i] Purging RSA key footprint from environment...$NC"
-
-    if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
-		PUB_STRING=$(awk '{print $2}' /jffs/.ssh/id_dropbear.pub)
-	else
-		PUB_STRING=""
-	fi
-
-    if [ -n "$PUB_STRING" ] && [ -f "/root/.ssh/authorized_keys" ]; then
-		sed -i "\|$PUB_STRING|d" /root/.ssh/authorized_keys
-	fi
-
-    NVRAM_KEYS=$(nvram get sshd_authkeys)
-
-    if [ -n "$PUB_STRING" ] && echo "$NVRAM_KEYS" | grep -q "$PUB_STRING"; then
-		CLEANED_KEYS=$(echo "$NVRAM_KEYS" | grep -v "$PUB_STRING")
-		nvram set sshd_authkeys="$CLEANED_KEYS"
-		nvram commit
-	fi
-
-    rm -f "/jffs/.ssh/id_dropbear" "/jffs/.ssh/id_dropbear.pub" "/root/.ssh/id_dropbear"
-	nvram get sshd_authkeys > /root/.ssh/authorized_keys
-	chmod 600 /root/.ssh/authorized_keys
-	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
-	ssh_init; pause
-}
-
 inject_menu() {
 	source /usr/sbin/helper.sh
 
@@ -893,7 +578,14 @@ do_uninstall() {
 		rm -f /www/user/"${INSTALLED_PAGE}" >/dev/null 2>&1
 	fi
 
-    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE"; sed -i "/wireless_report/d" "$SE_FILE"
+    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE"
+    sed -i "/wireless_report/d" "$SE_FILE"
+
+    if [ -f /jffs/configs/profile.add ]; then
+        sed -i '/# added by Wireless Report SSH/d' /jffs/configs/profile.add
+        echo -e "$GR[*] Removing shell alias...\n"
+    fi
+
 	restart_httpd; ssh_init
 	rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
 
@@ -1619,6 +1311,326 @@ set_rssi() {
             break
         done
     done
+}
+
+check_ssh() {
+	while true; do
+		show_header
+		echo -e "$BL=================================================="
+		echo -e "$NC                SSH Environment                   "
+		echo -e "$BL=================================================="
+		echo -e "$NC SSH-Key: $KEY                         Port: $PORT"
+		echo -e "$BL=================================================="
+		echo -e "                                                     "
+		echo -e "  $N1  Generate RSA Keys & Provision AiMesh Nodes    "
+		echo -e "  $N2  Provision Main Router Only                    "
+		echo -e "  $N3  Remove RSA Keys                               "
+		echo -e "  $N4  View Authorized Keys                          "
+		echo -e "  $N5  View Known Hosts                              "
+		echo -e "  $N6  View SSH Error Log                            "
+		echo -e "  $N7  Node Authentication                           "
+		echo -e "                                                     "
+		echo -e "  $LE  Exit back to main menu                        "
+		echo -e "                                                     "
+		echo -e "$BL=================================================="
+        while true; do
+            selection
+            case "$choice" in
+                1)
+                    ssh_keys
+                    case "$install" in 1) return 0 ;; esac
+                    break
+                    ;;
+                2)
+                    echo -e "\n$YL[i] Setting Up Router-Only...$NC"
+                    sed -i '/^SSH_NODES=/d' "$CONFIG"
+                    echo 'SSH_NODES=" "' >> "$CONFIG"
+                    pause; return
+                    ;;
+                3|4|5|6|7)
+                    froze || continue
+                    case "$choice" in
+                        3)
+                            del_ssh_keys ;;
+                        4)
+                            echo -e "\n$BL================ Authorized Keys =================$NC\n"
+
+                            if [ -f "/root/.ssh/authorized_keys" ]; then
+                                cat /root/.ssh/authorized_keys
+                            else
+                                echo -e "$YL[!] File not found.$NC"
+                            fi
+
+                            echo -e "\n\n$BL==================================================$NC"
+                            pause
+                            ;;
+                        5)
+                            echo -e "\n$BL================== Known Hosts  ==================$NC\n"
+
+                            if [ -f "/jffs/.ssh/known_hosts" ]; then
+                                cat /jffs/.ssh/known_hosts
+                            else
+                                echo -e "$YL[!] File not found.$NC"
+                            fi
+
+                            echo -e "\n$BL==================================================$NC"
+                            pause
+                            ;;
+                        6)
+                            echo -e "\n$BL================= SSH Error Log ==================$NC\n"
+
+                            if [ -f "$ERROR_LOG" ]; then
+                                cat "$ERROR_LOG"
+                                echo -e "\n\n$BL==================================================$NC"
+                                printf "\nRemove error log? (y/n): "; read -r rm_log
+                                case "$rm_log" in [yY]) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC" ;; esac
+                            else
+                                echo -e "$YL[!] File not found.$NC"
+                                echo -e "\n$BL==================================================$NC"
+                            fi
+
+                            pause
+                            ;;
+                        7)
+                            node_auth ;;
+                    esac
+                    break ;;
+                e|E)
+                    return 0 ;;
+                *)
+                    freeze 2; continue ;;
+            esac
+        done
+	done
+}
+
+ssh_keys() {
+    if [ -f "$SSH_KEY" ]; then
+        echo -e "\n$YL[!] Main Router SSH Key already exists.$NC"
+        pause
+        return 0
+    fi
+
+    if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
+		while true; do
+            printf "$BL\n[i]$NC Stored key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
+            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
+        done
+        echo -e "\n$GR[!]  Linking and configuring...$NC"
+	fi
+
+    if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
+        while true; do
+            printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
+            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
+
+        echo -e "\n$YL[i] Creating RSA Key in /jffs/.ssh/$NC\n"
+
+        mkdir -p /jffs/.ssh
+        dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
+    fi
+
+    rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
+    mkdir -p /root/.ssh
+    cp /jffs/.ssh/id_dropbear /root/.ssh/id_dropbear
+
+    echo -e "\n$BL[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear$NC\n"
+
+    SSH_KEY="/root/.ssh/id_dropbear"
+
+    local pub_key=$(dropbearkey -y -f "/root/.ssh/id_dropbear" | grep "^ssh-rsa")
+    local current_keys=$(nvram get sshd_authkeys)
+	local combined_keys=$(printf "%s\n%s" "$current_keys" "$pub_key" | sed '/^$/d' | sort -u)
+
+    echo -e "$YL[i] Injecting Key into NVRAM...$NC\n"
+
+    nvram set sshd_authkeys="$combined_keys"
+    nvram commit
+	nvram get sshd_authkeys > /root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+
+    if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
+    if ! grep -q "id_dropbear" "$SS_FILE"; then
+        echo -e "\n$YL[i] Adding SSH Key to services-start for persistence on reboots...$NC"
+		echo -e "\n$YL[i] Adding known_hosts to services-start...$NC\n"
+
+        echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
+        echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
+    fi
+
+    echo -e "$BL=================================================="
+	echo -e "$NC               ACTION REQUIRED NOW                "
+    echo -e "$BL=================================================="
+    echo -e "                                                     "
+	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management  "
+	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n      "
+	echo -e "$YL[!] Do not press [Enter] until Nodes are confirmed to be back online.\n"
+	echo -e "$BL[*] TIP: If a node is missing after authentication,                    "
+	echo -e "$BL[*]      use option #7 to reauthenticate.                           $NC"
+	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check..."; read -r discard
+	node_auth
+}
+
+del_ssh_keys() {
+	if [ -f "$SSH_KEY" ]; then
+		echo -e "\n$YL[!] Main Router SSH Key exists.$NC\n"
+        while true; do
+            printf "Do you want to delete Key? (y/n): "; read -r delete
+            case "$delete" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
+        done
+	else
+		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
+		pause; return
+	fi
+
+    echo -e "\n$YL[i] Purging RSA key footprint from environment...$NC"
+
+    if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
+		PUB_STRING=$(awk '{print $2}' /jffs/.ssh/id_dropbear.pub)
+	else
+		PUB_STRING=""
+	fi
+
+    if [ -n "$PUB_STRING" ] && [ -f "/root/.ssh/authorized_keys" ]; then
+		sed -i "\|$PUB_STRING|d" /root/.ssh/authorized_keys
+	fi
+
+    NVRAM_KEYS=$(nvram get sshd_authkeys)
+
+    if [ -n "$PUB_STRING" ] && echo "$NVRAM_KEYS" | grep -q "$PUB_STRING"; then
+		CLEANED_KEYS=$(echo "$NVRAM_KEYS" | grep -v "$PUB_STRING")
+		nvram set sshd_authkeys="$CLEANED_KEYS"
+		nvram commit
+	fi
+
+    rm -f "/jffs/.ssh/id_dropbear" "/jffs/.ssh/id_dropbear.pub" "/root/.ssh/id_dropbear"
+	nvram get sshd_authkeys > /root/.ssh/authorized_keys
+	chmod 600 /root/.ssh/authorized_keys
+	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
+	ssh_init; pause
+}
+
+node_auth() {
+	if [ ! -s "$SSH_KEY" ]; then
+        echo -e "\n$YL[!] Main Router SSH Key not found.$NC"
+        pause
+        return
+    fi
+
+    echo -e "\n$GR[✓] Main Router SSH Key found at: $WH$SSH_KEY$NC\n"
+
+    echo -e "$BL=================================================="
+    echo -e "$NC         Verifying Node Authentication            "
+    echo -e "$BL=================================================="
+    echo -e ""
+
+    AIMESH_NODES=$(nvram get asus_device_list | sed 's/</\n/g' | grep '>2$' | awk -F '>' '{print $2 "|" $3}' |  sort -t . -k 4,4n)
+
+    if [ -z "$AIMESH_NODES" ]; then
+        echo -e "$RD[!] No AiMesh Nodes detected in NVRAM.$NC"
+        TOTAL_NODES=0; any_success=0
+        ACTION_MSG="Force ROUTER-ONLY configuration"; KEY_LBL="r"
+    else
+        TOTAL_NODES=$(echo "$AIMESH_NODES" | grep -o "|" | wc -l)
+		any_success=0; VALID_NODES=""; new_nodes=0
+
+        for line in $AIMESH_NODES; do
+			ROUTER="${line%%|*}"; IP="${line#*|}"
+            case "$IP" in ""|"$ROUTER") continue ;; esac
+			if [ -z "$ROUTER" ]; then ROUTER="Node_$IP"; fi
+
+            printf "$NC[*] Testing $GR%-14s$NC (%s) " "$ROUTER" "$IP"
+
+            SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
+
+            SSH_RC=$?
+			if [ -n "$SSH_ERR" ]; then echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done; fi
+
+            if [ "$SSH_RC" -eq 0 ]; then
+				echo -e "$GR[✓] AUTHENTICATED$NC"
+				any_success=$((any_success + 1))
+				VALID_NODES="$VALID_NODES $ROUTER|$IP"
+
+                if ! grep -q "$IP" /jffs/.ssh/known_hosts 2>/dev/null; then
+					echo -ne "    Capturing fingerprint & updating known_hosts "
+					dbclient -y -p "$SSH_PORT" "$IP" "exit" > /dev/null 2>&1
+
+                    if grep -q "$IP" /root/.ssh/known_hosts 2>/dev/null; then
+						grep "$IP" /root/.ssh/known_hosts >> /jffs/.ssh/known_hosts
+						sort -u /jffs/.ssh/known_hosts -o /jffs/.ssh/known_hosts
+						echo -e "$GR[✓] DONE$NC"
+
+                        new_nodes=$((new_nodes + 1))
+						TARGET_KEY=$(awk -v ip="$IP" '$1 ~ ip {print $2, $3}' /jffs/.ssh/known_hosts 2>/dev/null)
+						if [ -n "$TARGET_KEY" ]; then
+                            echo -e "    Node Host Key: $BL$TARGET_KEY$NC"
+                        fi
+					else
+                        echo -e "$RD[✗] FAILED$NC"
+                    fi
+				fi
+			else
+				if echo "$SSH_ERR" | grep -q "No auth methods"; then
+                    echo -e "$RD[✗] Failed: Invalid Username or SSH Key.$NC"
+				elif
+                    echo "$SSH_ERR" | grep -q "Connection refused"; then
+                        echo -e "$RD[✗] Failed: SSH Connection refused.$NC"
+				else
+                    echo -e "$RD[✗] Failed: Unknown connection issue.$NC"
+                fi
+			fi
+		done
+    fi
+
+    sed -i '/SSH_NODES=/d' "$CONFIG"
+
+    if [ -z "$VALID_NODES" ]; then
+        echo 'SSH_NODES=" "' >> "$CONFIG"
+    else
+        echo "SSH_NODES=\"$VALID_NODES\"" >> "$CONFIG"
+    fi
+
+    if [ "$any_success" -gt 0 ] && [ "$any_success" -eq "$TOTAL_NODES" ]; then
+        echo -e "\n$GR[✓] All nodes ($any_success/$TOTAL_NODES) authenticated successfully!$NC"
+        if [ "$new_nodes" -gt 0 ]; then
+            [ "$new_nodes" -eq 1 ] && suffix="" || suffix="s"
+            echo -e "\n$YL[!] $new_nodes new node$suffix successfully authenticated.$NC"
+        fi
+        pause; return
+    else
+        if [ "$any_success" -gt 0 ]; then
+            echo -e "\n$YL[!] Partial Success: Only $any_success of $TOTAL_NODES nodes authenticated.$NC"
+            ACTION_MSG="Continue with current nodes only"
+            KEY_LBL="$LC"
+        else
+            echo -e "\n$RD[!] CRITICAL: SSH authentication failed on all nodes.$NC"
+            ACTION_MSG="Force ROUTER-ONLY configuration"
+            KEY_LBL="$LR"
+        fi
+
+        echo -e "\n Choices:\n"
+        echo -e "  $BL(Enter)$NC Retry authentication"
+        echo -e "  $BL$KEY_LBL$NC     $ACTION_MSG"
+        echo -e "  $LE     Exit to main menu\n"
+        selection
+        case "$choice" in
+            [rR]|[cC])
+                echo -e "\n\n$YL[!] $ACTION_MSG...$NC\n"
+                if [ "$any_success" -eq 0 ]; then
+                    sed -i '/SSH_NODES=/d' "$CONFIG"
+                    echo 'SSH_NODES=" "' >> "$CONFIG"
+                fi
+                echo -e "$GR[✓] Environment configuration locked in.$NC"
+                pause; return
+                ;;
+            e|E)
+                return ;;
+            *)
+                printf "\n$BL[i] Retrying authentication...$NC"; sleep 5
+                echo -e ""; node_auth; return
+                ;;
+        esac
+    fi
 }
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
