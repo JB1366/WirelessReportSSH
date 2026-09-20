@@ -230,9 +230,9 @@ menu_vars() {
 
     REPORT_UNIT="${REPORT_UNIT:-F}"
 	case "$REPORT_UNIT" in
-        ISO) DN="ISO"; DU="$GR°C$NC" ;;
-        C) DN="INTL"; DU="$GR°C$NC" ;;
-        *) DN="USA"; DU="$GR°F$NC" ;;
+        ISO) DN="ISO";  DU="$GR°C$NC" ;;
+        C)   DN="INTL"; DU="$GR°C$NC" ;;
+        *)   DN="USA";  DU="$GR°F$NC" ;;
     esac
 
     THEME=${THEME:-ORIGINAL}; TM_STAT="$GR$THEME$NC"
@@ -243,7 +243,12 @@ menu_vars() {
 
     PULSE_MINS=${PULSE_MINS:-15}; case "$PULSE_MINS" in 0) UP_STAT="$OFF" ;; *) UP_STAT="$GR${PULSE_MINS} Mins$NC" ;; esac
 
-    IPPAD=${IPPAD:-1}; case "$IPPAD" in 2) PD_STAT="${GR}Last 2 Octets$NC" ;; 1) PD_STAT="${BL}Last Octet$NC" ;; *) PD_STAT="${RD}Disabled$NC" ;; esac
+    IPPAD=${IPPAD:-1}
+    case "$IPPAD" in
+        2) PD_STAT="${GR}Last 2 Octets$NC" ;;
+        1) PD_STAT="${BL}Last Octet$NC" ;;
+        *) PD_STAT="${RD}Disabled$NC" ;;
+    esac
 
     HOST_COLOR=${HOST_COLOR:-0}; case "$HOST_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
 
@@ -1252,12 +1257,16 @@ set_rssi() {
                             echo "$var=\"$val\"" >> "$CONFIG"
                         fi
                     done
-                    rm -f "$HISTORY_DB"; unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
+                    rm -f "$HISTORY_DB"
+                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
-                    pause; return 0
+                    pause
+                    return 0
                     ;;
                 *)
-                    freeze 2; continue ;;
+                    freeze 2
+                    continue
+                    ;;
             esac
             break
         done
@@ -1268,7 +1277,7 @@ check_ssh() {
 	while true; do
 		show_header
 		echo -e "$BL=================================================="
-		echo -e "$NC                SSH Environment                   "
+		echo -e "$NC                 SSH Environment                  "
 		echo -e "$BL=================================================="
 		echo -e "$NC SSH-Key: $KEY                         Port: $PORT"
 		echo -e "$BL=================================================="
@@ -1296,7 +1305,8 @@ check_ssh() {
                     echo -e "\n$YL[i] Setting Up Router-Only...$NC"
                     sed -i '/^SSH_NODES=/d' "$CONFIG"
                     echo 'SSH_NODES=" "' >> "$CONFIG"
-                    pause; return
+                    pause
+                    return
                     ;;
                 3|4|5|6|7)
                     froze || continue
@@ -1339,11 +1349,15 @@ check_ssh() {
                         7)
                             node_auth ;;
                     esac
-                    break ;;
+                    break
+                    ;;
                 e|E)
-                    return 0 ;;
+                    return 0
+                    ;;
                 *)
-                    freeze 2; continue ;;
+                    freeze 2
+                    continue
+                    ;;
             esac
         done
 	done
@@ -1564,7 +1578,8 @@ node_auth() {
                 pause; return
                 ;;
             e|E)
-                return ;;
+                return
+                ;;
             *)
                 printf "\n$BL[i] Retrying authentication...$NC"; sleep 5
                 echo -e ""; node_auth; return
@@ -1749,10 +1764,12 @@ get_temp_unit() {
     case "$t_unit" in ""|*[!0-9.]*) echo "--"; return ;; esac
     case "$TEMP_UNIT" in
         C)
-            echo "${t_unit}°C" ;;
+            echo "${t_unit}°C"
+            ;;
         *)
             local f_temp=$(( (t_unit * 9 + (t_unit >= 0 ? 2 : -2)) / 5 + 32 ))
-            echo "${f_temp}°F" ;;
+            echo "${f_temp}°F"
+            ;;
     esac
 }
 
@@ -1915,7 +1932,9 @@ final_chk() {
 
 check_new_mac() {
 	local mac="$1"
-    if [ ! -f "$KNOWN_DB" ]; then touch "$KNOWN_DB"; fi
+    if [ ! -f "$KNOWN_DB" ]; then
+        touch "$KNOWN_DB"
+    fi
 
     if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
         echo "$mac" >> "$KNOWN_DB"
@@ -2122,7 +2141,7 @@ get_band() {
         elif [ "$Label" = "Unknown" ]; then
             case "$iface" in
                 *0*) Label="2.4G" ;;
-                *) Label="5G" ;;
+                *)   Label="5G" ;;
             esac
         fi
     fi
@@ -2145,7 +2164,6 @@ qca_uptime() {
     case "$iface" in *ath*) ;; *) return 0 ;; esac
     local now=$(date +%s); local clean_mac="$mac"
     local start_ts=$(jq -r --arg m "$clean_mac" '.[$m].start // 0' "/jffs/wlcnt.json" 2>/dev/null)
-
     if [ "${start_ts:-0}" -gt 0 ]; then
         diff=$((now - start_ts)); uptime=${diff#-}
     else
@@ -2156,12 +2174,10 @@ qca_uptime() {
 device_uptime() {
     local T=$1
     local pulse=""
-
     if [ -z "$T" ] || case "$T" in *[!0-9]*) true ;; *) false ;; esac; then
         echo "<span data-sort='0'>---</span>"
         return
     fi
-
     local check_mins="${PULSE_MINS:-15}"
     local pulse_sec=$((check_mins * 60))
 
@@ -2604,7 +2620,10 @@ for line in $SSH_NODES; do
 
         NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NNS</span>"
 
-        case "$NODE_NAMES" in "") NODE_NAMES="$NODE_BRAND" ;; *) NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;; esac
+        case "$NODE_NAMES" in
+            "") NODE_NAMES="$NODE_BRAND" ;;
+            *)  NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;;
+        esac
 
         parse_node_out "$NODE_OUT"
 		if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
