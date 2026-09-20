@@ -350,15 +350,11 @@ do_update() {
             echo -e "$RD[!] Download failed. Aborting installation.$NC"
             return 1
         fi
-
         local CURRENT_PATH TARGET_PATH
-
         CURRENT_PATH=$(readlink -f "$0" 2>/dev/null)
         [ -z "$CURRENT_PATH" ] && CURRENT_PATH="$0"
-
         TARGET_PATH=$(readlink -f "$REPORT_SCRIPT" 2>/dev/null)
         [ -z "$TARGET_PATH" ] && TARGET_PATH="$REPORT_SCRIPT"
-
         if [ "$CURRENT_PATH" != "$TARGET_PATH" ]; then
             echo -e "\n$YL[!] GitHub unreachable. Installing current local copy...$NC"
             cp "$0" "$REPORT_SCRIPT"
@@ -377,9 +373,7 @@ ScriptUpdateFromAMTM() {
         printf "Automatic updates via AMTM are currently disabled."
         return 1
     fi
-
     if [ "$1" = "check" ]; then return 0; fi
-
     if check_github && do_update; then
         echo -e "  [+] Downloading latest version (v$REMOTE_VERSION)\n\n"
         echo -e "  [✓] Wireless Report SSH successfully updated.\n"
@@ -394,14 +388,12 @@ get_usb() {
     local mount mountpoint ROOT_PATH
 
     mountpoint="$(awk '$1 ~ /^\/dev\/sd/ && $2 ~ /^\/tmp\/mnt\// {print $2}' /proc/mounts | sort -u)"
-
     for mount in $mountpoint; do
         if [ -d "$mount/wirelessreport-ssh" ]; then
             USB_PATH="$mount/wirelessreport-ssh"
             break
         fi
     done
-
     if [ -z "$USB_PATH" ]; then
         ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
         if [ -n "$ROOT_PATH" ]; then
@@ -423,7 +415,6 @@ get_usb() {
 wr_sha256() {
     local file="$1" hash=""
     [ -f "$file" ] || return 1
-
     if command -v sha256sum >/dev/null 2>&1; then
         hash=$(sha256sum "$file" 2>/dev/null | awk '{print $1}')
     elif command -v busybox >/dev/null 2>&1 && busybox sha256sum "$file" >/dev/null 2>&1; then
@@ -431,7 +422,6 @@ wr_sha256() {
     elif command -v openssl >/dev/null 2>&1; then
         hash=$(openssl dgst -sha256 "$file" 2>/dev/null | awk '{print $NF}')
     fi
-
     [ "${#hash}" -eq 64 ] || return 1
     printf '%s\n' "$hash"
 }
@@ -445,12 +435,10 @@ check_github() {
     GITHUB="https://raw.githubusercontent.com/$GIT/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
 
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
-
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
         REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
         LOCAL_HASH=$(wr_sha256 "$REPORT_SCRIPT" 2>/dev/null)
         REMOTE_HASH=$(wr_sha256 "$REMOTE_TMP" 2>/dev/null)
-
         if [ -z "$LOCAL_HASH" ] || [ -z "$REMOTE_HASH" ]; then
             if [ -f "$REPORT_SCRIPT" ]; then
                 if cmp -s "$REPORT_SCRIPT" "$REMOTE_TMP"; then
@@ -466,7 +454,6 @@ check_github() {
         REMOTE_VERSION=""
         REMOTE_HASH=""
     fi
-
     rm -f "$REMOTE_TMP"
 }
 
@@ -474,7 +461,6 @@ ssh_init () {
 	NODE_USER=$(nvram get http_username)
 	SSH_PORT=$(nvram get sshd_port)
     SSH_PORT=${SSH_PORT:-22}
-
     if [ -f "/root/.ssh/id_dropbear" ]; then
         SSH_KEY="/root/.ssh/id_dropbear"
 	else
@@ -558,7 +544,6 @@ do_uninstall() {
         printf "Are you sure? (y/n): "; read -r confirm
         case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
     done
-
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
 
     if mount | grep -q "menuTree.js"; then
@@ -583,16 +568,13 @@ do_uninstall() {
         echo -e "$GR[*] Removing shell alias...\n"
     fi
 
-	restart_httpd; ssh_init
+	restart_httpd
+    ssh_init
 	rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
-
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
-
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
-
     unset RTIME BACKHAUL CUR_DATE RS_HIST_DATE RS_HIST CUR_RS_HIST CUR_ENTRIES
     unset THEME IPPAD PULSE_MINS DISPLAY_UNIT HOST_COLOR MAIN_COLOR NODE_COLORS
-
     echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
 	echo -e "$GR[+] Success: Wireless Report SSH uninstalled.$NC"
 	pause
@@ -697,7 +679,6 @@ set_nicknames() {
 
                         node_idx=$((node_idx + 1))
                     done
-
                     printf "\n\n$GR[+] Default hardware models restored.$NC\n"
                     ;;
                 2)
@@ -873,14 +854,12 @@ set_colors() {
                     m_color_hex="#0096ff"
                     default_node_pool="#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda"
                     working_colors=""; idx=1
-
                     while [ $idx -le $total_nodes ]; do
                         next_color=$(echo "$default_node_pool" | awk -v col="$idx" '{print $col}')
                         next_color="${next_color:-#30d158}"
                         working_colors="${working_colors:+$working_colors }$next_color"
                         idx=$((idx + 1))
                     done
-
                     echo -e "$BL\nColors restored to defaults.$NC"
                     pause
                     continue 2
@@ -1207,7 +1186,6 @@ set_branch() {
         else
             echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"
         fi
-
         check_github
         BN="[$GR$BRANCH_NAME$NC]"
 
@@ -1266,7 +1244,6 @@ set_rssi() {
                     RS_HIST="$CUR_RS_HIST"
                     RS_HIST_ENTRIES="$CUR_ENTRIES"
                     RS_HIST_DATE="$CUR_DATE"
-
                     for var in RS_HIST RS_HIST_ENTRIES RS_HIST_DATE; do
                         eval "val=\$${var}"
                         if grep -q "^$var=" "$CONFIG"; then
@@ -1275,7 +1252,6 @@ set_rssi() {
                             echo "$var=\"$val\"" >> "$CONFIG"
                         fi
                     done
-
                     rm -f "$HISTORY_DB"; unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
                     pause; return 0
@@ -1499,7 +1475,6 @@ node_auth() {
     else
         TOTAL_NODES=$(echo "$AIMESH_NODES" | grep -o "|" | wc -l)
 		any_success=0; VALID_NODES=""; new_nodes=0
-
         for line in $AIMESH_NODES; do
 			ROUTER="${line%%|*}"; IP="${line#*|}"
             case "$IP" in ""|"$ROUTER") continue ;; esac
@@ -1522,7 +1497,6 @@ node_auth() {
                 if ! grep -q "$IP" /jffs/.ssh/known_hosts 2>/dev/null; then
 					echo -ne "    Capturing fingerprint & updating known_hosts "
 					dbclient -y -p "$SSH_PORT" "$IP" "exit" > /dev/null 2>&1
-
                     if grep -q "$IP" /root/.ssh/known_hosts 2>/dev/null; then
 						grep "$IP" /root/.ssh/known_hosts >> /jffs/.ssh/known_hosts
 						sort -u /jffs/.ssh/known_hosts -o /jffs/.ssh/known_hosts
@@ -1548,7 +1522,6 @@ node_auth() {
 			fi
 		done
     fi
-
     sed -i '/SSH_NODES=/d' "$CONFIG"
 
     if [ -z "$VALID_NODES" ]; then
@@ -1773,9 +1746,7 @@ update_time() {
 
 get_temp_unit() {
     local t_unit=$1
-
     case "$t_unit" in ""|*[!0-9.]*) echo "--"; return ;; esac
-
     case "$TEMP_UNIT" in
         C)
             echo "${t_unit}°C" ;;
@@ -1788,7 +1759,6 @@ get_temp_unit() {
 get_temp_class() {
     local temp=$1
 	local val="${temp%%[^0-9]*}"
-
     case "$val" in ""|*[!0-9]*) echo "stat-cool"; return ;; esac
 
     if [ "$REPORT_UNIT" = "C" ]; then
@@ -1804,9 +1774,7 @@ get_temp_class() {
 
 get_load_class() {
     local load=$1
-
     case "$load" in ""|*[!0-9.]*) echo "stat-cool"; return ;; esac
-
     case "$load" in
         [4-9]*|[0-9][0-9]*) echo "stat-hot" ;;
         1.[5-9]*|[2-3].*)   echo "stat-warm" ;;
@@ -1947,7 +1915,6 @@ final_chk() {
 
 check_new_mac() {
 	local mac="$1"
-
     if [ ! -f "$KNOWN_DB" ]; then touch "$KNOWN_DB"; fi
 
     if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
@@ -1960,7 +1927,6 @@ check_new_mac() {
 get_rx_tx() {
     rx_disp="${rx:-1}"
     [ "$rx_disp" = "0" ] && rx_disp="1"
-
     tx_disp="${tx:-${max:-1}}"
     [ "$tx_disp" = "0" ] && tx_disp="1"
 
@@ -2019,16 +1985,13 @@ get_trend() {
         echo "$mac|$final_history" >> "$NEW_HISTORY"
 
         local rssi_history=""; local IFS=','
-
         for entry in $final_history; do
 			rssi="${entry%%|*}"; rest="${entry#*|}"
 			name="${rest%%|*}"; rest="${rest#*|}"
-
             case "$RS_HIST_DATE" in
                 1) rband_val="${rest%%|*}"; time="${rest#*|}" ;;
                 *) rband_val="$rest"; time="" ;;
             esac
-
             if [ "$time" = "$rest" ]; then time=""; fi
 
 			if [ "$rssi" -ge -50 ]; then
@@ -2040,16 +2003,13 @@ get_trend() {
 			else
                 style="color: #ff453a; font-weight: bold;"
             fi
-
             rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi [$name] [$rband_val]${time:+ $time}</span>"
 		done
-
         unset IFS
 		echo -n "$trend_icon<span class='rssi-tooltip'>$rssi_history</span>"
 	else
 		local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
 		local old="${entry##*|}"
-
         echo "$mac|$current_rssi" >> "$NEW_HISTORY"
 
         if [ -z "$old" ] || [ "$old" -eq 0 ]; then
@@ -2074,7 +2034,6 @@ get_band() {
     local w_text=""
     local Label="Unknown"
     local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
-
     if [ -n "$width" ]; then w_text=" ($width)"; fi
 
     case "$m" in
@@ -2170,13 +2129,11 @@ get_band() {
 
     # Band UI Renderer
 	local class="" sort="0"
-
     case "$Label" in
 		2.4G*)  class="band-24g"; sort="2.4" ;;
 		5G*)    class="band-5g"; sort="5" ;;
 		6G*)    class="band-6g"; sort="6" ;;
 	esac
-
     case "$4" in
         band) echo "$Label" ;;
         *)    echo "<td data-sort='$sort' style='text-align:center;'><span class='$class'>$Label$w_text</span></td>" ;;
@@ -2185,9 +2142,7 @@ get_band() {
 
 qca_uptime() {
     [ "$uptime" = "UP_QCA" ] || return 0
-
     case "$iface" in *ath*) ;; *) return 0 ;; esac
-
     local now=$(date +%s); local clean_mac="$mac"
     local start_ts=$(jq -r --arg m "$clean_mac" '.[$m].start // 0' "/jffs/wlcnt.json" 2>/dev/null)
 
