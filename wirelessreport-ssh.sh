@@ -262,11 +262,12 @@ menu_vars() {
 
 do_install() {
 	mkdir -p "$INSTALL_DIR" 2>/dev/null
-
     if [ ! -f "$CONFIG" ]; then touch "$CONFIG"; fi
 
     local is_update=0
-	if [ -f "$REPORT_SCRIPT" ]; then is_update=1; fi
+	if [ -f "$REPORT_SCRIPT" ]; then
+        is_update=1
+    fi
 
     if [ "$is_update" = "1" ]; then
         while true; do
@@ -339,14 +340,12 @@ do_install() {
 
 do_update() {
     TEMP_SCRIPT="/tmp/wirelessreportssh.sh"
-
     if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" 2>/dev/null && [ -s "$TEMP_SCRIPT" ]; then
         mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
         chmod +x "$REPORT_SCRIPT" 2>/dev/null
         return 0
     else
         rm -f "$TEMP_SCRIPT"
-
         if [ ! -f "$0" ]; then
             echo -e "$RD[!] Download failed. Aborting installation.$NC"
             return 1
@@ -374,7 +373,6 @@ do_update() {
 
 ScriptUpdateFromAMTM() {
     doScriptUpdateFromAMTM=true
-
     if [ "$doScriptUpdateFromAMTM" != "true" ]; then
         printf "Automatic updates via AMTM are currently disabled."
         return 1
@@ -393,10 +391,10 @@ ScriptUpdateFromAMTM() {
 
 get_usb() {
     [ -n "$USB_PATH" ] && return
-
     local mount mountpoint ROOT_PATH
 
     mountpoint="$(awk '$1 ~ /^\/dev\/sd/ && $2 ~ /^\/tmp\/mnt\// {print $2}' /proc/mounts | sort -u)"
+
     for mount in $mountpoint; do
         if [ -d "$mount/wirelessreport-ssh" ]; then
             USB_PATH="$mount/wirelessreport-ssh"
@@ -486,7 +484,6 @@ ssh_init () {
 
 inject_menu() {
 	source /usr/sbin/helper.sh
-
     TAB_LABEL="Wireless Report SSH"
 
     if [ -f "$CONFIG" ]; then
@@ -673,14 +670,12 @@ set_nicknames() {
 
             node_idx=$((node_idx + 1))
         done
-
         echo -e "\n$BL=================================================="
         while true; do
             selection
             case "$choice" in
                 1)
                     echo -e "\n$BL[+] Resetting to hardware defaults...$NC"
-
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
                     unset MAIN_NICK
@@ -707,7 +702,6 @@ set_nicknames() {
                     ;;
                 2)
                     echo -e "\n$BL[*] Updating nicknames with Locations...$NC"
-
                     OLD_NAME="${MAIN_NICK:-$MAIN_ROUTER}"
                     NEW_LOC=$(nvram get cfg_alias)
                     sed -i '/^MAIN_NICK=/d' "$CONFIG"
@@ -742,12 +736,10 @@ set_nicknames() {
                         fi
                         node_idx=$((node_idx + 1))
                     done
-
                     printf "\n\n$GR[+] Nicknames updated to Locations...$NC\n"
                     ;;
                 3)
                     echo -e "\n$BL[*] Manual Entry Mode$NC"
-
                     OLD_MAIN="${MAIN_NICK:-$MAIN_ROUTER}"
 
                     printf "\n  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "; read -r manual_main
@@ -776,7 +768,6 @@ set_nicknames() {
                         fi
                         node_idx=$((node_idx + 1))
                     done
-
                     printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n"
                     ;;
                 e|E)
@@ -823,7 +814,6 @@ set_colors() {
 
     [ -z "$m_color_hex" ] && m_color_hex="$MAIN_COLOR"
     [ -z "$current_colors" ] && current_colors="$NODE_COLORS"
-
     total_nodes=0
     for node in $SSH_NODES; do total_nodes=$((total_nodes + 1)); done
     working_colors="" i=1
@@ -977,7 +967,6 @@ set_colors() {
 
     update_config_var "MAIN_COLOR" "$m_color_hex"
     update_config_var "NODE_COLORS" "$working_colors"
-
     echo -e "$BL\nDevice colors successfully saved to CONFIG.$NC"
     pause
 }
@@ -1005,7 +994,6 @@ set_theme() {
                 e|E) break 2 ;;
                 *) freeze 2; continue ;;
             esac
-
             if grep -q "^THEME=" "$CONFIG"; then
                 sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
             else
@@ -1041,13 +1029,11 @@ set_options() {
                         case "$RTIME" in
                             1)
                                 sed -i 's/RTIME=.*/RTIME="0"/' "$CONFIG"
-
                                 if grep -q "RTIME_LOG=" "$CONFIG"; then
                                     sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
                                 else
                                     echo 'RTIME_LOG="0"' >> "$CONFIG"
                                 fi
-
                                 rm -f "$USB_PATH/runtime.db"; menu_vars
                                 echo -e "$NC Runtime Tracking: ($RT_STAT)"
                                 ;;
@@ -1056,26 +1042,22 @@ set_options() {
                                     printf "\n Write stats to Syslog? (y/n): "; read -r choice
                                     case "$choice" in y|Y) RTIME_LOG="1"; break ;; n|N) RTIME_LOG="0"; break ;; *) freeze 2 ;; esac
                                 done
-
                                 if grep -q "RTIME_LOG=" "$CONFIG"; then
                                     sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$RTIME_LOG\"/" "$CONFIG"
                                 else
                                     echo "RTIME_LOG=\"$RTIME_LOG\"" >> "$CONFIG"
                                 fi
-
                                 sed -i 's/RTIME=.*/RTIME="1"/' "$CONFIG"; menu_vars
                                 echo -e "$NC Runtime Tracking: ($RT_STAT) Stats RESET."
                                 ;;
                         esac
                     else
                         echo 'RTIME="0"' >> "$CONFIG"
-
                         if grep -q "RTIME_LOG=" "$CONFIG"; then
                             sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
                         else
                             echo 'RTIME_LOG="0"' >> "$CONFIG"
                         fi
-
                         rm -f "$USB_PATH/runtime.db"; menu_vars
                         echo -e "$NC Runtime Tracking: ($RT_STAT)"
                     fi
@@ -1094,7 +1076,6 @@ set_options() {
                         echo -e "\n (${GR}0$NC) disable (${GR}15$NC) def (${GR}1440$NC) max "
                         printf "$BL Enter alert interval in mins:$GR "; read -r user_mins
                         case "$user_mins" in ""|*[!0-9]*) freeze 3; continue ;; esac
-
                         if [ "$user_mins" -le 1440 ]; then NEW_MINS="$user_mins"
                             if grep -q "PULSE_MINS=" "$CONFIG"; then
                                 sed -i "s/PULSE_MINS=.*/PULSE_MINS=\"$NEW_MINS\"/" "$CONFIG"
@@ -1139,7 +1120,6 @@ set_options() {
                         else
                             echo 'INJECT="2"' >> "$CONFIG"
                         fi
-
                         echo -e "\n$GR[+] Adding INJECT=\"2\" to CONFIG$NC"
                         INJECT="2"; inject_menu
                     fi
@@ -1189,7 +1169,6 @@ set_ippad() {
             esac
             break
         done
-
         if grep -q "IPPAD=" "$CONFIG"; then
             sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
         else
@@ -1223,7 +1202,6 @@ set_branch() {
             esac
             break
         done
-
         if grep -q "^BRANCH=" "$CONFIG"; then
             sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
         else
@@ -1269,7 +1247,6 @@ set_rssi() {
                     while true; do
                         printf "\n$NC Enter new depth (${BL}5-20$NC) [Current: $CE]: "; read -r new_depth
                         case "$new_depth" in *[!0-9]*|"") freeze 2; continue ;; esac
-
                         if [ "$new_depth" -ge 5 ] && [ "$new_depth" -le 20 ]; then
                             CUR_ENTRIES="$new_depth"
                             break 2
@@ -1300,9 +1277,7 @@ set_rssi() {
                     done
 
                     rm -f "$HISTORY_DB"; unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
-
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
-
                     pause; return 0
                     ;;
                 *)
@@ -1354,31 +1329,26 @@ check_ssh() {
                             del_ssh_keys ;;
                         4)
                             echo -e "\n$BL================ Authorized Keys =================$NC\n"
-
                             if [ -f "/root/.ssh/authorized_keys" ]; then
                                 cat /root/.ssh/authorized_keys
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-
                             echo -e "\n\n$BL==================================================$NC"
                             pause
                             ;;
                         5)
                             echo -e "\n$BL================== Known Hosts  ==================$NC\n"
-
                             if [ -f "/jffs/.ssh/known_hosts" ]; then
                                 cat /jffs/.ssh/known_hosts
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-
                             echo -e "\n$BL==================================================$NC"
                             pause
                             ;;
                         6)
                             echo -e "\n$BL================= SSH Error Log ==================$NC\n"
-
                             if [ -f "$ERROR_LOG" ]; then
                                 cat "$ERROR_LOG"
                                 echo -e "\n\n$BL==================================================$NC"
@@ -1388,7 +1358,6 @@ check_ssh() {
                                 echo -e "$YL[!] File not found.$NC"
                                 echo -e "\n$BL==================================================$NC"
                             fi
-
                             pause
                             ;;
                         7)
@@ -1422,10 +1391,9 @@ ssh_keys() {
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
         while true; do
             printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
-            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac; done
-
+            case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
+        done
         echo -e "\n$YL[i] Creating RSA Key in /jffs/.ssh/$NC\n"
-
         mkdir -p /jffs/.ssh
         dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
     fi
@@ -1433,7 +1401,6 @@ ssh_keys() {
     rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
     mkdir -p /root/.ssh
     cp /jffs/.ssh/id_dropbear /root/.ssh/id_dropbear
-
     echo -e "\n$BL[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear$NC\n"
 
     SSH_KEY="/root/.ssh/id_dropbear"
@@ -1453,7 +1420,6 @@ ssh_keys() {
     if ! grep -q "id_dropbear" "$SS_FILE"; then
         echo -e "\n$YL[i] Adding SSH Key to services-start for persistence on reboots...$NC"
 		echo -e "\n$YL[i] Adding known_hosts to services-start...$NC\n"
-
         echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
@@ -1544,7 +1510,9 @@ node_auth() {
             SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
 
             SSH_RC=$?
-			if [ -n "$SSH_ERR" ]; then echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done; fi
+			if [ -n "$SSH_ERR" ]; then
+                echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done
+            fi
 
             if [ "$SSH_RC" -eq 0 ]; then
 				echo -e "$GR[✓] AUTHENTICATED$NC"
@@ -1559,7 +1527,6 @@ node_auth() {
 						grep "$IP" /root/.ssh/known_hosts >> /jffs/.ssh/known_hosts
 						sort -u /jffs/.ssh/known_hosts -o /jffs/.ssh/known_hosts
 						echo -e "$GR[✓] DONE$NC"
-
                         new_nodes=$((new_nodes + 1))
 						TARGET_KEY=$(awk -v ip="$IP" '$1 ~ ip {print $2, $3}' /jffs/.ssh/known_hosts 2>/dev/null)
 						if [ -n "$TARGET_KEY" ]; then
@@ -1647,7 +1614,6 @@ do_runtime() {
 	RTIME=${RTIME:-1}
 	if [ "$RTIME" = "1" ]; then
 		read -r END_RUNTIME _ < /proc/uptime
-
         STATS_FILE="$USB_PATH/runtime.db"
 		DIFF=$(awk "BEGIN {printf \"%.2f\", $END_RUNTIME - $START_RUNTIME}")
 		RUNTIME="${DIFF}s"
@@ -1680,12 +1646,10 @@ do_runtime() {
         .button-refresh:has(.button-trigger:hover):after { opacity: 1; visibility: visible; }
         .button-refresh:has(.button-trigger:hover) .button-trigger:before, .button-refresh:has(select:hover) select:before { opacity: 1; visibility: visible; top: 190%; }
         .button-refresh:has(.button-trigger:hover) .button-trigger:after, .button-refresh:has(select:hover) select:after { opacity: 1; visibility: visible; }"
-
         RUNTIME_CSS=$(echo "$RUNTIME_CSS" | sed 's/^    //')
 	else
 		RUNTIME_CSS=".button-tables.button-trigger { color: #ffffff; }
         .button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }"
-
         RUNTIME=""
         rm -f "$USB_PATH/runtime.db"
 	fi
@@ -2340,7 +2304,6 @@ get_row() {
 
 router_uptime() {
     local s="${1%.*}" d h m
-
     d=$((s / 86400))
     h=$((s % 86400 / 3600))
     m=$((s % 3600 / 60))
@@ -2664,7 +2627,6 @@ NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0; NODE_DEVICE_TOTAL=0
 
 for line in $SSH_NODES; do
 	NODE_OUT=""
-
     ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	eval CUSTOM_NICK=\$NODE_NICK_$CLEAN_IP
