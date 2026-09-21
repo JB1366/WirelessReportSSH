@@ -1726,9 +1726,10 @@ do_numbered_node() {
 
     # TEMP/UPTIME STYLE
     case "$NUMBERED_NODE" in
-        4)     TS=13; US=10 ;;
-        [5-9]) TS=10; US=8 ;;
-        *)     TS=14; US=11 ;;
+        [1-2]) TS=14; US=14 ;;
+        3)     TS=14; US=11 ;;
+        4)     TS=12; US=10 ;;
+        *)     TS=10; US=8 ;;
     esac
 }
 
