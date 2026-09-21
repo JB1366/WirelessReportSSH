@@ -1728,7 +1728,7 @@ do_numbered_node() {
     case "$NUMBERED_NODE" in
         4)     TS=13; US=10 ;;
         [5-9]) TS=10; US=8 ;;
-        *)     TS=14; US=12 ;;
+        *)     TS=14; US=11 ;;
     esac
 }
 
