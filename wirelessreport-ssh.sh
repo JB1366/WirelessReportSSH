@@ -565,24 +565,26 @@ do_uninstall() {
 		rm -f /www/user/"${INSTALLED_PAGE}" >/dev/null 2>&1
 	fi
 
-    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE"
-    sed -i "/wireless_report/d" "$SE_FILE"
-
     if [ -f /jffs/configs/profile.add ]; then
         sed -i '/# added by Wireless Report SSH/d' /jffs/configs/profile.add
         echo -e "$GR[*] Removing shell alias...\n"
     fi
 
-	restart_httpd
-    ssh_init
-	rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
+    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE"
+    sed -i "/wireless_report/d" "$SE_FILE"
+    rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
-    sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
+
     unset RTIME BACKHAUL CUR_DATE RS_HIST_DATE RS_HIST CUR_RS_HIST CUR_ENTRIES
     unset THEME IPPAD PULSE_MINS DISPLAY_UNIT HOST_COLOR MAIN_COLOR NODE_COLORS
+
+    sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
     echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
 	echo -e "$GR[+] Success: Wireless Report SSH uninstalled.$NC"
-	pause
+
+	restart_httpd
+    ssh_init
+    pause
 }
 
 set_temp_date() {
@@ -613,7 +615,8 @@ set_temp_date() {
             sed -i '/REPORT_UNIT=/d' "$CONFIG"
             echo "REPORT_UNIT=\"$NEW_UNIT\"" >> "$CONFIG"
             REPORT_UNIT="$NEW_UNIT"
-            update_time; break
+            update_time
+            break
         done
     done
 }
@@ -633,8 +636,8 @@ set_nicknames() {
 		echo -e "                                                     "
         echo -e "$BL=================================================="
 
-        local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node model ip clean_ip hex_clr node_clr
-        local old_name new_loc node_loc old_nick manual_main input_node
+        local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node model ip clean_ip hex_clr
+        local node_clr old_name new_loc node_loc old_nick manual_main input_node
 
         MAIN_ROUTER=$(nvram get productid)
         MAIN_IP=$(nvram get lan_ipaddr)
@@ -761,7 +764,8 @@ set_nicknames() {
                 *)
                     freeze 2; continue ;;
             esac
-            pause; break
+            pause
+            break
         done
     done
 }
@@ -786,8 +790,10 @@ hex_to_ansi() {
 
 set_colors() {
     local main_name main_ip m_color_hex current_colors total_nodes working_colors i
-    local main_display_name main_display_color formatted_main_ip idx node MODEL IP CLEAN_IP active_color nick_var_name node_display_name display_color formatted_ip
-    local node_choice default_node_pool next_color target_name target_hex target_node target_ip target_CLEAN_IP target_nick_var target_prompt_color selected_hex new_string step color_choice
+    local main_display_name main_display_color formatted_main_ip idx node MODEL IP
+    local CLEAN_IP active_color nick_var_name node_display_name display_color formatted_ip
+    local node_choice default_node_pool next_color target_name target_hex target_node target_ip
+    local target_CLEAN_IP target_nick_var target_prompt_color selected_hex new_string step color_choice
 
     main_name=$(nvram get productid)
     main_ip=$(nvram get lan_ipaddr)
@@ -919,8 +925,7 @@ set_colors() {
                     8)  selected_hex="#ffffff" ;;
                     9)  selected_hex="#ff70a6" ;;
                     10) selected_hex="#64ffda" ;;
-                    *)  freeze; continue
-                    ;;
+                    *)  freeze; continue ;;
                 esac
                 break
             done
@@ -1092,8 +1097,7 @@ set_options() {
                     fi
                     ;;
                 dev)
-                    freeze 2
-                    continue ;;
+                    freeze 2; continue ;;
                     # set_branch ;;
                 inject)
                     if grep -q 'INJECT="2"' "$CONFIG"; then
@@ -1120,8 +1124,7 @@ set_options() {
                 e|E)
                     return 0 ;;
                 *)
-                    freeze 2
-                    continue ;;
+                    freeze 2; continue ;;
             esac
             break
         done
@@ -1264,9 +1267,7 @@ set_rssi() {
                     return 0
                     ;;
                 *)
-                    freeze 2
-                    continue
-                    ;;
+                    freeze 2; continue ;;
             esac
             break
         done
@@ -1352,12 +1353,9 @@ check_ssh() {
                     break
                     ;;
                 e|E)
-                    return 0
-                    ;;
+                    return 0 ;;
                 *)
-                    freeze 2
-                    continue
-                    ;;
+                    freeze 2; continue ;;
             esac
         done
 	done
@@ -1463,7 +1461,8 @@ del_ssh_keys() {
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
 	chmod 600 /root/.ssh/authorized_keys
 	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
-	ssh_init; pause
+	ssh_init
+    pause
 }
 
 node_auth() {
@@ -2051,11 +2050,14 @@ get_band() {
     local iface=$1
     local width=$2
     local model=$3
-    local w_text=""
     local Label="Unknown"
-    local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
-    if [ -n "$width" ]; then w_text=" ($width)"; fi
 
+    local w_text=""
+    if [ -n "$width" ]; then
+        w_text=" ($width)"
+    fi
+
+    local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$m" in
 		# Quad-Band Mapping (5G, 6G-1, 6G-2, 2.4G)
 		# Models: GT-BE98(Pro), BQ16
@@ -2336,7 +2338,10 @@ rm -rf "$NODE_DATA_DIR" 2>/dev/null
 mkdir -p "$NODE_DATA_DIR"
 
 for line in $SSH_NODES; do
-	ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
+	ROUTER="${line%%|*}"
+    IP="${line#*|}"
+    CLEAN_IP="${IP//./_}"
+
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	(
 		/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "
@@ -2481,7 +2486,11 @@ NODE_PFX=$(nvram get cfg_relist | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' 
 
 ROUTER=$(nvram get productid)
 MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
-if [ "${#MAIN_NAME}" -gt 25 ]; then MAIN_NAME="${MAIN_NAME:0:25}"; fi
+
+if [ "${#MAIN_NAME}" -gt 25 ]; then
+    MAIN_NAME="${MAIN_NAME:0:25}"
+fi
+
 case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
 
 read -r M_LOAD _ < /proc/loadavg
@@ -2503,7 +2512,6 @@ WL3_PHYS=$4
 
 RAW_IFACES=$(printf "%s\n" $WL_BASES $(ifconfig -a | grep -oE "wl[0-9]+\.[0-9]+") | sort -u)
 ACTIVE_IFACES=""
-
 for iface in $RAW_IFACES; do
     if wl -i "$iface" bss 2>/dev/null | grep -q "up"; then
         ACTIVE_IFACES="$ACTIVE_IFACES $iface"
@@ -2511,10 +2519,8 @@ for iface in $RAW_IFACES; do
 done
 
 IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
-
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
-
     case "$iface" in
 		${WL0_PHYS:+"$WL0_PHYS"*}) data_iface="wl0" ;;
 		${WL1_PHYS:+"$WL1_PHYS"*}) data_iface="wl1" ;;
@@ -2524,7 +2530,6 @@ for iface in $IFACE_LIST; do
 	esac
 
     MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null); MAC_LIST=${MAC_LIST//assoclist /}
-
     if [ -z "$MAC_LIST" ]; then
 		BRIDGE=$(brctl show 2>/dev/null | grep "$iface" | awk '{print $1}')
 		if [ -z "$BRIDGE" ]; then
@@ -2535,11 +2540,9 @@ for iface in $IFACE_LIST; do
             MAC_LIST=$(brctl showmacs "$BRIDGE" 2>/dev/null | grep -v "yes" | awk '{print $2}')
         fi
 	fi
-
     case "$MAC_LIST" in "") continue ;; esac
 
     ssid=$(nvram get "${iface}_ssid")
-
     if [ -z "$ssid" ] || [ "${#ssid}" -ge 16 ]; then
         idx=${iface#*.}
         if [ "$idx" != "$iface" ]; then
@@ -2548,15 +2551,12 @@ for iface in $IFACE_LIST; do
             ssid=""
         fi
     fi
-
 	if [ -z "$ssid" ] && [ -n "$data_iface" ]; then
         ssid=$(nvram get "${data_iface}_ssid")
     fi
-
     if [ -z "$ssid" ]; then
         ssid=$(nvram get "${iface%.*}_ssid")
     fi
-
     if [ -z "$ssid" ] && [ -n "$data_iface" ]; then
         ssid=$(nvram get "${data_iface%.*}_ssid")
     fi
@@ -2599,12 +2599,17 @@ NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0; NODE_DEVICE_TOTAL=0
 
 for line in $SSH_NODES; do
 	NODE_OUT=""
-    ROUTER="${line%%|*}"; IP="${line#*|}"; CLEAN_IP="${IP//./_}"
+    ROUTER="${line%%|*}"
+    IP="${line#*|}"
+    CLEAN_IP="${IP//./_}"
+
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	eval CUSTOM_NICK=\$NODE_NICK_$CLEAN_IP
 
     NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"
-    if [ "${#NODE_NAME}" -gt 25 ]; then NODE_NAME="${NODE_NAME:0:25}"; fi
+    if [ "${#NODE_NAME}" -gt 25 ]; then
+        NODE_NAME="${NODE_NAME:0:25}"
+    fi
 
     if [ -f "$NODE_DATA_DIR/${CLEAN_IP}.out" ]; then
         NODE_OUT=$(cat "$NODE_DATA_DIR/${CLEAN_IP}.out")
@@ -2627,8 +2632,9 @@ for line in $SSH_NODES; do
         esac
 
         parse_node_out "$NODE_OUT"
-		if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
-
+		if [ "${#N_TEMP_RAW}" -gt 3 ]; then
+            N_TEMP_RAW=$((N_TEMP_RAW / 1000))
+        fi
         N_UPTIME=$(router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class "$N_TEMP")
