@@ -224,9 +224,9 @@ menu_vars() {
     DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"
     DATE_INTL="$GR$(date +"%-d-%b %-H:%M:%S")$NC"
     DATE_ISO="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"
-    DATE_USA1="$BL$(date +"%b-%d %I:%M:%S %p")$NC"
-    DATE_INTL1="$BL$(date +"%d-%b %I:%M:%S %p")$NC"
-    DATE_ISO1="$BL$(date +"%Y-%m-%d %I:%M:%S %p")$NC"
+    DATE_USA1="$BL$(date +"%b-%d %-I:%M:%S %p")$NC"
+    DATE_INTL1="$BL$(date +"%d-%b %-I:%M:%S %p")$NC"
+    DATE_ISO1="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
 
     REPORT_UNIT="${REPORT_UNIT:-USA}"
 	case "$REPORT_UNIT" in
@@ -590,10 +590,10 @@ set_temp_date() {
         echo -e "  $N1  USA   $GR(°F)$NC            ($DATE_USA)       "
         echo -e "  $N2  INTL  $GR(°C)$NC            ($DATE_INTL)      "
         echo -e "  $N3  ISO   $GR(°C)$NC          ($DATE_ISO)         "
-        echo -e "   |                          |            |         "
-        echo -e "  $N4  USA   $BL(°F)$NC          ($DATE_USA1)        "
-        echo -e "  $N5  INTL  $BL(°C)$NC          ($DATE_INTL1)       "
-        echo -e "  $N6  ISO   $BL(°C)$NC        ($DATE_ISO1)          "
+        echo -e "   |                          |             |        "
+        echo -e "  $N4  USA   $BL(°F)$NC           ($DATE_USA1)       "
+        echo -e "  $N5  INTL  $BL(°C)$NC           ($DATE_INTL1)      "
+        echo -e "  $N6  ISO   $BL(°C)$NC         ($DATE_ISO1)         "
         echo -e "                                                     "
         echo -e "  $LE  Exit back to main menu                        "
         echo -e "                                                     "
@@ -1709,9 +1709,9 @@ update_time() {
         USA)  T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
         INTL) T_FMT="+%-d-%b %-H:%M:%S"; D_FMT="+%-d-%b %-H:%M"; TEMP_UNIT="C" ;;
         ISO)  T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C" ;;
-        USA1) T_FMT="+%b-%-d %I:%M:%S %p"; D_FMT="+%b-%-d %I:%M %p"; TEMP_UNIT="F" ;;
-        INTL1)T_FMT="+%-d-%b %I:%M:%S %p"; D_FMT="+%-d-%b %I:%M %p"; TEMP_UNIT="C" ;;
-        ISO1) T_FMT="+%Y-%m-%d %I:%M:%S %p"; D_FMT="+%Y-%m-%d %I:%M %p"; TEMP_UNIT="C" ;;
+        USA1) T_FMT="+%b-%-d %-I:%M:%S %p"; D_FMT="+%b-%-d %-I:%M %p"; TEMP_UNIT="F" ;;
+        INTL1)T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
+        ISO1) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C" ;;
         *)    T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
