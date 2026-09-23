@@ -613,7 +613,6 @@ set_temp_date() {
             sed -i '/REPORT_UNIT=/d' "$CONFIG"
             echo "REPORT_UNIT=\"$NEW_UNIT\"" >> "$CONFIG"
             REPORT_UNIT="$NEW_UNIT"
-            update_time
             break
         done
     done
