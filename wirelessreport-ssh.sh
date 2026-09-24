@@ -3060,44 +3060,6 @@ cat <<HTML >> "$WEB_PAGE"
         background: rgba(0, 150, 255, 0.15);
     }
 
-
-
-    .btn-tooltip {
-        position: relative;
-    }
-
-    .btn-tooltip:before {
-        content: attr(data-tooltip);
-        position: absolute;
-        height: 28px;
-        line-height: 28px;
-        padding: 0 15px;
-        background: $RT_TOOLTIP;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        border: 1.5px solid #0096ff;
-        border-radius: 20px;
-        box-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        z-index: 100;
-        pointer-events: none;
-        top: 150%;
-        left: 150%;
-        transform: translateX(-75%);
-    }
-
-    .btn-tooltip:hover:before {
-        opacity: 1;
-        visibility: visible;
-        top: 150%;
-    }
-
-
-
     ${RUNTIME_CSS}
 
     #refresh-option {
@@ -3619,8 +3581,6 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" style="$ROUTER_ONLY">All Devices</button>
                             <button class="button-tables" onclick="openPopout()" style="$ROUTER_ONLY">Side by Side ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
-                            <a class="button-tables btn-tooltip" href="https://github.com/JB1366/WirelessReportSSH" target="_blank" rel="noopener noreferrer" data-tooltip="Wireless Report Repository">Github</a>
-                            <a class="button-tables btn-tooltip" href="https://www.snbforums.com/threads/97849/latest" target="_blank" rel="noopener noreferrer" data-tooltip="Wireless Report SNB Forums">SNB</a>
                         </div>
                     </div>
                     <div class="grid-container">
