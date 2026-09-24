@@ -1575,17 +1575,80 @@ do_runtime() {
         case "$RTIME_LOG" in 1) sys_log "Report completed in $RUNTIME. AVG: ${AVERAGE}s (L: ${NEW_MIN}s/H: ${NEW_MAX}s) over $NEW_COUNT scans." ;; esac
 
         RUNTIME_CSS=".button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }
-        .button-refresh, .button-refresh select, .button-refresh .button-trigger { position: relative; display: inline-block; }
-        .button-refresh:before, .button-refresh .button-trigger:before, .button-refresh select:before { position: absolute; height: 28px; line-height: 28px; padding: 0 15px; background: $RT_TOOLTIP; color: white; font-size: 12px; font-weight: bold; border: 1.5px solid #0096ff; border-radius: 20px; box-shadow: 0 0 10px rgba(0,150,255,0.3); white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 100; pointer-events: none; }
-        .button-refresh:after, .button-refresh .button-trigger:after, .button-refresh select:after { content: \"\"; position: absolute; width: 4px; height: 4px; background: #0096ff; border-radius: 50%; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 101; pointer-events: none; }
-        .button-refresh:before { content: \"Avg: ${AVERAGE}s over $NEW_COUNT scans\"; left: -80px; bottom: 185%; }
-        .button-refresh:after { left: 15px; bottom: 130%; box-shadow: -12px -12px 0 1.5px #0096ff; }
-        .button-refresh .button-trigger:before, .button-refresh select:before { content: \"High: ${NEW_MAX}s   Low: ${NEW_MIN}s\"; left: -80px; top: 185%; }
-        .button-refresh .button-trigger:after, .button-refresh select:after { left: 11px; top: 130%; box-shadow: -12px 12px 0 1.5px #0096ff; }
-        .button-refresh:has(.button-trigger:hover):before { opacity: 1; visibility: visible; bottom: 190%; }
-        .button-refresh:has(.button-trigger:hover):after { opacity: 1; visibility: visible; }
-        .button-refresh:has(.button-trigger:hover) .button-trigger:before, .button-refresh:has(select:hover) select:before { opacity: 1; visibility: visible; top: 190%; }
-        .button-refresh:has(.button-trigger:hover) .button-trigger:after, .button-refresh:has(select:hover) select:after { opacity: 1; visibility: visible; }"
+        .button-refresh, .button-refresh select, .button-refresh .button-trigger {
+            position: relative;
+            display: inline-block;
+        }
+        .button-refresh:before, .button-refresh .button-trigger:before, .button-refresh select:before {
+            position: absolute;
+            height: 28px;
+            line-height: 28px;
+            padding: 0 15px;
+            background: $RT_TOOLTIP;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1.5px solid #0096ff;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0,150,255,0.3);
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .button-refresh:after, .button-refresh .button-trigger:after, .button-refresh select:after {
+            content: \"\";
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #0096ff;
+            border-radius: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 101;
+            pointer-events: none;
+        }
+        .button-refresh:before {
+            content: \"Avg: ${AVERAGE}s over $NEW_COUNT scans\";
+            left: -80px;
+            bottom: 185%;
+        }
+        .button-refresh:after {
+            left: 15px;
+            bottom: 130%;
+            box-shadow: -12px -12px 0 1.5px #0096ff;
+        }
+        .button-refresh .button-trigger:before, .button-refresh select:before {
+            content: \"High: ${NEW_MAX}s   Low: ${NEW_MIN}s\";
+            left: -80px;
+            top: 185%;
+        }
+        .button-refresh .button-trigger:after, .button-refresh select:after {
+            left: 11px;
+            top: 130%;
+            box-shadow: -12px 12px 0 1.5px #0096ff;
+        }
+        .button-refresh:has(.button-trigger:hover):before {
+            opacity: 1;
+            visibility: visible;
+            bottom: 190%;
+        }
+        .button-refresh:has(.button-trigger:hover):after {
+            opacity: 1;
+            visibility: visible;
+        }
+        .button-refresh:has(.button-trigger:hover) .button-trigger:before, .button-refresh:has(select:hover) select:before {
+            opacity: 1;
+            visibility: visible;
+            top: 190%;
+        }
+        .button-refresh:has(.button-trigger:hover) .button-trigger:after, .button-refresh:has(select:hover) select:after {
+            opacity: 1;
+            visibility: visible;
+        }"
         RUNTIME_CSS=$(echo "$RUNTIME_CSS" | sed 's/^    //')
 	else
 		RUNTIME_CSS=".button-tables.button-trigger { color: #ffffff; }
@@ -1661,9 +1724,15 @@ get_theme() {
 }
 
 do_numbered_node() {
-    case "$NUMBERED_NODE" in 0) ROUTER_ONLY="display: none !important;" ;; *) ROUTER_ONLY="" ;; esac
+    case "$NUMBERED_NODE" in
+        0) ROUTER_ONLY="display: none !important;" ;;
+        *) ROUTER_ONLY="" ;;
+    esac
 
-    case "$NUMBERED_NODE" in 1) NTOTAL="" ;; *) NTOTAL="<span class='right-arrow'>—›</span> $NODE_TOTALS" ;; esac
+    case "$NUMBERED_NODE" in
+        1) NTOTAL="" ;;
+        *) NTOTAL="<span class='right-arrow'>—›</span> $NODE_TOTALS" ;;
+    esac
 
     case "$NUMBERED_NODE" in
         [1-9])
@@ -1892,7 +1961,6 @@ check_new_mac() {
     if [ ! -f "$KNOWN_DB" ]; then
         touch "$KNOWN_DB"
     fi
-
     if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
         echo "$mac" >> "$KNOWN_DB"
         echo "$mac" >> "$KNOWN_CACHE"
@@ -1903,6 +1971,7 @@ check_new_mac() {
 get_rx_tx() {
     rx_disp="${rx:-1}"
     [ "$rx_disp" = "0" ] && rx_disp="1"
+
     tx_disp="${tx:-${max:-1}}"
     [ "$tx_disp" = "0" ] && tx_disp="1"
 
@@ -1911,7 +1980,6 @@ get_rx_tx() {
     else
         lrd="${rx_disp} / ${tx_disp}"
     fi
-
     if [ "$rx_disp" -gt "$tx_disp" ] 2>/dev/null; then
         T=$rx_disp; rx_disp=$tx_disp; tx_disp=$T
         lrd="$rx_disp / $tx_disp"
@@ -1986,13 +2054,13 @@ get_trend() {
 	else
 		local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
 		local old="${entry##*|}"
+
         echo "$mac|$current_rssi" >> "$NEW_HISTORY"
 
         if [ -z "$old" ] || [ "$old" -eq 0 ]; then
             echo "<span class='trend-box'>•</span>"
             return
         fi
-
         if [ "$current_rssi" -gt "$old" ]; then
             echo "<span class='trend-box trend-up rssi-excl'>↑</span>"
         elif [ "$current_rssi" -lt "$old" ]; then
@@ -2008,12 +2076,10 @@ get_band() {
     local width=$2
     local model=$3
     local Label="Unknown"
-
     local w_text=""
     if [ -n "$width" ]; then
         w_text=" ($width)"
     fi
-
     local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$m" in
 		# Quad-Band Mapping (5G, 6G-1, 6G-2, 2.4G)
@@ -2138,9 +2204,9 @@ device_uptime() {
         echo "<span data-sort='0'>---</span>"
         return
     fi
+
     local check_mins="${PULSE_MINS:-15}"
     local pulse_sec=$((check_mins * 60))
-
     if [ "$check_mins" -ne 0 ] && [ "$T" -lt "$pulse_sec" ]; then
         pulse="pulse-blue"
     fi
@@ -2149,7 +2215,6 @@ device_uptime() {
     local rem=$((T % 86400))
     local h=$((rem / 3600))
     local m=$(((rem % 3600) / 60))
-
     if [ "$d" -gt 0 ]; then
         printf "<span class='%s' data-sort='%s'>%02dd %02dh</span>" "$pulse" "$T" "$d" "$h"
     elif [ "$h" -gt 0 ]; then
@@ -2298,7 +2363,6 @@ for line in $SSH_NODES; do
 	ROUTER="${line%%|*}"
     IP="${line#*|}"
     CLEAN_IP="${IP//./_}"
-
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	(
 		/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "
@@ -2443,11 +2507,9 @@ NODE_PFX=$(nvram get cfg_relist | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' 
 
 ROUTER=$(nvram get productid)
 MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
-
 if [ "${#MAIN_NAME}" -gt 25 ]; then
     MAIN_NAME="${MAIN_NAME:0:25}"
 fi
-
 case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
 
 read -r M_LOAD _ < /proc/loadavg
@@ -2559,7 +2621,6 @@ for line in $SSH_NODES; do
     ROUTER="${line%%|*}"
     IP="${line#*|}"
     CLEAN_IP="${IP//./_}"
-
     case "$IP" in ""|"$ROUTER") continue ;; esac
 	eval CUSTOM_NICK=\$NODE_NICK_$CLEAN_IP
 
@@ -2578,11 +2639,8 @@ for line in $SSH_NODES; do
         NODE_COLOR=$(echo $N_COLORS | cut -d' ' -f$((COLOR_INDEX)))
         NODE_SUP="<sup>$NUMBERED_NODE</sup>"
         NODE_NUM="<span style='color:$NODE_COLOR;'>$NODE_SUP</span>"
-
         case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
-
         NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NNS</span>"
-
         case "$NODE_NAMES" in
             "") NODE_NAMES="$NODE_BRAND" ;;
             *)  NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;;
