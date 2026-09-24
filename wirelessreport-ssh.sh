@@ -130,7 +130,6 @@ check_version() {
     else
         version_cmp=$(version_compare "$SCRIPT_VERSION" "$REMOTE_VERSION")
         case "$version_cmp" in -1|0|1) ;; *) version_cmp=0 ;; esac
-
         if [ "$version_cmp" -gt 0 ]; then
             STATE="UP_TO_DATE"
         elif [ "$version_cmp" -lt 0 ]; then
@@ -204,7 +203,7 @@ menu_vars() {
     JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
-	for i in E C R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
+	for i in E S R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
 
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
 
@@ -368,7 +367,7 @@ do_update() {
         TARGET_PATH=$(readlink -f "$REPORT_SCRIPT" 2>/dev/null)
         [ -z "$TARGET_PATH" ] && TARGET_PATH="$REPORT_SCRIPT"
         if [ "$CURRENT_PATH" != "$TARGET_PATH" ]; then
-            echo -e "\n$YL[!] GitHub unreachable. Installing current local copy...$NC"
+            echo -e "\n$GR[+] GitHub unreachable. Installing current local copy...$NC"
             cp "$0" "$REPORT_SCRIPT"
             chmod +x "$REPORT_SCRIPT" 2>/dev/null
             pause; return 0
@@ -584,16 +583,16 @@ set_temp_date() {
         echo -e "$BL=================================================="
         echo -e "$NC                  Set Temp/Date                   "
         echo -e "$BL=================================================="
-        echo -e "$BL  Current:$NC $DN $DU        Date: $CT            "
+        echo -e "$NC  Current: $DN $DU        Date: $CT               "
         echo -e "$BL=================================================="
         echo -e "                                                     "
-        echo -e "  $N1  USA   $GR(°F)$NC            ($DATE_USA)       "
-        echo -e "  $N2  INTL  $GR(°C)$NC            ($DATE_INTL)      "
-        echo -e "  $N3  ISO   $GR(°C)$NC          ($DATE_ISO)         "
+        echo -e "  $N1  USA   ($GR°F$NC)            ($DATE_USA)       "
+        echo -e "  $N2  INTL  ($GR°C$NC)            ($DATE_INTL)      "
+        echo -e "  $N3  ISO   ($GR°C$NC)          ($DATE_ISO)         "
         echo -e "   |                          |             |        "
-        echo -e "  $N4  USA   $BL(°F)$NC           ($DATE_USA1)       "
-        echo -e "  $N5  INTL  $BL(°C)$NC           ($DATE_INTL1)      "
-        echo -e "  $N6  ISO   $BL(°C)$NC         ($DATE_ISO1)         "
+        echo -e "  $N4  USA   ($BL°F$NC)           ($DATE_USA1)       "
+        echo -e "  $N5  INTL  ($BL°C$NC)           ($DATE_INTL1)      "
+        echo -e "  $N6  ISO   ($BL°C$NC)         ($DATE_ISO1)         "
         echo -e "                                                     "
         echo -e "  $LE  Exit back to main menu                        "
         echo -e "                                                     "
@@ -840,8 +839,8 @@ set_colors() {
         #=============================================================#
         echo -e "                                                     "
         echo -e "  $LR Restore Default Colors                         "
-        echo -e "  $LC Cancel and Discard Changes                     "
-        echo -e "  $LE Exit and Save Changes                          "
+        echo -e "  $LS Save Changes & Exit                            "
+        echo -e "  $LE Exit back to main menu                         "
         echo -e "                                                     "
         echo -e "$BL=================================================="
         while true; do
@@ -861,8 +860,8 @@ set_colors() {
                     pause
                     continue 2
                     ;;
-                c|C) return 0 ;;
-                e|E) break 2 ;;
+                s|S) break 2 ;;
+                e|E) return 0 ;;
             esac
             case "$node_choice" in ""|*[!0-9]*) freeze 2; continue ;; esac
             if [ "$node_choice" -gt "$total_nodes" ]; then freeze 2; continue; fi
@@ -1079,7 +1078,7 @@ set_options() {
                     set_branch ;;
                 inject)
                     if grep -q 'INJECT="2"' "$CONFIG"; then
-                        echo -e "\n$YL[+] INJECT=\"2\" already exists in CONFIG$NC"
+                        echo -e "\n$YL[!] INJECT=\"2\" already exists in CONFIG$NC"
                     else
                         if grep -q "INJECT=" "$CONFIG"; then
                             sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
@@ -1193,8 +1192,8 @@ set_rssi() {
 		echo -e "  $N2 Set History Depth:   [$CE] entries             "
 		echo -e "  $N3 Toggle Timestamps:   [$TS]                     "
 		echo -e "                                                     "
-		echo -e "  $LC Cancel and Discard Changes                     "
-		echo -e "  $LE Exit and Save Changes                          "
+		echo -e "  $LS Save Changes & Exit                            "
+        echo -e "  $LE Exit back to main menu                         "
 		echo -e "                                                     "
 		echo -e "$BL=================================================="
         while true; do
@@ -1218,11 +1217,7 @@ set_rssi() {
                 3)
                     case "$CUR_DATE" in 1) CUR_DATE="0" ;; *) CUR_DATE="1" ;; esac
                     ;;
-                c|C)
-                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
-                    return 0
-                    ;;
-                e|E)
+                s|S)
                     RS_HIST="$CUR_RS_HIST"
                     RS_HIST_ENTRIES="$CUR_ENTRIES"
                     RS_HIST_DATE="$CUR_DATE"
@@ -1238,6 +1233,10 @@ set_rssi() {
                     unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
                     pause
+                    return 0
+                    ;;
+                e|E)
+                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     return 0
                     ;;
                 *)
@@ -1277,7 +1276,7 @@ check_ssh() {
                     break
                     ;;
                 2)
-                    echo -e "\n$YL[i] Setting Up Router-Only...$NC"
+                    echo -e "\n$GR[+] Setting Up Router-Only...$NC"
                     sed -i '/^SSH_NODES=/d' "$CONFIG"
                     echo 'SSH_NODES=" "' >> "$CONFIG"
                     pause
@@ -1353,7 +1352,7 @@ ssh_keys() {
             printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
         done
-        echo -e "\n$YL[i] Creating RSA Key in /jffs/.ssh/$NC\n"
+        echo -e "\n$GR[i] Creating RSA Key in /jffs/.ssh/$NC\n"
         mkdir -p /jffs/.ssh
         dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
     fi
@@ -1365,15 +1364,15 @@ ssh_keys() {
     local pub_key=$(dropbearkey -y -f "/root/.ssh/id_dropbear" | grep "^ssh-rsa")
     local current_keys=$(nvram get sshd_authkeys)
 	local combined_keys=$(printf "%s\n%s" "$current_keys" "$pub_key" | sed '/^$/d' | sort -u)
-    echo -e "$YL[i] Injecting Key into NVRAM...$NC\n"
+    echo -e "$GR[+] Injecting Key into NVRAM...$NC\n"
     nvram set sshd_authkeys="$combined_keys"
     nvram commit
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
     chmod 600 /root/.ssh/authorized_keys
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
     if ! grep -q "id_dropbear" "$SS_FILE"; then
-        echo -e "\n$YL[i] Adding SSH Key to services-start for persistence on reboots...$NC"
-		echo -e "\n$YL[i] Adding known_hosts to services-start...$NC\n"
+        echo -e "\n$GR[+] Adding SSH Key to services-start for persistence on reboots...$NC"
+		echo -e "\n$GR[+] Adding known_hosts to services-start...$NC\n"
         echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
@@ -1401,7 +1400,7 @@ del_ssh_keys() {
 		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
 		pause; return
 	fi
-    echo -e "\n$YL[i] Purging RSA key footprint from environment...$NC"
+    echo -e "\n$GR[+] Purging RSA key footprint from environment...$NC"
     if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
 		PUB_STRING=$(awk '{print $2}' /jffs/.ssh/id_dropbear.pub)
 	else
