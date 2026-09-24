@@ -3236,7 +3236,7 @@ cat <<HTML >> "$WEB_PAGE"
     .uptime-row {
         text-align: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .allcol-style {
