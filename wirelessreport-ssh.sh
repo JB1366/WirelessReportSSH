@@ -308,9 +308,9 @@ do_install() {
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"; pause; return 1; fi
 
     if [ "${USB_PATH#/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC\n"
+        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC"
     else
-        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC\n"
+        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
     if [ -f "$SSH_KEY" ]; then
         node_auth
@@ -331,7 +331,7 @@ do_install() {
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "/wireless_report/d" "$SE_FILE" 2>/dev/null
-    echo 'if [ "$1" = "restart" ] && [ "$2" = "wireless_report" ]; then '$REPORT_SCRIPT' & fi # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in restart:wirelessreportssh) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
     if ! grep -F "sh /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" /jffs/configs/profile.add >/dev/null 2>/dev/null; then
@@ -564,7 +564,7 @@ do_uninstall() {
 	fi
     sed -i '/# added by Wireless Report SSH/d' /jffs/configs/profile.add 2>/dev/null
     sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
-    sed -i "/wireless_report/d" "$SE_FILE" 2>/dev/null
+    sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
     rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
     unset RTIME BACKHAUL CUR_DATE RS_HIST_DATE RS_HIST CUR_RS_HIST CUR_ENTRIES
@@ -3899,7 +3899,7 @@ function triggerRefresh() {
     document.cookie = "report_done=true; expires=" + expires + "; path=/";
     fetch('/apply.cgi', {
         method: 'POST',
-        body: 'action_mode=apply&rc_service=restart_wireless_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        body: 'action_mode=apply&rc_service=restart_wirelessreportssh&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     });
 
     var scanTime = parseFloat("$JS_DIFF") || 5.0;
