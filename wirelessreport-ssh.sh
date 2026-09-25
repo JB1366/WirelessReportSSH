@@ -242,6 +242,7 @@ menu_vars() {
 
     RTIME=${RTIME:-1}
     case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
+    RTIME_LOG=${RTIME_LOG:-0}
 
     BACKHAUL=${BACKHAUL:-0}
     case "$BACKHAUL" in 0) WB_STAT="$OFF" ;; *) WB_STAT="$ON" ;; esac
