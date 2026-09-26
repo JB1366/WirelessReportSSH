@@ -334,7 +334,7 @@ do_install() {
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "/wireless_report/d" "$SE_FILE" 2>/dev/null
-    echo 'case "$1:$2" in restart:wirelessreportssh) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
     if ! grep -F "sh /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" /jffs/configs/profile.add >/dev/null 2>/dev/null; then
