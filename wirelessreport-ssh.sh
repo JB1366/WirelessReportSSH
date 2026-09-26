@@ -1112,6 +1112,13 @@ set_runtime() {
                     else
                         echo "RTIME=\"$NEW_RTIME\"" >> "$CONFIG"
                     fi
+                    if [ "$NEW_RTIME" = "0" ]; then
+                        if grep -q "RTIME_LOG=" "$CONFIG"; then
+                            sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"0\"/" "$CONFIG"
+                        else
+                            echo "RTIME_LOG=\"0\"" >> "$CONFIG"
+                        fi
+                    fi
                     ;;
                 2)
                     case "$RTIME_LOG" in
@@ -1122,6 +1129,13 @@ set_runtime() {
                         sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$NEW_LOG\"/" "$CONFIG"
                     else
                         echo "RTIME_LOG=\"$NEW_LOG\"" >> "$CONFIG"
+                    fi
+                    if [ "$RTIME" != "1" ]; then
+                        if grep -q "RTIME=" "$CONFIG"; then
+                            sed -i "s/RTIME=.*/RTIME=\"1\"/" "$CONFIG"
+                        else
+                            echo "RTIME=\"1\"" >> "$CONFIG"
+                        fi
                     fi
                     ;;
                 e|E)
