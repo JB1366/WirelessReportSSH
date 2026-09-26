@@ -310,6 +310,8 @@ do_install() {
     echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
 
+    mkdir -p "$(dirname "$PROFILE_ADD")"
+    [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
     if ! grep -q "alias wrssh=" "$PROFILE_ADD" 2>/dev/null; then
         echo "alias wrssh=\"$REPORT_SCRIPT install\" # added by Wireless Report SSH" >> "$PROFILE_ADD"
         echo -e "\n$GR[+] Adding alias 'wrssh' to $PROFILE_ADD$NC"
