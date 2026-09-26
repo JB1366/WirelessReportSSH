@@ -328,12 +328,12 @@ do_install() {
     echo -e "$GR[+] Mounting Tab Wireless Report SSH$NC\n"
 
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
-    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
+    sed -i "/# Inject Wireless Report SSH/d" "$SS_FILE" 2>/dev/null
     echo "$REPORT_SCRIPT inject & # Inject Wireless Report SSH" >> "$SS_FILE"
     chmod +x "$SS_FILE"
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
-    sed -i "/wireless_report/d" "$SE_FILE" 2>/dev/null
+    sed -i "/# WR SSH/d" "$SE_FILE" 2>/dev/null
     echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
@@ -569,8 +569,8 @@ do_uninstall() {
 		rm -f /www/user/"${INSTALLED_PAGE}" >/dev/null 2>&1
 	fi
     sed -i '/# added by Wireless Report SSH/d' /jffs/configs/profile.add 2>/dev/null
-    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
-    sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
+    sed -i "/# Inject Wireless Report SSH/d" "$SS_FILE" 2>/dev/null
+    sed -i "/# WR SSH/d" "$SE_FILE" 2>/dev/null
     rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
     unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOST_COLOR SSH_KEY
