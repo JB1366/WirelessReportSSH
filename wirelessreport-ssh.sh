@@ -310,6 +310,11 @@ do_install() {
     echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
 
+    if ! grep -q "alias wrssh=" "$PROFILE_ADD" 2>/dev/null; then
+        echo "alias wrssh=\"$REPORT_SCRIPT install\" # added by Wireless Report SSH" >> "$PROFILE_ADD"
+        echo -e "\n$GR[+] Adding alias 'wrssh' to $PROFILE_ADD$NC"
+    fi
+
     if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
 		printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
@@ -346,11 +351,6 @@ do_install() {
     sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
     echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
-
-    if ! grep -F "$REPORT_SCRIPT" "$PROFILE_ADD" >/dev/null 2>/dev/null; then
-        echo "alias wrssh=\"$REPORT_SCRIPT install\" # added by Wireless Report SSH" >> "$PROFILE_ADD"
-        echo -e "$GR[+] Adding alias 'wrssh' to $PROFILE_ADD$NC\n"
-    fi
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
