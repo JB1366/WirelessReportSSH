@@ -3926,7 +3926,7 @@ function triggerRefresh() {
     document.cookie = "report_done=true; expires=" + expires + "; path=/";
     fetch('/apply.cgi', {
         method: 'POST',
-        body: 'action_mode=apply&rc_service=restart_wirelessreportssh&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        body: 'action_mode=apply&rc_service=restart_wireless_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     });
 
     var scanTime = parseFloat("$JS_DIFF") || 5.0;
