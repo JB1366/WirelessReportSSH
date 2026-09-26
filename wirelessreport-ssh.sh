@@ -242,7 +242,9 @@ menu_vars() {
 
     RTIME=${RTIME:-1}
     case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
+
     RTIME_LOG=${RTIME_LOG:-0}
+    case "$RTIME_LOG" in 0) WS_STAT="$OFF" ;; *) WS_STAT="$ON" ;; esac
 
     BACKHAUL=${BACKHAUL:-0}
     case "$BACKHAUL" in 0) WB_STAT="$OFF" ;; *) WB_STAT="$ON" ;; esac
@@ -996,44 +998,7 @@ set_options() {
             selection
             case "$choice" in
                 1)
-                    if grep -q "RTIME=" "$CONFIG"; then
-                        case "$RTIME" in
-                            1)
-                                sed -i 's/RTIME=.*/RTIME="0"/' "$CONFIG"
-                                if grep -q "RTIME_LOG=" "$CONFIG"; then
-                                    sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
-                                else
-                                    echo 'RTIME_LOG="0"' >> "$CONFIG"
-                                fi
-                                rm -f "$USB_PATH/runtime.db"; menu_vars
-                                echo -e "$NC Runtime Tracking: ($RT_STAT)"
-                                ;;
-                            *)
-                                while true; do
-                                    printf "\n Write stats to Syslog? (y/n): "; read -r choice
-                                    case "$choice" in y|Y) RTIME_LOG="1"; break ;; n|N) RTIME_LOG="0"; break ;; *) freeze 2 ;; esac
-                                done
-                                if grep -q "RTIME_LOG=" "$CONFIG"; then
-                                    sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$RTIME_LOG\"/" "$CONFIG"
-                                else
-                                    echo "RTIME_LOG=\"$RTIME_LOG\"" >> "$CONFIG"
-                                fi
-                                sed -i 's/RTIME=.*/RTIME="1"/' "$CONFIG"; menu_vars
-                                echo -e "$NC Runtime Tracking: ($RT_STAT) Stats RESET."
-                                ;;
-                        esac
-                    else
-                        echo 'RTIME="0"' >> "$CONFIG"
-                        if grep -q "RTIME_LOG=" "$CONFIG"; then
-                            sed -i 's/RTIME_LOG=.*/RTIME_LOG="0"/' "$CONFIG"
-                        else
-                            echo 'RTIME_LOG="0"' >> "$CONFIG"
-                        fi
-                        rm -f "$USB_PATH/runtime.db"; menu_vars
-                        echo -e "$NC Runtime Tracking: ($RT_STAT)"
-                    fi
-                    pause
-                    ;;
+                    set_runtime ;;
                 2)
                     if grep -q "^BACKHAUL=" "$CONFIG"; then
                         case "$BACKHAUL" in 1) NEW_BH="0" ;; *) NEW_BH="1" ;; esac
@@ -1092,16 +1057,74 @@ set_options() {
                         echo -e "\n$GR[+] Adding INJECT=\"2\" to CONFIG$NC"
                         INJECT="2"
                     fi
-                    if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
-                    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
-                    echo "$REPORT_SCRIPT inject & # Inject Wireless Report SSH" >> "$SS_FILE"
-                    chmod +x "$SS_FILE"
                     inject_menu
                     pause
                     continue 2
                     ;;
                 e|E)
                     return 0 ;;
+                *)
+                    freeze 2; continue ;;
+            esac
+            break
+        done
+    done
+}
+
+set_runtime() {
+    while true; do
+        show_header
+        echo -e "$BL=================================================="
+        echo -e "$NC               Runtime Tracking                   "
+        echo -e "$BL=================================================="
+        echo -e "                                                     "
+        echo -e "  $N1 Toggle Runtime Tracking: ($RT_STAT)            "
+        echo -e "  $N2 Toggle Stats to Syslog: ($WS_STAT)             "
+        echo -e "                                                     "
+        echo -e "  $LE Exit back to Set Options Menu                  "
+        echo -e "                                                     "
+        echo -e "$BL=================================================="
+        while true; do
+            selection
+            case "$choice" in
+                1)
+                    case "$RTIME" in
+                        1)
+                            NEW_RTIME="0"
+                            rm -f "$USB_PATH/runtime.db"
+                            ;;
+                        *)
+                            NEW_RTIME="1"
+                            ;;
+                    esac
+                    if grep -q "RTIME=" "$CONFIG"; then
+                        sed -i "s/RTIME=.*/RTIME=\"$NEW_RTIME\"/" "$CONFIG"
+                    else
+                        echo "RTIME=\"$NEW_RTIME\"" >> "$CONFIG"
+                    fi
+                    ;;
+                2)
+                    case "$RTIME_LOG" in
+                        1)
+                            NEW_LOG="0"
+                            rm -f "$USB_PATH/runtime.db"
+                            ;;
+                        *)
+                            NEW_LOG="1"
+                            [ ! -f "$SE_FILE" ] && printf '#!/bin/sh\n' > "$SE_FILE"
+                            sed -i '/# Wireless Report Syslog$/d' "$SE_FILE" 2>/dev/null
+                            printf '%s\n' 'case "$1:$2" in start:WirelessReportRuntime_*) '"$REPORT_SCRIPT"' service_event "$@" & ;; esac # Wireless Report Syslog' >> "$SE_FILE"
+                            chmod +x "$SE_FILE"
+                            ;;
+                    esac
+                    if grep -q "RTIME_LOG=" "$CONFIG"; then
+                        sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$NEW_LOG\"/" "$CONFIG"
+                    else
+                        echo "RTIME_LOG=\"$NEW_LOG\"" >> "$CONFIG"
+                    fi
+                    ;;
+                e|E)
+                    break 2 ;;
                 *)
                     freeze 2; continue ;;
             esac
@@ -1138,7 +1161,7 @@ set_ippad() {
         if grep -q "IPPAD=" "$CONFIG"; then
             sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
         else
-            echo 'IPPAD="'"$NEW_PAD"'"' >> "$CONFIG"
+            echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
         fi
     done
 }
@@ -4224,7 +4247,9 @@ HTML
 
 rm -rf "$SEEN_MACS" "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" "$LEASES_CACHE" 2>/dev/null
 rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$DEVICE_LIST_CACHE" "$NODE_DATA_DIR" 2>/dev/null
+
 }
+
 case "$1" in
     install)
         install_menu
