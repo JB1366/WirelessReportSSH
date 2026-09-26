@@ -1111,10 +1111,6 @@ set_runtime() {
                             ;;
                         *)
                             NEW_LOG="1"
-                            [ ! -f "$SE_FILE" ] && printf '#!/bin/sh\n' > "$SE_FILE"
-                            sed -i '/# Wireless Report Syslog$/d' "$SE_FILE" 2>/dev/null
-                            printf '%s\n' 'case "$1:$2" in start:WirelessReportRuntime_*) '"$REPORT_SCRIPT"' service_event "$@" & ;; esac # Wireless Report Syslog' >> "$SE_FILE"
-                            chmod +x "$SE_FILE"
                             ;;
                     esac
                     if grep -q "RTIME_LOG=" "$CONFIG"; then
