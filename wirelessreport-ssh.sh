@@ -1089,13 +1089,8 @@ set_runtime() {
             case "$choice" in
                 1)
                     case "$RTIME" in
-                        1)
-                            NEW_RTIME="0"
-                            rm -f "$USB_PATH/runtime.db"
-                            ;;
-                        *)
-                            NEW_RTIME="1"
-                            ;;
+                        1) NEW_RTIME="0"; rm -f "$USB_PATH/runtime.db" ;;
+                        *) NEW_RTIME="1" ;;
                     esac
                     if grep -q "RTIME=" "$CONFIG"; then
                         sed -i "s/RTIME=.*/RTIME=\"$NEW_RTIME\"/" "$CONFIG"
@@ -1105,13 +1100,8 @@ set_runtime() {
                     ;;
                 2)
                     case "$RTIME_LOG" in
-                        1)
-                            NEW_LOG="0"
-                            rm -f "$USB_PATH/runtime.db"
-                            ;;
-                        *)
-                            NEW_LOG="1"
-                            ;;
+                        1) NEW_LOG="0"; rm -f "$USB_PATH/runtime.db" ;;
+                        *) NEW_LOG="1" ;;
                     esac
                     if grep -q "RTIME_LOG=" "$CONFIG"; then
                         sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$NEW_LOG\"/" "$CONFIG"
@@ -1122,7 +1112,8 @@ set_runtime() {
                 e|E)
                     break 2 ;;
                 *)
-                    freeze 2; continue ;;
+                    freeze 2
+                    continue ;;
             esac
             break
         done
