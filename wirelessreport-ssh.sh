@@ -216,6 +216,7 @@ menu_vars() {
 
     SS_FILE="/jffs/scripts/services-start"
     SE_FILE="/jffs/scripts/service-event"
+    PROFILE_ADD="/jffs/configs/profile.add"
 
     case "$SSH_KEY" in "") KEY="${RD}NO$NC" ;; *) KEY="${GR}YES$NC" ;; esac
     PORT="$GR$SSH_PORT$NC"
@@ -285,12 +286,19 @@ menu_vars() {
 }
 
 do_install() {
-	mkdir -p "$INSTALL_DIR" 2>/dev/null
+	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+        echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
+        pause; return 1
+    fi
+
+    mkdir -p "$INSTALL_DIR" 2>/dev/null
     if [ ! -f "$CONFIG" ]; then touch "$CONFIG"; fi
+
     local is_update=0
 	if [ -f "$REPORT_SCRIPT" ]; then
         is_update=1
     fi
+
     if [ "$is_update" = "1" ]; then
         while true; do
             check_version do_install
@@ -298,8 +306,10 @@ do_install() {
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac
         done
     fi
+
     echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
+
     if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
 		printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
@@ -307,14 +317,13 @@ do_install() {
 		exec "$REPORT_SCRIPT" install "$@"
 		echo -e "$RD[!]Error: Failed to restart script!$NC" >&2; exit 1
 	fi
-    if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-        echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"; pause; return 1; fi
 
     if [ "${USB_PATH#/tmp/mnt/}" != "$USB_PATH" ]; then
         echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC"
     else
         echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
+
     if [ -f "$SSH_KEY" ]; then
         node_auth
 	else
@@ -323,10 +332,11 @@ do_install() {
 		printf "$BL[+] (1) Generate RSA Keys or (2) Provision router-only$NC"; read -r discard
         check_ssh || return 1
 	fi
-    echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
-    inject_menu
-    echo -e "$GR[+] Mounting Tab Wireless Report SSH$NC\n"
 
+    echo -e "$GR[+] Mounting Tab Wireless Report SSH$NC\n"
+    inject_menu
+
+    echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
     echo "$REPORT_SCRIPT inject & # Inject Wireless Report SSH" >> "$SS_FILE"
@@ -337,9 +347,9 @@ do_install() {
     echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
-    if ! grep -F "sh /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" /jffs/configs/profile.add >/dev/null 2>/dev/null; then
-        echo "alias wrssh=\"sh /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh install\" # added by Wireless Report SSH" >> /jffs/configs/profile.add
-        echo -e "$GR[+] Adding alias 'wrssh' to /jffs/configs/profile.add$NC\n"
+    if ! grep -F "$REPORT_SCRIPT" "$PROFILE_ADD" >/dev/null 2>/dev/null; then
+        echo "alias wrssh=\"$REPORT_SCRIPT install\" # added by Wireless Report SSH" >> "$PROFILE_ADD"
+        echo -e "$GR[+] Adding alias 'wrssh' to $PROFILE_ADD$NC\n"
     fi
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
@@ -555,6 +565,7 @@ do_uninstall() {
         printf "Are you sure? (y/n): "; read -r confirm
         case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
     done
+
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     if mount | grep -q "menuTree.js"; then
 		umount -l "$SYSTEM_MENU" >/dev/null 2>&1
@@ -568,13 +579,14 @@ do_uninstall() {
 		umount -l "/www/user/$INSTALLED_PAGE" >/dev/null 2>&1
 		rm -f /www/user/"${INSTALLED_PAGE}" >/dev/null 2>&1
 	fi
-    sed -i '/# added by Wireless Report SSH/d' /jffs/configs/profile.add 2>/dev/null
-    sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
-    sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
+
+    sed -i "\|$REPORT_SCRIPT|d" "$PROFILE_ADD" "$SS_FILE" "$SE_FILE" 2>/dev/null
     rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
+
     unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOST_COLOR SSH_KEY
     unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT
+
     echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
 	echo -e "$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
@@ -1064,7 +1076,8 @@ set_options() {
                 e|E)
                     return 0 ;;
                 *)
-                    freeze 2; continue ;;
+                    freeze 2
+                    continue ;;
             esac
             break
         done
@@ -1100,7 +1113,7 @@ set_runtime() {
                     ;;
                 2)
                     case "$RTIME_LOG" in
-                        1) NEW_LOG="0"; rm -f "$USB_PATH/runtime.db" ;;
+                        1) NEW_LOG="0" ;;
                         *) NEW_LOG="1" ;;
                     esac
                     if grep -q "RTIME_LOG=" "$CONFIG"; then
@@ -1172,12 +1185,13 @@ set_branch() {
             selection
             case "$choice" in
                 1) BRANCH="0" ;;
-                2) BRANCH="1" ;;
+                2) BRANCH="0" ;;
                 e|E) break 2 ;;
                 *) freeze 2; continue ;;
             esac
             break
         done
+        break # remove on Development creation.
         if grep -q "^BRANCH=" "$CONFIG"; then
             sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
         else
@@ -1224,7 +1238,8 @@ set_rssi() {
                             CUR_ENTRIES="$new_depth"
                             break 2
                         else
-                            freeze 2; continue
+                            freeze 2
+                            continue
                         fi
                     done
                     ;;
@@ -1235,6 +1250,7 @@ set_rssi() {
                     RS_HIST="$CUR_RS_HIST"
                     RS_HIST_ENTRIES="$CUR_ENTRIES"
                     RS_HIST_DATE="$CUR_DATE"
+
                     for var in RS_HIST RS_HIST_ENTRIES RS_HIST_DATE; do
                         eval "val=\$${var}"
                         if grep -q "^$var=" "$CONFIG"; then
@@ -1243,6 +1259,7 @@ set_rssi() {
                             echo "$var=\"$val\"" >> "$CONFIG"
                         fi
                     done
+
                     rm -f "$HISTORY_DB"
                     unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
@@ -1254,7 +1271,8 @@ set_rssi() {
                     return 0
                     ;;
                 *)
-                    freeze 2; continue ;;
+                    freeze 2
+                    continue ;;
             esac
             break
         done
@@ -1337,12 +1355,12 @@ check_ssh() {
                         7)
                             node_auth ;;
                     esac
-                    break
-                    ;;
+                    break ;;
                 e|E)
                     return 0 ;;
                 *)
-                    freeze 2; continue ;;
+                    freeze 2
+                    continue ;;
             esac
         done
 	done
@@ -1354,6 +1372,7 @@ ssh_keys() {
         pause
         return 0
     fi
+
     if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
 		while true; do
             printf "$BL\n[i]$NC Stored key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
@@ -1361,6 +1380,7 @@ ssh_keys() {
         done
         echo -e "\n$GR[!]  Linking and configuring...$NC"
 	fi
+
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
         while true; do
             printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
@@ -1370,19 +1390,23 @@ ssh_keys() {
         mkdir -p /jffs/.ssh
         dropbearkey -t rsa -f /jffs/.ssh/id_dropbear
     fi
+
     rm -f /jffs/.ssh/known_hosts /root/.ssh/known_hosts >/dev/null 2>&1
     mkdir -p /root/.ssh
     cp /jffs/.ssh/id_dropbear /root/.ssh/id_dropbear
     echo -e "\n$BL[i] Copying /jffs/.ssh/id_dropbear to /root/.ssh/id_dropbear$NC\n"
     SSH_KEY="/root/.ssh/id_dropbear"
+
     local pub_key=$(dropbearkey -y -f "/root/.ssh/id_dropbear" | grep "^ssh-rsa")
     local current_keys=$(nvram get sshd_authkeys)
 	local combined_keys=$(printf "%s\n%s" "$current_keys" "$pub_key" | sed '/^$/d' | sort -u)
+
     echo -e "$GR[+] Injecting Key into NVRAM...$NC\n"
     nvram set sshd_authkeys="$combined_keys"
     nvram commit
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
     chmod 600 /root/.ssh/authorized_keys
+
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
     if ! grep -q "id_dropbear" "$SS_FILE"; then
         echo -e "\n$GR[+] Adding SSH Key to services-start for persistence on reboots...$NC"
@@ -1390,6 +1414,7 @@ ssh_keys() {
         echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
+
     echo -e "$BL=================================================="
 	echo -e "$NC               ACTION REQUIRED NOW                "
     echo -e "$BL=================================================="
@@ -1414,6 +1439,7 @@ del_ssh_keys() {
 		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
 		pause; return
 	fi
+
     echo -e "\n$GR[+] Purging RSA key footprint from environment...$NC"
     if [ -f "/jffs/.ssh/id_dropbear.pub" ]; then
 		PUB_STRING=$(awk '{print $2}' /jffs/.ssh/id_dropbear.pub)
@@ -1423,12 +1449,14 @@ del_ssh_keys() {
     if [ -n "$PUB_STRING" ] && [ -f "/root/.ssh/authorized_keys" ]; then
 		sed -i "\|$PUB_STRING|d" /root/.ssh/authorized_keys
 	fi
+
     NVRAM_KEYS=$(nvram get sshd_authkeys)
     if [ -n "$PUB_STRING" ] && echo "$NVRAM_KEYS" | grep -q "$PUB_STRING"; then
 		CLEANED_KEYS=$(echo "$NVRAM_KEYS" | grep -v "$PUB_STRING")
 		nvram set sshd_authkeys="$CLEANED_KEYS"
 		nvram commit
 	fi
+
     rm -f "/jffs/.ssh/id_dropbear" "/jffs/.ssh/id_dropbear.pub" "/root/.ssh/id_dropbear"
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
 	chmod 600 /root/.ssh/authorized_keys
@@ -1443,6 +1471,7 @@ node_auth() {
         pause
         return
     fi
+
     echo -e "\n$GR[✓] Main Router SSH Key found at: $WH$SSH_KEY$NC\n"
     echo -e "$BL=================================================="
     echo -e "$NC         Verifying Node Authentication            "
@@ -1470,6 +1499,7 @@ node_auth() {
 			if [ -n "$SSH_ERR" ]; then
                 echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done
             fi
+
             if [ "$SSH_RC" -eq 0 ]; then
 				echo -e "$GR[✓] AUTHENTICATED$NC"
 				any_success=$((any_success + 1))
@@ -1502,6 +1532,7 @@ node_auth() {
 			fi
 		done
     fi
+
     sed -i '/SSH_NODES=/d' "$CONFIG"
     if [ -z "$VALID_NODES" ]; then
         echo 'SSH_NODES=" "' >> "$CONFIG"
