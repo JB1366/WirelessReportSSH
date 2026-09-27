@@ -192,6 +192,11 @@ version_compare() {
         }'
 }
 
+set_default_colors() {
+    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
+    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
+}
+
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
@@ -206,9 +211,6 @@ menu_vars() {
 	for i in E S R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
 
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
-
-    : "${MAIN_COLOR:=#0096ff}"
-    : "${NODE_COLORS:=#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
 
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"; echo -e "$BL"
     STATUS="$NC STATUS:"
@@ -867,19 +869,20 @@ set_colors() {
             printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
             case "$node_choice" in
                 r|R)
-                    m_color_hex="#0096ff"
-                    default_node_pool="#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda"
-                    working_colors=""; idx=1
+                    unset MAIN_COLOR NODE_COLORS
+                    set_default_colors
+                    m_color_hex="$MAIN_COLOR"
+                    working_colors=""
+                    local idx=1
                     while [ $idx -le $total_nodes ]; do
-                        next_color=$(echo "$default_node_pool" | awk -v col="$idx" '{print $col}')
+                        local next_color=$(echo "$NODE_COLORS" | awk -v col="$idx" '{print $col}')
                         next_color="${next_color:-#30d158}"
                         working_colors="${working_colors:+$working_colors }$next_color"
                         idx=$((idx + 1))
                     done
-                    echo -e "$BL\nColors restored to defaults.$NC"
+                    echo -e "$BL\n[+] Colors restored to defaults.$NC"
                     pause
-                    continue 2
-                    ;;
+                    continue 2 ;;
                 s|S) break 2 ;;
                 e|E) return 0 ;;
             esac
@@ -954,7 +957,7 @@ set_colors() {
     }
     update_config_var "MAIN_COLOR" "$m_color_hex"
     update_config_var "NODE_COLORS" "$working_colors"
-    echo -e "$BL\nDevice colors successfully saved to CONFIG.$NC"
+    echo -e "$BL\n[+] Device colors successfully saved to CONFIG.$NC"
     pause
 }
 
@@ -2408,7 +2411,8 @@ $1
 ROW
 }
 
-ssh_init; get_usb; check_github; update_time
+ssh_init; get_usb; check_github
+update_time; set_default_colors
 
 run_report() {
 #=================#
@@ -2671,7 +2675,6 @@ wait
 #========================#
 #  Node Device Assembly  #
 #========================#
-N_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
 BULLET=" <span style='color:white; font-size: 14px;'>•</span> "
 BULLET_LG=" <span style='color:white; font-size: 20px;'>•</span> "
 NODE_NAMES=""; NODE_TEMPS=""; NODE_LOADS=""; NODE_BOOTTIMES=""; NODE_UPTIMES=""
@@ -2697,7 +2700,7 @@ for line in $SSH_NODES; do
     if [ -n "$NODE_OUT" ]; then
         NUMBERED_NODE=$((NUMBERED_NODE + 1))
 		COLOR_INDEX=$((COLOR_INDEX + 1))
-        NODE_COLOR=$(echo $N_COLORS | cut -d' ' -f$((COLOR_INDEX)))
+        NODE_COLOR=$(echo $NODE_COLORS | cut -d' ' -f$((COLOR_INDEX)))
         NODE_SUP="<sup>$NUMBERED_NODE</sup>"
         NODE_NUM="<span style='color:$NODE_COLOR;'>$NODE_SUP</span>"
         case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
