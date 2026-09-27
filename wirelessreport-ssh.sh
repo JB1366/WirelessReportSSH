@@ -1062,17 +1062,21 @@ set_options() {
                     ;;
                 dev)
                     set_branch ;;
-                inject)
-                    if grep -q 'INJECT="2"' "$CONFIG"; then
-                        echo -e "\n$YL[!] INJECT=\"2\" already exists in CONFIG$NC"
-                    else
+                inject|inject2)
+                    if [ "$choice" = "inject2" ]; then
                         if grep -q "INJECT=" "$CONFIG"; then
                             sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
                         else
                             echo 'INJECT="2"' >> "$CONFIG"
                         fi
-                        echo -e "\n$GR[+] Adding INJECT=\"2\" to CONFIG$NC"
                         INJECT="2"
+                        echo -e "\n$YL[!] Menu injection applied.$NC"
+                    else
+                        if grep -q 'INJECT="2"' "$CONFIG"; then
+                            sed -i '/^INJECT="2"/d' "$CONFIG"
+                            INJECT=""
+                        fi
+                        echo -e "\n$YL[!] TAB injection applied.$NC"
                     fi
                     inject_menu
                     pause
