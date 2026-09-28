@@ -309,7 +309,7 @@ do_install() {
         done
     fi
 
-    echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
+    echo -e "\n$GR[+] Downloading latest version($NC v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
 
     mkdir -p "$(dirname "$PROFILE_ADD")"
@@ -328,9 +328,9 @@ do_install() {
 	fi
 
     if [ "${USB_PATH#/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC"
+        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC\n"
     else
-        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
+        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC\n"
     fi
 
     if [ -f "$SSH_KEY" ]; then
@@ -342,7 +342,7 @@ do_install() {
         check_ssh || return 1
 	fi
 
-    echo -e "$GR[+] Mounting Tab Wireless Report SSH$NC\n"
+    echo -e "\n$GR[+] Mounting Tab Wireless Report SSH$NC"
     inject_menu
 
     echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
@@ -356,7 +356,8 @@ do_install() {
     echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
-    install=""; SCRIPT_VERSION="$REMOTE_VERSION"
+    install=""; set_default_colors
+    SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
     echo -e "$GR[✓] SUCCESS: Installation complete!$NC\n"
     echo -e "$YL[i] To access Report, navigate to Advanced Settings > Wireless "
@@ -577,7 +578,7 @@ do_uninstall() {
 		sed -i '/tabName:[[:space:]]*"Wireless Report SSH"/d' "$TEMP_MENU" 2>/dev/null
 		mount --bind "$TEMP_MENU" "$SYSTEM_MENU"
 		sys_log "Unmounting Wireless Report SSH Tab."
-		echo -e "\n$BL[*] Removing Wireless Report SSH Tab and restoring defaults...$NC\n"
+		echo -e "\n$BL[*] Removing Wireless Report SSH Tab and restoring defaults...$NC"
 	fi
     if [ -n "$INSTALLED_PAGE" ]; then
 		umount -l "/www/user/$INSTALLED_PAGE" >/dev/null 2>&1
@@ -588,11 +589,16 @@ do_uninstall() {
     rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
 
-    unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOST_COLOR SSH_KEY
-    unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT
+    unintsall_script="1"
+    del_ssh_keys || return 1
+    if [ "$KEY_NO" = true ]; then
+        echo -e "\n$YL[!] RSS Keys and Fingerprints preserved in /jffs/.ssh$NC"
+    fi
 
-    echo -e "$GR[+] System cleaned. SSH Keys and Fingerprints preserved in /jffs/.ssh$NC\n"
-	echo -e "$GR[+] Success: Wireless Report SSH uninstalled.$NC"
+    unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOST_COLOR SSH_KEY
+    unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT unintsall_script
+
+	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
 	restart_httpd
     ssh_init
@@ -1391,14 +1397,14 @@ check_ssh() {
 
 ssh_keys() {
     if [ -f "$SSH_KEY" ]; then
-        echo -e "\n$YL[!] Main Router SSH Key already exists.$NC"
+        echo -e "\n$YL[!] RSA Keys already exists.$NC"
         pause
         return 0
     fi
 
     if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
 		while true; do
-            printf "$BL\n[i]$NC Stored key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
+            printf "$BL\n[i]$NC Stored RSA key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
         done
         echo -e "\n$GR[!]  Linking and configuring...$NC"
@@ -1406,7 +1412,7 @@ ssh_keys() {
 
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
         while true; do
-            printf "$NC\nDo you want to create RSA Key (y/n): "; read -r update
+            printf "$NC\nDo you want to create RSA Keys (y/n): "; read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
         done
         echo -e "\n$GR[i] Creating RSA Key in /jffs/.ssh/$NC\n"
@@ -1432,7 +1438,7 @@ ssh_keys() {
 
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
     if ! grep -q "id_dropbear" "$SS_FILE"; then
-        echo -e "\n$GR[+] Adding SSH Key to services-start for persistence on reboots...$NC"
+        echo -e "\n$GR[+] Adding RSA Key to services-start for persistence on reboots...$NC"
 		echo -e "\n$GR[+] Adding known_hosts to services-start...$NC\n"
         echo "cp /jffs/.ssh/id_dropbear /tmp/home/root/.ssh/id_dropbear # sshpairs" >> "$SS_FILE"
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
@@ -1453,14 +1459,33 @@ ssh_keys() {
 
 del_ssh_keys() {
 	if [ -f "$SSH_KEY" ]; then
-		echo -e "\n$YL[!] Main Router SSH Key exists.$NC\n"
+		echo -e "\n$YL[!] RSA Keys exist.$NC\n"
+        KEY_NO=false
         while true; do
-            printf "Do you want to delete Key? (y/n): "; read -r delete
-            case "$delete" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
+            if [ "$unintsall_script" = "1" ]; then
+                printf "Uninstalling Wireless Report SSH, Do you want to delete RSA Keys? (y/n): "; read -r delete
+            else
+                printf "Do you want to delete Keys? (y/n): "; read -r delete
+            fi
+            case "$delete" in
+                y|Y)
+                    break ;;
+                n|N)
+                    if [ "$unintsall_script" = "1" ]; then
+                        KEY_NO=true
+                    fi
+                    return ;;
+                *)
+                    freeze ;;
+            esac
         done
 	else
-		echo -e "\n$YL[!] No active RSA key found to delete.$NC"
-		pause; return
+		echo -e "\n$YL[!] No active RSA keys found to delete.$NC\n"
+		if [ "$unintsall_script" = "1" ]; then
+            return
+        fi
+        pause
+        return
 	fi
 
     echo -e "\n$GR[+] Purging RSA key footprint from environment...$NC"
@@ -1485,17 +1510,21 @@ del_ssh_keys() {
 	chmod 600 /root/.ssh/authorized_keys
 	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
 	ssh_init
-    pause
+    if [ "$unintsall_script" = "1" ]; then
+        return
+    else
+        pause || return
+    fi
 }
 
 node_auth() {
 	if [ ! -s "$SSH_KEY" ]; then
-        echo -e "\n$YL[!] Main Router SSH Key not found.$NC"
+        echo -e "\n$YL[!] RSA Keys not found.$NC"
         pause
         return
     fi
 
-    echo -e "\n$GR[✓] Main Router SSH Key found at: $WH$SSH_KEY$NC\n"
+    echo -e "\n$GR[✓] RSA Key found at: $WH$SSH_KEY$NC\n"
     echo -e "$BL=================================================="
     echo -e "$NC         Verifying Node Authentication            "
     echo -e "$BL=================================================="
