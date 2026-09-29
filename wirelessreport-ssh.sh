@@ -356,8 +356,7 @@ do_install() {
     echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
-    install=""; set_default_colors
-    SCRIPT_VERSION="$REMOTE_VERSION"
+    install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
     echo -e "$GR[✓] SUCCESS: Installation complete!$NC\n"
     echo -e "$YL[i] To access Report, navigate to Advanced Settings > Wireless "
@@ -601,7 +600,7 @@ do_uninstall() {
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
 	restart_httpd
-    ssh_init
+    ssh_init; set_default_colors
     pause
 }
 
@@ -1397,7 +1396,7 @@ check_ssh() {
 
 ssh_keys() {
     if [ -f "$SSH_KEY" ]; then
-        echo -e "\n$YL[!] RSA Keys already exists.$NC"
+        echo -e "\n$YL[!] RSA Keys already exist.$NC"
         pause
         return 0
     fi
