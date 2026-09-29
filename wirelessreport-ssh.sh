@@ -192,11 +192,6 @@ version_compare() {
         }'
 }
 
-set_default_colors() {
-    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
-    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
-}
-
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
@@ -285,6 +280,11 @@ menu_vars() {
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
 
     BN="$GR$BRANCH_NAME$NC"
+}
+
+default_colors() {
+    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
+    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
 }
 
 do_install() {
@@ -600,7 +600,7 @@ do_uninstall() {
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
 	restart_httpd
-    ssh_init; set_default_colors
+    ssh_init; default_colors
     pause
 }
 
@@ -876,7 +876,7 @@ set_colors() {
             case "$node_choice" in
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
-                    set_default_colors
+                    default_colors
                     m_color_hex="$MAIN_COLOR"
                     working_colors=""
                     local idx=1
@@ -2445,7 +2445,7 @@ ROW
 }
 
 ssh_init; get_usb; check_github
-update_time; set_default_colors
+update_time; default_colors
 
 run_report() {
 #=================#
