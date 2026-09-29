@@ -612,11 +612,12 @@ set_temp_date() {
         echo -e "$BL=================================================="
         echo -e "$NC  Current: $DN $DU        Date: $CT               "
         echo -e "$BL=================================================="
-        echo -e "                                                     "
+        echo -e "                               $NC [MILITARY]        "
         echo -e "  $N1  USA   ($GR°F$NC)            ($DATE_USA)       "
         echo -e "  $N2  INTL  ($GR°C$NC)            ($DATE_INTL)      "
         echo -e "  $N3  ISO   ($GR°C$NC)          ($DATE_ISO)         "
-        echo -e "   |                          |             |        "
+        echo -e "                                                     "
+        echo -e "                               [12-HR AM/PM]         "
         echo -e "  $N4  USA   ($BL°F$NC)           ($DATE_USA1)       "
         echo -e "  $N5  INTL  ($BL°C$NC)           ($DATE_INTL1)      "
         echo -e "  $N6  ISO   ($BL°C$NC)         ($DATE_ISO1)         "
@@ -658,8 +659,8 @@ set_nicknames() {
 		echo -e "  $LE Exit back to main menu                         "
 		echo -e "                                                     "
         echo -e "$BL=================================================="
-        local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node model ip clean_ip hex_clr
-        local node_clr old_name new_loc node_loc old_nick manual_main input_node
+        local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
+        local NODE_CLR OLD_NAME NEW_LOC NODE_LOC OLD_NICK manual_main input_node
 
         MAIN_ROUTER=$(nvram get productid)
         MAIN_IP=$(nvram get lan_ipaddr)
@@ -1065,8 +1066,6 @@ set_options() {
                         echo 'TABLE_HEADERS="0"' >> "$CONFIG"
                     fi
                     ;;
-                dev)
-                    set_branch ;;
                 inject|inject2)
                     if [ "$choice" = "inject2" ]; then
                         if grep -q "INJECT=" "$CONFIG"; then
@@ -1087,6 +1086,8 @@ set_options() {
                     pause
                     continue 2
                     ;;
+                dev)
+                    set_branch ;;
                 e|E)
                     return 0 ;;
                 *)
