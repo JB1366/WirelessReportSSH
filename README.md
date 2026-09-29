@@ -9,6 +9,6 @@ curl -sfL https://raw.githubusercontent.com/JB1366/WirelessReportSSH/main/wirele
 \
 to run script:
 ```
-/jffs/addons/WirelessReportSSH/wirelessreport-ssh.sh
+/jffs/addons/WirelessReportSSH/wirelessreport-ssh.sh install
 ```
 
