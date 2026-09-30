@@ -263,7 +263,7 @@ menu_vars() {
     TABLE_HEADERS=${TABLE_HEADERS:-1}
     case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
 
-    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-0}
+    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-1}
     case "$WIFI_RADIO_TEMPS" in 1) WF_STAT="$ON" ;; *) WF_STAT="$OFF" ;; esac
 
     RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
@@ -1075,7 +1075,7 @@ set_options() {
                         case "$WIFI_RADIO_TEMPS" in 1) NEW_WF="0" ;; *) NEW_WF="1" ;; esac
                         sed -i "s/WIFI_RADIO_TEMPS=.*/WIFI_RADIO_TEMPS=\"$NEW_WF\"/" "$CONFIG"
                     else
-                        echo 'WIFI_RADIO_TEMPS="1"' >> "$CONFIG"
+                        echo 'WIFI_RADIO_TEMPS="0"' >> "$CONFIG"
                     fi
                     ;;
                 inject|inject2)
@@ -1862,7 +1862,7 @@ do_numbered_node() {
         *)     TS=10; US=8 ;;
     esac
 
-    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-0}
+    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-1}
     case "$WIFI_RADIO_TEMPS" in
         0) RADIO_ON="display: none !important;" ;;
         *) RADIO_ON="" ;;
@@ -2842,8 +2842,6 @@ for line in $SSH_NODES; do
 
         parse_node_out "$NODE_OUT"
 
-		if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
-
         N_UPTIME=$(router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class "$N_TEMP")
@@ -2851,10 +2849,9 @@ for line in $SSH_NODES; do
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW:-0} )) "$D_FMT")
         NODE_DEVICES=0
 
-        node_val_24g="${n_2_4G:-${n_24G:-<span style='color:gray;'>--</span>}}"
-        node_val_5g="${n_5G:-${n_5g_1:-${n_5g:-<span style='color:gray;'>--</span>}}}"
-        node_val_6g="${n_6G:-${n_6G_1:-${n_6g:-<span style='color:gray;'>--</span>}}}"
-
+        node_val_24g="${n_2_4G:-${n_24G:-<span>--</span>}}"
+        node_val_5g="${n_5G:-${n_5g_1:-${n_5g:-<span>--</span>}}}"
+        node_val_6g="${n_6G:-${n_6G_1:-${n_6g:-<span>--</span>}}}"
         NODE_BAND_24G="${NODE_BAND_24G}${NODE_BAND_24G:+$BULLET}${node_val_24g}"
         NODE_BAND_5G="${NODE_BAND_5G}${NODE_BAND_5G:+$BULLET}${node_val_5g}"
         NODE_BAND_6G="${NODE_BAND_6G}${NODE_BAND_6G:+$BULLET}${node_val_6g}"
@@ -2897,46 +2894,37 @@ ALL_BOOTTIME="$MAIN_BOOTTIME$BULLET$NODE_BOOTTIMES"
 ALL_NAMES="$MAIN_NAME$BULLET_LG$NODE_NAMES"
 ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
 
-# Map dynamic main router band variables to match your ALL_BAND expected names
+GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
+MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
+NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
+
 MAIN_BAND_24G="${MAIN_BAND_2_4G:-${MAIN_BAND_24G:-}}"
 MAIN_BAND_5G="${MAIN_BAND_5G:-${MAIN_BAND_5G_1:-}}"
 MAIN_BAND_6G="${MAIN_BAND_6G:-${MAIN_BAND_6G_1:-}}"
-
-# Then your existing ALL_BAND block runs smoothly:
-ALL_BAND_24G="${MAIN_BAND_24G:-<span style='color:gray;'>--</span>}${NODE_BAND_24G:+${BULLET}${NODE_BAND_24G}}"
-ALL_BAND_5G="${MAIN_BAND_5G:-<span style='color:gray;'>--</span>}${NODE_BAND_5G:+${BULLET}${NODE_BAND_5G}}"
-
-# Build 6G rows joined inline or with a clean separator
+ALL_BAND_24G="${MAIN_BAND_24G:-<span>--</span>}${NODE_BAND_24G:+${BULLET}${NODE_BAND_24G}}"
+ALL_BAND_5G="${MAIN_BAND_5G:-<span>--</span>}${NODE_BAND_5G:+${BULLET}${NODE_BAND_5G}}"
 HTML_ROW_6G=""
 for band_key in "6G-1" "6G-2"; do
     var_safe_key=$(echo "$band_key" | tr '.-' '__')
-
     eval "m_val=\$MAIN_BAND_${var_safe_key}"
     eval "n_val=\$NODE_BAND_${var_safe_key}"
-
     if [ -n "$m_val" ] || [ -n "$n_val" ]; then
-        m_val="${m_val:-<span style='color:gray;'>--</span>}"
+        m_val="${m_val:-<span>--</span>}"
         if [ -n "$n_val" ]; then
             combined_band="${m_val}${BULLET}${n_val}"
         else
             combined_band="${m_val}"
         fi
-
         display_key="${band_key//__/-}"
         if echo "$combined_band" | grep -q "class="; then
             item_html="<span>${display_key}: ${combined_band}</span>"
             case "$HTML_ROW_6G" in
                 *"$display_key:"*) ;;
-                #
                 *) HTML_ROW_6G="${HTML_ROW_6G}${HTML_ROW_6G:+&nbsp;}${item_html}" ;;
             esac
         fi
     fi
 done
-
-GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
-MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
-NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 
 do_numbered_node; get_theme; do_runtime
 check_version header_box
@@ -3862,7 +3850,8 @@ cat <<HTML >> "$WEB_PAGE"
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
                         <div class="top-buttons">
                             <div class="button-refresh">
-                                <button class="button-trigger button-tables" onclick="triggerRefresh()">Refresh <span>${RUNTIME}</span></button>
+                                <button class="button-trigger button-tables" onclick="triggerRefresh()">
+                                Refresh <span>${RUNTIME}</span></button>
                                 <div class="button-auto-refresh">
                                     <span>Auto:</span>
                                     <select id="refresh-option">
