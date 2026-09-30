@@ -1,7 +1,7 @@
 Wireless Report SSH<br>
 \
 \
-![Screenshot](https://raw.githubusercontent.com/JB1366/WirelessReportSSH//main/Sreenshot.png)
+![Screenshot](https://github.com/JB1366/WirelessReportSSH/blob/main/Screenshot.png)
 \
 \
 to install script:
