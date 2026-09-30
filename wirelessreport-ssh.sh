@@ -3837,13 +3837,13 @@ cat <<HTML >> "$WEB_PAGE"
         width: 100% !important;
         table-layout: fixed !important;
     }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(1) { width: 25% !important; }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(2) { width: 18% !important; }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(3) { width: 12% !important; }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(4) { width: 12% !important; }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(5) { width: 13% !important; }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(6) { width: 10% !important; }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(7) { width: 10% !important; }
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(1) { width: 25% !important; } /* HOSTNAME */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(2) { width: 18% !important; } /* IP ADDRESS */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(3) { width: 12% !important; } /* RSSI */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(4) { width: 12% !important; } /* RX/TX */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(5) { width: 13% !important; } /* SSID */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(6) { width: 10% !important; } /* BAND */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(7) { width: 10% !important; } /* Uptime */
 </style>
 </head>
 <body onload="initial();">
