@@ -263,6 +263,9 @@ menu_vars() {
     TABLE_HEADERS=${TABLE_HEADERS:-1}
     case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
 
+    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-0}
+    case "$WIFI_RADIO_TEMPS" in 1) WF_STAT="$ON" ;; *) WF_STAT="$OFF" ;; esac
+
     RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
     case "$RS_HIST_ENTRIES" in ""|*[!0-9]*) RS_HIST_ENTRIES=5 ;; esac
     if [ "$RS_HIST_ENTRIES" -lt 5 ] || [ "$RS_HIST_ENTRIES" -gt 20 ]; then RS_HIST_ENTRIES=5; fi
@@ -1013,6 +1016,7 @@ set_options() {
 		echo -e "  $N4  Toggle IP Column Padding: ($PD_STAT)          "
 		echo -e "  $N5  Toggle Node Hostname Display: ($HN_STAT)      "
         echo -e "  $N6  Toggle Loading Table Headers: ($TH_STAT)      "
+        echo -e "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)           "
         echo -e "                                                     "
         echo -e "  $LE  Exit back to main menu                        "
         echo -e "                                                     "
@@ -1064,6 +1068,14 @@ set_options() {
                         sed -i "s/TABLE_HEADERS=.*/TABLE_HEADERS=\"$NEW_TH\"/" "$CONFIG"
                     else
                         echo 'TABLE_HEADERS="0"' >> "$CONFIG"
+                    fi
+                    ;;
+                7)
+                    if grep -q "WIFI_RADIO_TEMPS=" "$CONFIG"; then
+                        case "$WIFI_RADIO_TEMPS" in 1) NEW_WF="0" ;; *) NEW_WF="1" ;; esac
+                        sed -i "s/WIFI_RADIO_TEMPS=.*/WIFI_RADIO_TEMPS=\"$NEW_WF\"/" "$CONFIG"
+                    else
+                        echo 'WIFI_RADIO_TEMPS="1"' >> "$CONFIG"
                     fi
                     ;;
                 inject|inject2)
@@ -1849,6 +1861,12 @@ do_numbered_node() {
         4)     TS=12; US=10 ;;
         *)     TS=10; US=8 ;;
     esac
+
+    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-0}
+    case "$WIFI_RADIO_TEMPS" in
+        0) RADIO_ON="display: none !important;" ;;
+        *) RADIO_ON="" ;;
+    esac
 }
 
 hasta() {
@@ -2231,8 +2249,8 @@ get_band() {
             esac
             ;;
 
-        # Dual-Band DSL-AX82U Specific
-        *DSL-AX82U*)
+        # Dual-Band DSL-AX82U / RT-AX86S Specific
+        *DSL-AX82U|AX86S*)
             case "$iface" in
                 wl0*|eth5*) Label="2.4G" ;;
                 wl1*|eth6*) Label="5G" ;;
@@ -2427,15 +2445,39 @@ EOF
 
 parse_node_out() {
     N_TEMP_RAW="" N_LOAD="" N_UPTIME_RAW="" N_UPTIME=""
-    while IFS='|' read -r key val; do
+    unset n_2_4G n_5G n_6G n_5G_1 n_5G_2 n_6G_1 n_6G_2
+    while IFS='|' read -r key f2 f3 f4 rest; do
         case "$key" in
-            "TEMP")   N_TEMP_RAW=$val ;;
-            "LOAD")   N_LOAD=$val ;;
-            "UPTIME") N_UPTIME_RAW=$val ;;
+            "TEMP")
+                N_TEMP_RAW="$f2" ;;
+            "LOAD")
+                N_LOAD="$f2" ;;
+            "UPTIME")
+                N_UPTIME_RAW="$f2" ;;
+            "RADIO_TEMP")
+                n_router="$f2"
+                n_iface="$f3"
+                n_cval="$f4"
+                n_band_label="$(get_band "$n_iface" "" "$n_router" "band")"
+                if [ -n "$n_band_label" ] && [ "$n_band_label" != "Unknown" ]; then
+                    n_unit=$(get_temp_unit "$n_cval")
+                    n_class=$(get_temp_class "$n_unit")
+                    n_html="<span class='${n_class}'>${n_unit}</span>"
+                    n_var_safe=$(echo "$n_band_label" | tr '.-' '__')
+                    eval "curr_val=\$n_${n_var_safe}"
+                    if [ -n "$curr_val" ]; then
+                        eval "n_${n_var_safe}=\"\$curr_val\${BULLET}\$n_html\""
+                    else
+                        eval "n_${n_var_safe}=\"\$n_html\""
+                    fi
+                fi
+                ;;
         esac
     done <<EOF
 $1
 EOF
+    if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
+    if [ -z "$n_5G" ] && [ -n "$n_2_4G" ]; then n_5G="$n_2_4G"; fi
 }
 
 parse_node_data() {
@@ -2577,6 +2619,26 @@ for line in $SSH_NODES; do
             echo \"TEMP|\$(cut -c1-2 /sys/class/thermal/thermal_zone0/temp 2>/dev/null)\"
             echo \"LOAD|\$(cut -d' ' -f1 /proc/loadavg)\"
             echo \"UPTIME|\$(cut -d. -f1 /proc/uptime)\"
+
+            if [ \"\$HW_ENGINE\" = \"BRCM\" ]; then
+                NODE_ROUTER=\$(nvram get productid 2>/dev/null)
+                for iface in \$ALL_IFACES; do
+                    case \"\$iface\" in
+                        *.*) continue ;;
+                    esac
+                    raw_t=\$(wl -i \"\$iface\" phy_tempsense 2>/dev/null)
+                    if [ -n \"\$raw_t\" ]; then
+                        raw_num=\"\${raw_t%% *}\"
+                        case \"\$raw_num\" in
+                            *[!0-9]*|'') ;;
+                            *)
+                                c_val=\$(( (raw_num / 2) + 20 ))
+                                echo \"RADIO_TEMP|\$NODE_ROUTER|\$iface|\$c_val\"
+                                ;;
+                        esac
+                    fi
+                done
+            fi
 		" 2>/dev/null > "$NODE_DATA_DIR/${CLEAN_IP}.out"
 	) &
 done
@@ -2589,6 +2651,8 @@ YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0; MAIN_DEVICE_TOTAL=0
 > "$SEEN_MACS"; > "$NEW_HISTORY"
+RADIO_TEMPS_HTML=""; MAIN_BAND_2_4G=""; MAIN_BAND_5G=""
+MAIN_BAND_6G_1=""; MAIN_BAND_6G_2=""
 
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
 if [ -f "$KNOWN_DB" ]; then cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null; else > "$KNOWN_CACHE"; fi
@@ -2635,6 +2699,7 @@ for iface in $RAW_IFACES; do
     fi
 done
 
+SEEN_BANDS=""
 IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
@@ -2645,6 +2710,37 @@ for iface in $IFACE_LIST; do
 		${WL3_PHYS:+"$WL3_PHYS"*}) data_iface="wl3" ;;
 		*) data_iface="$iface" ;;
 	esac
+
+    raw_temp="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
+    if [ -n "$raw_temp" ] && echo "$raw_temp" | grep -qE "^[0-9]"; then
+        band_label="$(get_band "$iface" "" "$ROUTER" "band")"
+        if [ -n "$band_label" ] && [ "$band_label" != "Unknown" ]; then
+            case "$SEEN_BANDS" in
+                *"|$band_label|"*) ;;
+                *)
+                    SEEN_BANDS="${SEEN_BANDS}|$band_label|"
+                    c_val=$(echo "$raw_temp" | awk -F' ' '{printf "%.0f\n", $1/2+20}')
+                    t_unit=$(get_temp_unit "$c_val")
+                    t_class=$(get_temp_class "$t_unit")
+                    r_html="<span class='${t_class}'>${t_unit}</span>"
+                    var_safe_label=$(echo "$band_label" | tr '.-' '__')
+                    eval "curr_val=\$MAIN_BAND_${var_safe_label}"
+                    if [ -n "$curr_val" ]; then
+                        eval "MAIN_BAND_${var_safe_label}=\"\$curr_val\${BULLET}\$r_html\""
+                    else
+                        eval "MAIN_BAND_${var_safe_label}=\"\$r_html\""
+                    fi
+                    RADIO_TEMPS_HTML="${RADIO_TEMPS_HTML}<span class='radio-temp'>${band_label}: <span class='${t_class}'>${t_unit}</span></span>&nbsp;"
+                    ;;
+            esac
+        fi
+    fi
+
+    if [ -n "$RADIO_TEMPS_HTML" ]; then
+        MAIN_RADIO_ROW="<div>${RADIO_TEMPS_HTML}</div>"
+    else
+        MAIN_RADIO_ROW=""
+    fi
 
     MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null); MAC_LIST=${MAC_LIST//assoclist /}
     if [ -z "$MAC_LIST" ]; then
@@ -2712,6 +2808,7 @@ BULLET=" <span style='color:white; font-size: 14px;'>•</span> "
 BULLET_LG=" <span style='color:white; font-size: 20px;'>•</span> "
 NODE_NAMES=""; NODE_TEMPS=""; NODE_LOADS=""; NODE_BOOTTIMES=""; NODE_UPTIMES=""
 NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0; NODE_DEVICE_TOTAL=0
+NODE_BAND_24G=""; NODE_BAND_5G=""; NODE_BAND_6G=""
 
 for line in $SSH_NODES; do
 	NODE_OUT=""
@@ -2744,15 +2841,23 @@ for line in $SSH_NODES; do
         esac
 
         parse_node_out "$NODE_OUT"
-		if [ "${#N_TEMP_RAW}" -gt 3 ]; then
-            N_TEMP_RAW=$((N_TEMP_RAW / 1000))
-        fi
+
+		if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
+
         N_UPTIME=$(router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class "$N_TEMP")
         NC_LOAD=$(get_load_class "$N_LOAD")
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW:-0} )) "$D_FMT")
         NODE_DEVICES=0
+
+        node_val_24g="${n_2_4G:-${n_24G:-<span style='color:gray;'>--</span>}}"
+        node_val_5g="${n_5G:-${n_5g_1:-${n_5g:-<span style='color:gray;'>--</span>}}}"
+        node_val_6g="${n_6G:-${n_6G_1:-${n_6g:-<span style='color:gray;'>--</span>}}}"
+
+        NODE_BAND_24G="${NODE_BAND_24G}${NODE_BAND_24G:+$BULLET}${node_val_24g}"
+        NODE_BAND_5G="${NODE_BAND_5G}${NODE_BAND_5G:+$BULLET}${node_val_5g}"
+        NODE_BAND_6G="${NODE_BAND_6G}${NODE_BAND_6G:+$BULLET}${node_val_6g}"
 
         while read -r ssh_node_data; do
 			case "$ssh_node_data" in "") continue ;; esac
@@ -2791,6 +2896,43 @@ ALL_UPTIME="$MAIN_UPTIME$BULLET$NODE_UPTIMES"
 ALL_BOOTTIME="$MAIN_BOOTTIME$BULLET$NODE_BOOTTIMES"
 ALL_NAMES="$MAIN_NAME$BULLET_LG$NODE_NAMES"
 ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
+
+# Map dynamic main router band variables to match your ALL_BAND expected names
+MAIN_BAND_24G="${MAIN_BAND_2_4G:-${MAIN_BAND_24G:-}}"
+MAIN_BAND_5G="${MAIN_BAND_5G:-${MAIN_BAND_5G_1:-}}"
+MAIN_BAND_6G="${MAIN_BAND_6G:-${MAIN_BAND_6G_1:-}}"
+
+# Then your existing ALL_BAND block runs smoothly:
+ALL_BAND_24G="${MAIN_BAND_24G:-<span style='color:gray;'>--</span>}${NODE_BAND_24G:+${BULLET}${NODE_BAND_24G}}"
+ALL_BAND_5G="${MAIN_BAND_5G:-<span style='color:gray;'>--</span>}${NODE_BAND_5G:+${BULLET}${NODE_BAND_5G}}"
+
+# Build 6G rows joined inline or with a clean separator
+HTML_ROW_6G=""
+for band_key in "6G-1" "6G-2"; do
+    var_safe_key=$(echo "$band_key" | tr '.-' '__')
+
+    eval "m_val=\$MAIN_BAND_${var_safe_key}"
+    eval "n_val=\$NODE_BAND_${var_safe_key}"
+
+    if [ -n "$m_val" ] || [ -n "$n_val" ]; then
+        m_val="${m_val:-<span style='color:gray;'>--</span>}"
+        if [ -n "$n_val" ]; then
+            combined_band="${m_val}${BULLET}${n_val}"
+        else
+            combined_band="${m_val}"
+        fi
+
+        display_key="${band_key//__/-}"
+        if echo "$combined_band" | grep -q "class="; then
+            item_html="<span>${display_key}: ${combined_band}</span>"
+            case "$HTML_ROW_6G" in
+                *"$display_key:"*) ;;
+                #
+                *) HTML_ROW_6G="${HTML_ROW_6G}${HTML_ROW_6G:+&nbsp;}${item_html}" ;;
+            esac
+        fi
+    fi
+done
 
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
@@ -3387,6 +3529,11 @@ cat <<HTML >> "$WEB_PAGE"
         margin-right: 1px;
     }
 
+    .radio-temp-row {
+        margin-top: 8px;
+        font-size: 14px;
+    }
+
     .uptime-row {
         text-align: center;
         justify-content: center;
@@ -3745,9 +3892,12 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
                                     <div class="temp-load-row">
-                                        <span>Temp: $MAIN_TEMP</span>
+                                        <span>CPU: $MAIN_TEMP</span>
                                         <span>Load: $MAIN_LOAD</span>
                                         <span>Devices: $MAIN_DEVICE_TOTAL</span>
+                                    </div>
+                                    <div class="radio-temp-row" style="$RADIO_ON">
+                                    $MAIN_RADIO_ROW
                                     </div>
                                 </div>
                                 <table id="mainTable" class="report_table">
@@ -3783,9 +3933,14 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
                                     <div class="temp-load-row">
-                                        <span>Temp: $NODE_TEMPS</span>
+                                        <span>CPU: $NODE_TEMPS</span>
                                         <span>Load: $NODE_LOADS</span>
                                         <span>Devices: $NODE_DEVICE_TOTAL $NTOTAL</span>
+                                    </div>
+                                    <div class="radio-temp-row" style="$RADIO_ON">
+                                        <span>2.4G: $NODE_BAND_24G </span>
+                                        <span>5G: $NODE_BAND_5G</span>
+                                        <span>$NODE_HTML_ROW_6G</span>
                                     </div>
                                 </div>
                                 <table id="nodeTable" class="report_table">
@@ -3816,9 +3971,14 @@ cat <<HTML >> "$WEB_PAGE"
                                 <span>Updated: $CUR_TIME</span>
                                 <hr class="separator-line">
                                 <div class="temp-load-row allcol-style" style="font-size: ${TS}px;">
-                                    <span>Temp: $ALL_TEMP</span>
+                                    <span>CPU: $ALL_TEMP</span>
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
+                                </div>
+                                <div class="radio-temp-row" style="$RADIO_ON">
+                                    <span>2.4G: $ALL_BAND_24G</span>
+                                    <span>5G: $ALL_BAND_5G</span>
+                                    <span>$HTML_ROW_6G</span>
                                 </div>
                             </div>
                             <table id="allTable" class="report_table">
@@ -3957,10 +4117,16 @@ function triggerRefresh() {
             var row = document.querySelector(colId + ' .temp-load-row');
             if (row) {
                 var spans = row.querySelectorAll(':scope > span');
-                if (spans[0]) spans[0].innerText = "Temp: --";
+                if (spans[0]) spans[0].innerText = "CPU: --";
                 if (spans[1]) spans[1].innerText = "Load: --";
                 if (spans[2]) spans[2].innerText = "Devices: 0";
             }
+
+            // Set a uniform placeholder across all radio temperature rows on initial load
+            document.querySelectorAll('.radio-temp-row').forEach(function(row) {
+                row.innerHTML = "2.4G: <span>--</span> 5G: <span>--</span> 6G: <span>--</span>";
+            });
+
             var footerSpans = document.querySelectorAll(colId + ' tfoot span');
             footerSpans.forEach(function(span) {
                 if (span.textContent.trim().startsWith("Uptime")) {
