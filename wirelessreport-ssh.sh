@@ -2240,7 +2240,7 @@ get_band() {
             ;;
 
         # Tri-Band Mapping (2.4G, 5G-1, 5G-2)
-        # Models:  RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
+        # Models: RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
         *AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
                 wl0*|eth1*|eth4*|eth8*)        Label="2.4G" ;;
@@ -2249,8 +2249,9 @@ get_band() {
             esac
             ;;
 
-        # Dual-Band DSL-AX82U / RT-AX86S Specific
-        *DSL-AX82U|AX86S*)
+        # Dual-Band Mapping
+        # Models: DSL-AX82U, RT-AX86S
+        *AX82U|AX86S*)
             case "$iface" in
                 wl0*|eth5*) Label="2.4G" ;;
                 wl1*|eth6*) Label="5G" ;;
@@ -2259,7 +2260,7 @@ get_band() {
             ;;
 
         # Dual-Band Mapping
-		# Models:  RT-AX86U, ZENWIFI-BD4(QCA)
+		# Models: RT-AX86U, ZENWIFI-BD4(QCA)
         *)
             case "$iface" in
                 wl0*|eth1*|eth4*|eth6*|eth8*|ath0*)  Label="2.4G" ;;
@@ -2294,9 +2295,10 @@ get_band() {
 		5G*)    class="band-5g"; sort="5" ;;
 		6G*)    class="band-6g"; sort="6" ;;
 	esac
+
     case "$4" in
         band) echo "$Label" ;;
-        *)    echo "<td data-sort='$sort' style='text-align:center;'><span class='$class'>$Label$w_text</span></td>" ;;
+        *)    echo "<td data-sort='$sort'><span class='$class'>$Label$w_text</span></td>" ;;
     esac
 }
 
