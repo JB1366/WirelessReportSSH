@@ -3596,36 +3596,6 @@ cat <<HTML >> "$WEB_PAGE"
         margin-left: 2px;
     }
 
-    .popout-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(8px);
-    }
-
-    .popout-content {
-        background: rgba(0, 0, 0, 0.2);
-        width: 95%;
-        max-width: 1450px;
-        margin: auto;
-        padding: 15px;
-        border-radius: 15px;
-        border: 1px solid rgba(0, 150, 255, 0.4);
-        position: relative;
-        max-height: 95vh;
-        overflow-y: auto;
-        box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(20px);
-        overflow-x: hidden !important;
-    }
-
     body.wr-wide-mode {
         overflow: hidden !important;
     }
@@ -3681,6 +3651,36 @@ cat <<HTML >> "$WEB_PAGE"
     body.wr-wide-mode table.report_table th:nth-child(5) { min-width: 75px; }
     body.wr-wide-mode table.report_table th:nth-child(6) { min-width: 75px; }
     body.wr-wide-mode table.report_table th:nth-child(7) { min-width: 75px; }
+
+    .popout-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+    }
+
+    .popout-content {
+        background: rgba(0, 0, 0, 0.2);
+        width: 95%;
+        max-width: 1450px;
+        margin: auto;
+        padding: 15px;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 150, 255, 0.4);
+        position: relative;
+        max-height: 95vh;
+        overflow-y: auto;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(20px);
+        overflow-x: hidden !important;
+    }
 
     .popout-close-x {
         position: absolute;
@@ -3786,6 +3786,20 @@ cat <<HTML >> "$WEB_PAGE"
         -webkit-tap-highlight-color: transparent !important;
     }
 
+    #popoutModal #popMainTable,
+    #popoutModal #popNodeTable {
+        min-width: 0 !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(1) { width: 25% !important; } /* HOSTNAME */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(2) { width: 18% !important; } /* IP ADDRESS */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(3) { width: 12% !important; } /* RSSI */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(4) { width: 12% !important; } /* RX/TX */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(5) { width: 13% !important; } /* SSID */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(6) { width: 10% !important; } /* BAND */
+    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(7) { width: 10% !important; } /* Uptime */
+
     @media (min-width: 992px) {
         #popoutModal .separator-line {
             min-width: 600px;
@@ -3830,20 +3844,6 @@ cat <<HTML >> "$WEB_PAGE"
             display: inline-block !important;
         }
     }
-
-    #popoutModal #popMainTable,
-    #popoutModal #popNodeTable {
-        min-width: 0 !important;
-        width: 100% !important;
-        table-layout: fixed !important;
-    }
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(1) { width: 25% !important; } /* HOSTNAME */
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(2) { width: 18% !important; } /* IP ADDRESS */
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(3) { width: 12% !important; } /* RSSI */
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(4) { width: 12% !important; } /* RX/TX */
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(5) { width: 13% !important; } /* SSID */
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(6) { width: 10% !important; } /* BAND */
-    #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(7) { width: 10% !important; } /* Uptime */
 </style>
 </head>
 <body onload="initial();">
