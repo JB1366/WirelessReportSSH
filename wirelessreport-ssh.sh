@@ -104,15 +104,15 @@ install_menu() {
 					case "$choice" in
 						2) do_uninstall ;;
 						3) set_temp_date ;;
-						4) set_nicknames ;;
-						5) set_colors ;;
+						4) set_device_nicknames ;;
+						5) set_device_colors ;;
                         6) set_theme ;;
 						7) set_options ;;
-						8) set_rssi ;;
+						8) set_rssi_tooltip ;;
 						9) check_ssh ;;
 					esac
 					break ;;
-				e|E) clear; hasta; exit 0 ;;
+				e|E) clear; hasta_la_vista; exit 0 ;;
 				*) freeze 2; continue ;;
 			esac
 		done
@@ -285,11 +285,6 @@ menu_vars() {
     BN="$GR$BRANCH_NAME$NC"
 }
 
-default_colors() {
-    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
-    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
-}
-
 do_install() {
 	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
@@ -440,7 +435,7 @@ get_usb() {
     ERROR_LOG="$USB_PATH/ssh_error.log"
 }
 
-wr_sha256() {
+do_hash_check() {
     local file="$1" hash=""
     [ -f "$file" ] || return 1
     if command -v sha256sum >/dev/null 2>&1; then
@@ -465,8 +460,8 @@ check_github() {
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
         REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
-        LOCAL_HASH=$(wr_sha256 "$REPORT_SCRIPT" 2>/dev/null)
-        REMOTE_HASH=$(wr_sha256 "$REMOTE_TMP" 2>/dev/null)
+        LOCAL_HASH=$(do_hash_check "$REPORT_SCRIPT" 2>/dev/null)
+        REMOTE_HASH=$(do_hash_check "$REMOTE_TMP" 2>/dev/null)
         if [ -z "$LOCAL_HASH" ] || [ -z "$REMOTE_HASH" ]; then
             if [ -f "$REPORT_SCRIPT" ]; then
                 if cmp -s "$REPORT_SCRIPT" "$REMOTE_TMP"; then
@@ -603,7 +598,7 @@ do_uninstall() {
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
 	restart_httpd
-    ssh_init; default_colors
+    ssh_init; device_default_colors
     pause
 }
 
@@ -648,7 +643,12 @@ set_temp_date() {
     done
 }
 
-set_nicknames() {
+device_default_colors() {
+    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
+    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
+}
+
+set_device_nicknames() {
     while true; do
         show_header
         echo -e "$BL=================================================="
@@ -809,7 +809,7 @@ hex_to_ansi() {
     esac
 }
 
-set_colors() {
+set_device_colors() {
     local main_name main_ip m_color_hex current_colors total_nodes working_colors i
     local main_display_name main_display_color formatted_main_ip idx node MODEL IP
     local CLEAN_IP active_color nick_var_name node_display_name display_color formatted_ip
@@ -879,7 +879,7 @@ set_colors() {
             case "$node_choice" in
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
-                    default_colors
+                    device_default_colors
                     m_color_hex="$MAIN_COLOR"
                     working_colors=""
                     local idx=1
@@ -1025,7 +1025,7 @@ set_options() {
             selection
             case "$choice" in
                 1)
-                    set_runtime ;;
+                    set_runtime_tracking ;;
                 2)
                     if grep -q "^BACKHAUL=" "$CONFIG"; then
                         case "$BACKHAUL" in 1) NEW_BH="0" ;; *) NEW_BH="1" ;; esac
@@ -1053,7 +1053,7 @@ set_options() {
                     pause
                     ;;
                 4)
-                    set_ippad ;;
+                    set_ip_padding ;;
                 5)
                     if grep -q "HOST_COLOR=" "$CONFIG"; then
                         case "$HOST_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
@@ -1099,7 +1099,7 @@ set_options() {
                     continue 2
                     ;;
                 dev)
-                    set_branch ;;
+                    set_github_branch ;;
                 e|E)
                     return 0 ;;
                 *)
@@ -1111,7 +1111,7 @@ set_options() {
     done
 }
 
-set_runtime() {
+set_runtime_tracking() {
     while true; do
         show_header
         echo -e "$BL=================================================="
@@ -1174,7 +1174,7 @@ set_runtime() {
     done
 }
 
-set_ippad() {
+set_ip_padding() {
     while true; do
         show_header
         echo -e "$BL=================================================="
@@ -1207,7 +1207,7 @@ set_ippad() {
     done
 }
 
-set_branch() {
+set_github_branch() {
     while true; do
         show_header
         echo -e "$BL=================================================="
@@ -1250,7 +1250,7 @@ set_branch() {
     done
 }
 
-set_rssi() {
+set_rssi_tooltip() {
 	while true; do
 		show_header
 		echo -e "$BL=================================================="
@@ -1344,7 +1344,7 @@ check_ssh() {
             selection
             case "$choice" in
                 1)
-                    ssh_keys
+                    get_ssh_keys
                     case "$install" in 1) return 0 ;; esac
                     break
                     ;;
@@ -1407,7 +1407,7 @@ check_ssh() {
 	done
 }
 
-ssh_keys() {
+get_ssh_keys() {
     if [ -f "$SSH_KEY" ]; then
         echo -e "\n$YL[!] RSA Keys already exist.$NC"
         pause
@@ -1561,7 +1561,7 @@ node_auth() {
             SSH_ERR=$(/usr/bin/ssh -p "$SSH_PORT" -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes "${NODE_USER}@${IP}" "exit" 2>&1 >/dev/null)
             SSH_RC=$?
 			if [ -n "$SSH_ERR" ]; then
-                echo "$SSH_ERR" | while read -r line; do ssh_error "$line"; done
+                echo "$SSH_ERR" | while read -r line; do ssh_error_log "$line"; done
             fi
 
             if [ "$SSH_RC" -eq 0 ]; then
@@ -1659,7 +1659,7 @@ pause() { printf "\nPress $BL[Enter]$NC to return..."; read -r discard; }
 
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 
-do_runtime() {
+runtime_tracking() {
 	RTIME=${RTIME:-1}
 	if [ "$RTIME" = "1" ]; then
 		read -r END_RUNTIME _ < /proc/uptime
@@ -1767,7 +1767,7 @@ do_runtime() {
 	fi
 }
 
-ssh_error() {
+ssh_error_log() {
     if [ -n "$1" ]; then
         case "$1" in
             *Ignoring*|*skipping*) ;;
@@ -1869,7 +1869,7 @@ do_numbered_node() {
     esac
 }
 
-hasta() {
+hasta_la_vista() {
 echo -e "\n\n\n$BL" #============================================================================================================#
 echo -e "                                                                                                                        "
 echo -e "                                                                                                                        "
@@ -2040,11 +2040,11 @@ get_ip() {
             ;;
     esac
 
-    ip_to_num "$ip"
+    ip_to_number "$ip"
     ip_sort="$IP_NUM"
 }
 
-ip_to_num() {
+ip_to_number() {
     local ip="$1" o1 o2 o3 o4
     o1="${ip%%.*}"; local rest="${ip#*.}"
     o2="${rest%%.*}"; rest="${rest#*.}"
@@ -2063,7 +2063,7 @@ ip_to_num() {
     IP_NUM=$(printf "%03d%03d%03d%03d" "${o1:-0}" "${o2:-0}" "${o3:-0}" "${o4:-0}")
 }
 
-final_chk() {
+final_check() {
     width="${width:-20}"
     ssid="${ssid:-Wireless}"
     case "$rssi" in 0|1|""|"-"|*[!0-9-]*) rssi=-54 ;; esac
@@ -2101,7 +2101,7 @@ get_rx_tx() {
     lrd_val=$(printf "%04d" "${tx_disp:-0}")
 }
 
-get_trend() {
+get_rssi_trend() {
     local mac="$1"
     local current_rssi="$2"
     local rssi_name="${3:-""}"
@@ -2300,7 +2300,7 @@ get_band() {
     esac
 }
 
-qca_uptime() {
+get_qca_uptime() {
     [ "$uptime" = "UP_QCA" ] || return 0
     case "$iface" in *ath*) ;; *) return 0 ;; esac
     local now=$(date +%s); local clean_mac="$mac"
@@ -2312,7 +2312,7 @@ qca_uptime() {
     fi
 }
 
-device_uptime() {
+get_device_uptime() {
     local T=$1
     local pulse=""
     if [ -z "$T" ] || case "$T" in *[!0-9]*) true ;; *) false ;; esac; then
@@ -2413,7 +2413,7 @@ get_row() {
 	</tr>"
 }
 
-router_uptime() {
+get_router_uptime() {
     local s="${1%.*}" d h m
     d=$((s / 86400))
     h=$((s % 86400 / 3600))
@@ -2486,7 +2486,7 @@ ROW
 }
 
 ssh_init; get_usb; check_github
-update_time; default_colors
+update_time; device_default_colors
 
 run_report() {
 #=================#
@@ -2679,7 +2679,7 @@ read -r M_T < /sys/class/thermal/thermal_zone0/temp 2>/dev/null
 M_TEMP=$(get_temp_unit $(( ${M_T:-0} / 1000 )))
 MC_TEMP=$(get_temp_class "$M_TEMP")
 read -r s _ < /proc/uptime; s=${s%.*}
-M_UPTIME=$(router_uptime "$s")
+M_UPTIME=$(get_router_uptime "$s")
 M_TIME=$(( $(date +%s) - s ))
 M_BOOT=$(date -d @$M_TIME "$D_FMT")
 
@@ -2778,11 +2778,11 @@ for iface in $IFACE_LIST; do
 		get_ip
         parse_main_sta "$iface" "$data_iface"
 		get_rx_tx
-		final_chk
+		final_check
 		is_mac_new=$(check_new_mac "$mac")
-		trend=$(get_trend "$mac" "$rssi" "$MAIN_NAME")
+		trend=$(get_rssi_trend "$mac" "$rssi" "$MAIN_NAME")
 		band=$(get_band "$iface" "$width" "$ROUTER")
-		uptime=$(device_uptime "$uptime")
+		uptime=$(get_device_uptime "$uptime")
 		get_bars_rssi_style
 		get_max_column
 		hostcolor_main_name
@@ -2843,7 +2843,7 @@ for line in $SSH_NODES; do
 
         parse_node_out "$NODE_OUT"
 
-        N_UPTIME=$(router_uptime "$N_UPTIME_RAW")
+        N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class "$N_TEMP")
         NC_LOAD=$(get_load_class "$N_LOAD")
@@ -2856,12 +2856,12 @@ for line in $SSH_NODES; do
 			get_mac_address || continue
 			get_ip
             get_rx_tx
-			final_chk
+			final_check
             is_mac_new=$(check_new_mac "$mac")
-			trend=$(get_trend "$mac" "$rssi" "$NODE_NAME")
+			trend=$(get_rssi_trend "$mac" "$rssi" "$NODE_NAME")
 			band=$(get_band "$iface" "$width" "$ROUTER")
-			qca_uptime
-			uptime=$(device_uptime "$uptime")
+			get_qca_uptime
+			uptime=$(get_device_uptime "$uptime")
 			get_bars_rssi_style
 			get_max_column
 			hostcolor_node_name
@@ -2922,7 +2922,7 @@ for band_key in "6G-1" "6G-2"; do
     fi
 done
 
-do_numbered_node; get_theme; do_runtime
+do_numbered_node; get_theme; runtime_tracking
 check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
