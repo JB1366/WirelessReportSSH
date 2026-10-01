@@ -1861,11 +1861,6 @@ do_numbered_node() {
         4)     TS=12; US=10 ;;
         *)     TS=10; US=8 ;;
     esac
-
-    case "$WIFI_RADIO_TEMPS" in
-        0) RADIO_ON="display: none !important;" ;;
-        *) RADIO_ON="" ;;
-    esac
 }
 
 hasta_la_vista() {
@@ -2478,6 +2473,11 @@ ROW
 }
 
 get_main_wifi_radios() {
+    case "$WIFI_RADIO_TEMPS" in
+        0) RADIO_ON="display: none !important;" ;;
+        *) RADIO_ON="" ;;
+    esac
+
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
         RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
         if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
@@ -2780,9 +2780,9 @@ done
 IPPAD=${IPPAD:-1}; HOST_COLOR=${HOST_COLOR:-0}; TABLE_HEADERS=${TABLE_HEADERS:-1}
 YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
-T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0; MAIN_DEVICE_TOTAL=0
+MAIN_DEVICE_TOTAL=0; RADIO_TEMPS=""; SEEN_BANDS=""
+T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$SEEN_MACS"; > "$NEW_HISTORY"
-RADIO_TEMPS=""; SEEN_BANDS=""
 
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
 if [ -f "$KNOWN_DB" ]; then cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null; else > "$KNOWN_CACHE"; fi
