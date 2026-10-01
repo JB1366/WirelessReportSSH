@@ -2761,7 +2761,6 @@ for iface in $IFACE_LIST; do
         [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface}_ssid")
         [ -z "$ssid" ] && ssid=$(nvram get "${iface%.*}_ssid")
         [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface%.*}_ssid")
-    fi get "${data_iface%.*}_ssid")
     fi
 
 	for mac in $MAC_LIST; do
