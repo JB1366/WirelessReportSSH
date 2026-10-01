@@ -3504,7 +3504,7 @@ cat <<HTML >> "$WEB_PAGE"
         color: #f2f2f7;
         margin-top: 11px;
         font-weight: bold;
-        white-space: nowrap;
+        white-space: normal;
         width: 100%;
         overflow: visible !important;
     }
@@ -3519,7 +3519,7 @@ cat <<HTML >> "$WEB_PAGE"
         color: #f2f2f7;
         margin-top: 8px;
         font-weight: bold;
-        white-space: nowrap;
+        white-space: normal;
         width: 100%;
         overflow: visible !important;
     }
