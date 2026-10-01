@@ -2754,22 +2754,14 @@ for iface in $IFACE_LIST; do
     case "$MAC_LIST" in "") continue ;; esac
 
     ssid=$(nvram get "${iface}_ssid")
-    if [ -z "$ssid" ] || [ "${#ssid}" -ge 16 ]; then
-        idx=${iface#*.}
-        if [ "$idx" != "$iface" ]; then
-            ssid=$(nvram get "gnp_name_$idx")
-        else
-            ssid=""
-        fi
-    fi
-	if [ -z "$ssid" ] && [ -n "$data_iface" ]; then
-        ssid=$(nvram get "${data_iface}_ssid")
-    fi
+    [ "${#ssid}" -ge 16 ] && ssid=""
     if [ -z "$ssid" ]; then
-        ssid=$(nvram get "${iface%.*}_ssid")
-    fi
-    if [ -z "$ssid" ] && [ -n "$data_iface" ]; then
-        ssid=$(nvram get "${data_iface%.*}_ssid")
+        idx=${iface#*.}
+        [ "$idx" != "$iface" ] && ssid=$(nvram get "gnp_name_$idx")
+        [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface}_ssid")
+        [ -z "$ssid" ] && ssid=$(nvram get "${iface%.*}_ssid")
+        [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface%.*}_ssid")
+    fi get "${data_iface%.*}_ssid")
     fi
 
 	for mac in $MAC_LIST; do
