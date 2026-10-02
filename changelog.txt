@@ -5,6 +5,7 @@
 v2.1.1-add wifi-radio temps.
       -update runtime tracking.
       -popoutModal adjustments.
+      -add Toggle Loading Table Headers.
       -add AM/PM option to Set Date/Time Menu.
       -fix band column sorting - secondary sort by width.
       -fix rx/tx column sorting - secondary sort by rx.

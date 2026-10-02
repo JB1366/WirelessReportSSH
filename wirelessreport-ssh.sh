@@ -2607,6 +2607,12 @@ get_all_radio_row() {
                 *°*)
                     display_key="${band_key//__/-}"
                     item_html="<span>${display_key}: ${combined}</span>"
+
+                    # Insert a line break before 6G bands if node density is high
+                    if [ "$NUMBERED_NODE" -ge 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
+                        ALL_RADIO_ROW="${ALL_RADIO_ROW}<br>"
+                    fi
+
                     case "$ALL_RADIO_ROW" in
                         *"$display_key:"*) ;;
                         *) ALL_RADIO_ROW="${ALL_RADIO_ROW}${ALL_RADIO_ROW:+&nbsp;}${item_html}" ;;
