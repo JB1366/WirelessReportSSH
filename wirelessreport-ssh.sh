@@ -2241,7 +2241,7 @@ get_band() {
 
         # Tri-Band Mapping (2.4G, 5G, 5G-2)
         # Models: GT-AX11000_PRO, RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
-        *AXE11000_PRO*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
+        *AXE11000_PRO*|*GT-AX11000*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
                 wl0*|eth1*|eth4*|eth8*)        Label="2.4G" ;;
                 wl1*|eth2*|eth5*|eth7*|eth10*) Label="5G" ;;
