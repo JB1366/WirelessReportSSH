@@ -232,7 +232,7 @@ menu_vars() {
         USA)  DN="USA";  DU="$GR°F$NC"; CT="$DATE_USA" ;;
         INTL) DN="INTL"; DU="$GR°C$NC"; CT="$DATE_INTL" ;;
         ISO)  DN="ISO";  DU="$GR°C$NC"; CT="$DATE_ISO" ;;
-        ISO2)  DN="ISO";  DU="$GR°F$NC"; CT="$DATE_ISO" ;;
+        ISO2) DN="ISO";  DU="$GR°F$NC"; CT="$DATE_ISO" ;;
         USA1) DN="USA";  DU="$BL°F$NC"; CT="$DATE_USA1" ;;
         INTL1)DN="INTL"; DU="$BL°C$NC"; CT="$DATE_INTL1" ;;
         ISO1) DN="ISO";  DU="$BL°C$NC"; CT="$DATE_ISO1" ;;
@@ -2202,7 +2202,7 @@ get_band() {
         *BE98*|*BQ16*)
             case "$iface" in
                 wl0*|eth7*)  Label="5G" ;;
-                wl1*|eth8*)  Label="6G-1" ;;
+                wl1*|eth8*)  Label="6G" ;;
                 wl2*|eth9*)  Label="6G-2" ;;
                 wl3*|eth10*) Label="2.4G" ;;
             esac
@@ -2229,9 +2229,9 @@ get_band() {
             ;;
 
         # Tri-Band Mapping (2.4G, 5G, 6G)
-        # Models: RT-BE96U, RT-BE92U, GT-BE19000, GS-BE18000, GS-BE12000, BT6, ZENWIFI-BT8(MTK),
-        #         RT-AXE7800, GT-AXE11000, ET8, ET9, ET12
-        *BE96U*|*BE92U*|*BE19000*|*BE18000*|*BE12000*|*BT6*|*BT8*|*AXE7800*|*AXE11000*|*ET8*|*ET9*|*ET12*)
+        # Models: RT-AXE7800, GT-AXE11000, RT-BE96U, RT-BE92U, GT-BE19000, GS-BE18000
+        #         GS-BE12000, BT6, ZENWIFI-BT8(MTK), ET8, ET9, ET12
+        *AXE7800*|*AXE11000*|*BE96U*|*BE92U*|*BE19000*|*BE18000*|*BE12000*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
             case "$iface" in
                 wl0*|eth1*|eth4*|eth8*|ra[0-9]*)         Label="2.4G" ;;
                 wl1*|eth2*|eth5*|eth7*|eth10*|rai[0-9]*) Label="5G" ;;
@@ -2239,12 +2239,12 @@ get_band() {
             esac
             ;;
 
-        # Tri-Band Mapping (2.4G, 5G-1, 5G-2)
-        # Models: RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
-        *AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
+        # Tri-Band Mapping (2.4G, 5G, 5G-2)
+        # Models: GT-AX11000_PRO, RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
+        *AXE11000_PRO*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
                 wl0*|eth1*|eth4*|eth8*)        Label="2.4G" ;;
-                wl1*|eth2*|eth5*|eth7*|eth10*) Label="5G-1" ;;
+                wl1*|eth2*|eth5*|eth7*|eth10*) Label="5G" ;;
                 wl2*|eth6*|eth9*)              Label="5G-2" ;;
             esac
             ;;
