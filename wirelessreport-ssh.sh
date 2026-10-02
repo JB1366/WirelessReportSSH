@@ -2599,7 +2599,8 @@ get_all_radio_row() {
             elif [ -n "$main_val" ]; then
                 combined="$main_val"
             elif [ -n "$node_val" ]; then
-                combined="$node_val"
+                # Main router lacks the band, but nodes have it: prepend placeholder for main router slot
+                combined="<span>--</span>${node_separator}${node_val}"
             fi
 
             case "$combined" in
@@ -4038,7 +4039,7 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
                                 </div>
-                                <div class="radio-temp-row" style="$RADIO_ON">$ALL_RADIO_ROW</div>
+                                <div class="radio-temp-row" style="$RADIO_ON font-size: ${TS}px;">$ALL_RADIO_ROW</div>
                             </div>
                             <table id="allTable" class="report_table">
                                 <thead><tr>
