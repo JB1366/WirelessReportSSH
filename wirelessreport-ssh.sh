@@ -1841,7 +1841,7 @@ get_theme() {
 
 do_numbered_node() {
     case "$NUMBERED_NODE" in
-        0) ROUTER_ONLY="display: none !important;" ;;
+        0) ROUTER_ONLY="style=\"display: none !important;\"" ;;
         *) ROUTER_ONLY="" ;;
     esac
 
@@ -2482,7 +2482,7 @@ ROW
 
 get_main_wifi_radios() {
     case "$WIFI_RADIO_TEMPS" in
-        0) RADIO_ON="display: none !important;" ;;
+        0) RADIO_ON="style=\"display: none !important;\"" ;;
         *) RADIO_ON="" ;;
     esac
 
@@ -2516,7 +2516,7 @@ get_main_wifi_radios() {
 
 clear_node_wifi_vars() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
-        for band_key in "2.4G" "5G" "5G-1" "5G-2" "6G" "6G-1" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "n_${var_safe_key}=''"
         done
@@ -2525,7 +2525,7 @@ clear_node_wifi_vars() {
 
 get_node_wifi_radios() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
-        for band_key in "2.4G" "5G" "5G-1" "5G-2" "6G" "6G-1" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "val=\$n_${var_safe_key}"
             [ -n "$val" ] && eval "BAND_HAS_CONTENT_${var_safe_key}=1"
@@ -2546,7 +2546,7 @@ get_node_wifi_radios() {
 get_main_radio_row() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
         MAIN_RADIO_ROW=""
-        for band_key in "2.4G" "5G" "5G-1" "5G-2" "6G" "6G-1" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "band_html=\$MAIN_BAND_${var_safe_key}"
             if [ -n "$band_html" ]; then
@@ -2562,7 +2562,7 @@ get_main_radio_row() {
 get_node_radio_row() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
         NODE_RADIO_ROW=""
-        for band_key in "2.4G" "5G" "5G-1" "5G-2" "6G" "6G-1" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "has_content=\${BAND_HAS_CONTENT_${var_safe_key:-0}:-0}"
             [ "$has_content" -ne 1 ] && continue
@@ -2588,7 +2588,7 @@ get_all_radio_row() {
             *)     node_separator="$BULLET_ALL" ;;
         esac
 
-        for band_key in "2.4G" "5G" "5G-1" "5G-2" "6G" "6G-1" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
 
             eval "main_val=\$MAIN_BAND_${var_safe_key}"
@@ -2607,7 +2607,6 @@ get_all_radio_row() {
             elif [ -n "$main_val" ]; then
                 combined="$main_val"
             elif [ -n "$node_val" ]; then
-                # Main router lacks the band, but nodes have it: prepend placeholder for main router slot
                 combined="<span>--</span>${node_separator}${node_val}"
             fi
 
@@ -2616,7 +2615,6 @@ get_all_radio_row() {
                     display_key="${band_key//__/-}"
                     item_html="<span>${display_key}: ${combined}</span>"
 
-                    # Insert a line break before 6G bands if node density is high
                     if [ "$NUMBERED_NODE" -gt 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
                         ALL_RADIO_ROW="${ALL_RADIO_ROW}<br>"
                     fi
@@ -3962,9 +3960,9 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span id="refresh-countdown"></span>
                                 </div>
                             </div>
-                            <button id="btnMain" class="button-tables active" onclick="switchTab('split')" style="$ROUTER_ONLY">Main</button>
-                            <button id="btnAll" class="button-tables" onclick="switchTab('all')" style="$ROUTER_ONLY">All Devices</button>
-                            <button class="button-tables" onclick="openPopout()" style="$ROUTER_ONLY">Side by Side ◫</button>
+                            <button id="btnMain" class="button-tables active" onclick="switchTab('split')" $ROUTER_ONLY>Main</button>
+                            <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices</button>
+                            <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Side by Side ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
                         </div>
                     </div>
@@ -3980,7 +3978,7 @@ cat <<HTML >> "$WEB_PAGE"
                                         <span>Load: $MAIN_LOAD</span>
                                         <span>Devices: $MAIN_DEVICE_TOTAL</span>
                                     </div>
-                                    <div class="radio-temp-row" style="$RADIO_ON">$MAIN_RADIO_ROW</div>
+                                    <div class="radio-temp-row" $RADIO_ON>$MAIN_RADIO_ROW</div>
                                 </div>
                                 <table id="mainTable" class="report_table">
                                     <thead><tr>
@@ -4009,7 +4007,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 <div class='rssi-quality-box rssi-fair'>Fair: <span style='background:#ffd60a;' class='rssi-font'>$T_FAIR</span></div>
                                 <div class='rssi-quality-box rssi-poor'>Poor: <span style='background:#ff453a;' class='rssi-font'>$T_POOR</span></div>
                             </div>
-                            <div id="nodeCol" class="report-column" style="$ROUTER_ONLY">
+                            <div id="nodeCol" class="report-column" $ROUTER_ONLY>
                                 <div class="section-header">
                                     <span>$NODE_NAMES</span><br>
                                     <span>Updated: $CUR_TIME</span>
@@ -4019,7 +4017,7 @@ cat <<HTML >> "$WEB_PAGE"
                                         <span>Load: $NODE_LOADS</span>
                                         <span>Devices: $NODE_DEVICE_TOTAL $NTOTAL</span>
                                     </div>
-                                    <div class="radio-temp-row" style="$RADIO_ON">$NODE_RADIO_ROW</div>
+                                    <div class="radio-temp-row" $RADIO_ON>$NODE_RADIO_ROW</div>
                                 </div>
                                 <table id="nodeTable" class="report_table">
                                     <thead><tr>
@@ -4043,7 +4041,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 </table>
                             </div>
                         </div>
-                        <div id="allCol" class="report-column" style="$ROUTER_ONLY">
+                        <div id="allCol" class="report-column" $ROUTER_ONLY>
                             <div class="section-header">
                                 <span>$ALL_NAMES</span><br>
                                 <span>Updated: $CUR_TIME</span>
@@ -4053,7 +4051,7 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
                                 </div>
-                                <div class="radio-temp-row" style="$RADIO_ON font-size: ${TS}px;">$ALL_RADIO_ROW</div>
+                                <div class="radio-temp-row" $RADIO_ON font-size: ${TS}px;">$ALL_RADIO_ROW</div>
                             </div>
                             <table id="allTable" class="report_table">
                                 <thead><tr>
@@ -4076,7 +4074,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 </tfoot>
                             </table>
                         </div>
-                        <div id="allDevicesQualityBar" class="rssi-quality-bar" style="$ROUTER_ONLY">
+                        <div id="allDevicesQualityBar" class="rssi-quality-bar" $ROUTER_ONLY>
                             <div class='rssi-quality-box rssi-excl'>Excellent: <span style='background:#30d158;' class='rssi-font'>$T_EXCL</span></div>
                             <div class='rssi-quality-box rssi-good'>Good: <span style='background:#64d2ff;' class='rssi-font'>$T_GOOD</span></div>
                             <div class='rssi-quality-box rssi-fair'>Fair: <span style='background:#ffd60a;' class='rssi-font'>$T_FAIR</span></div>
