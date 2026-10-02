@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.1.2-fix gt>4 device wifi-radio row formatting.
 v2.1.1-add wifi-radio temps.
       -update runtime tracking.
       -popoutModal adjustments.
