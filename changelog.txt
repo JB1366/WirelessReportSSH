@@ -2,7 +2,15 @@
 # Wireless Report - Changelog #
 #=============================#
 
-
+v2.1.1-add wifi-radio temps.
+      -update runtime tracking.
+      -popoutModal adjustments.
+      -add AM/PM option to Set Date/Time Menu.
+      -fix band column sorting - secondary sort by width.
+      -fix rx/tx column sorting - secondary sort by rx.
+      -add option to restore default colors in Set Colors Menu.
+      -update side-by-side button.
+      -update ansi yellow in shell install menu.
 v2.1.0-minor updates, refactoring, optimizations.
 v2.0.9-reverted node device counting mechanism.
 v2.0.8-added filelock to webpage injection, adjusted services-start/event.
