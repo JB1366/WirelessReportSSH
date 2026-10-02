@@ -1893,7 +1893,7 @@ update_time() {
         USA)  T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
         INTL) T_FMT="+%-d-%b %-H:%M:%S"; D_FMT="+%-d-%b %-H:%M"; TEMP_UNIT="C" ;;
         ISO)  T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C" ;;
-        ISO3) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="F" ;;
+        ISO2) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="F" ;;
         USA1) T_FMT="+%b-%-d %-I:%M:%S %p"; D_FMT="+%b-%-d %-I:%M %p"; TEMP_UNIT="F" ;;
         INTL1)T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
         ISO1) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C" ;;
