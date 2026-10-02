@@ -1898,6 +1898,7 @@ update_time() {
         INTL1)T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
         ISO1) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C" ;;
         ISO3) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F" ;;
+        *)    T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
 }
@@ -2197,7 +2198,7 @@ get_band() {
     fi
     local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$m" in
-		# Quad-Band Mapping (5G, 6G-1, 6G-2, 2.4G)
+		# Quad-Band Mapping (5G, 6G, 6G-2, 2.4G)
 		# Models: GT-BE98(Pro), BQ16
         *BE98*|*BQ16*)
             case "$iface" in
@@ -2241,7 +2242,7 @@ get_band() {
 
         # Tri-Band Mapping (2.4G, 5G, 5G-2)
         # Models: GT-AX11000_PRO, RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
-        *AXE11000_PRO*|*GT-AX11000*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
+        *AXE11000_PRO*|*AX11000*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
                 wl0*|eth1*|eth4*|eth8*)        Label="2.4G" ;;
                 wl1*|eth2*|eth5*|eth7*|eth10*) Label="5G" ;;
@@ -2637,8 +2638,9 @@ run_report() {
 #=================#
 #  Node Scan(s)   #
 #=================#
+IPPAD=${IPPAD:-1}; WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-1}
+HOST_COLOR=${HOST_COLOR:-0}; TABLE_HEADERS=${TABLE_HEADERS:-1}
 read -r START_RUNTIME _ < /proc/uptime
-WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-1}
 
 NODE_DATA_DIR="/tmp/node_data"
 rm -rf "$NODE_DATA_DIR" 2>/dev/null
@@ -2790,13 +2792,12 @@ done
 #=============================#
 #  Main Scan/Device Assembly  #
 #=============================#
-IPPAD=${IPPAD:-1}; HOST_COLOR=${HOST_COLOR:-0}; TABLE_HEADERS=${TABLE_HEADERS:-1}
-YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
 MAIN_DEVICE_TOTAL=0; RADIO_TEMPS=""; SEEN_BANDS=""
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$SEEN_MACS"; > "$NEW_HISTORY"
 
+YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
 if [ -f "$KNOWN_DB" ]; then cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null; else > "$KNOWN_CACHE"; fi
 if [ -f "$HISTORY_DB" ]; then cp "$HISTORY_DB" "$HISTORY_CACHE" 2>/dev/null; else > "$HISTORY_CACHE"; fi
@@ -2855,19 +2856,6 @@ for iface in $IFACE_LIST; do
 
     get_main_wifi_radios
 
-    MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null); MAC_LIST=${MAC_LIST//assoclist /}
-    if [ -z "$MAC_LIST" ]; then
-		BRIDGE=$(brctl show 2>/dev/null | grep "$iface" | awk '{print $1}')
-		if [ -z "$BRIDGE" ]; then
-            BRIDGE=$(brctl show 2>/dev/null | grep -B1 "$iface" | grep -v "\-\-" | head -n1 | awk '{print $1}')
-        fi
-
-        if [ -n "$BRIDGE" ]; then
-            MAC_LIST=$(brctl showmacs "$BRIDGE" 2>/dev/null | grep -v "yes" | awk '{print $2}')
-        fi
-	fi
-    case "$MAC_LIST" in "") continue ;; esac
-
     ssid=$(nvram get "${iface}_ssid")
     [ "${#ssid}" -ge 16 ] && ssid=""
     if [ -z "$ssid" ]; then
@@ -2877,6 +2865,19 @@ for iface in $IFACE_LIST; do
         [ -z "$ssid" ] && ssid=$(nvram get "${iface%.*}_ssid")
         [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface%.*}_ssid")
     fi
+
+    MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null)
+    MAC_LIST=${MAC_LIST//assoclist /}
+    if [ -z "$MAC_LIST" ]; then
+		BRIDGE=$(brctl show 2>/dev/null | grep "$iface" | awk '{print $1}')
+		if [ -z "$BRIDGE" ]; then
+            BRIDGE=$(brctl show 2>/dev/null | grep -B1 "$iface" | grep -v "\-\-" | head -n1 | awk '{print $1}')
+        fi
+        if [ -n "$BRIDGE" ]; then
+            MAC_LIST=$(brctl showmacs "$BRIDGE" 2>/dev/null | grep -v "yes" | awk '{print $2}')
+        fi
+	fi
+    case "$MAC_LIST" in "") continue ;; esac
 
 	for mac in $MAC_LIST; do
 		case "$mac" in ""|"mac") continue ;; esac
@@ -2999,8 +3000,8 @@ MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
 
-do_numbered_node; get_theme; runtime_tracking
-check_version header_box
+do_numbered_node; runtime_tracking
+get_theme; check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
 mv "$NEW_HISTORY" "$HISTORY_DB"
@@ -3219,26 +3220,18 @@ cat <<HTML >> "$WEB_PAGE"
 
     .rssi-excl {
         color: #30d158;
-        --hover-color: #30d158;
-        --glow-color: rgba(48, 209, 88, 0.4);
     }
 
     .rssi-good {
         color: #64d2ff;
-        --hover-color: #64d2ff;
-        --glow-color: rgba(100, 210, 255, 0.4);
     }
 
     .rssi-fair {
         color: #ffd60a;
-        --hover-color: #ffd60a;
-        --glow-color: rgba(255, 214, 10, 0.4);
     }
 
     .rssi-poor {
         color: #ff453a;
-        --hover-color: #ff453a;
-        --glow-color: rgba(255, 69, 58, 0.4);
     }
 
     .rssi-container {
@@ -3575,7 +3568,7 @@ cat <<HTML >> "$WEB_PAGE"
         animation: routerPulse 1.5s infinite ease-in-out;
     }
 
-    .temp-load-row {
+    .cputemp-load-row {
         display: block;
         font-size: 14px;
         color: #f2f2f7;
@@ -3586,7 +3579,7 @@ cat <<HTML >> "$WEB_PAGE"
         overflow: visible !important;
     }
 
-    .temp-load-row > span:not(:last-child) {
+    .cputemp-load-row > span:not(:last-child) {
         margin-right: 1px;
     }
 
@@ -3819,13 +3812,13 @@ cat <<HTML >> "$WEB_PAGE"
         padding: 0 4px !important;
     }
 
-    #popoutModal .report-column .section-header .temp-load-row {
+    #popoutModal .report-column .section-header .cputemp-load-row {
         margin-top: -2px !important;
         margin-bottom: -2px !important;
         display: block !important;
     }
 
-    #popoutModal .report-column .section-header .temp-load-row span {
+    #popoutModal .report-column .section-header .cputemp-load-row span {
         font-size: 14px !important;
         font-weight: bold !important;
     }
@@ -3869,6 +3862,7 @@ cat <<HTML >> "$WEB_PAGE"
         width: 100% !important;
         table-layout: fixed !important;
     }
+
     #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(1) { width: 25% !important; } /* HOSTNAME */
     #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(2) { width: 18% !important; } /* IP ADDRESS */
     #popoutModal :is(#popMainTable, #popNodeTable) :is(th, td):nth-child(3) { width: 12% !important; } /* RSSI */
@@ -3973,12 +3967,14 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>$MAIN_NAME</span><br>
                                     <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
-                                    <div class="temp-load-row">
+                                    <div class="cputemp-load-row">
                                         <span>CPU: $MAIN_TEMP</span>
                                         <span>Load: $MAIN_LOAD</span>
                                         <span>Devices: $MAIN_DEVICE_TOTAL</span>
                                     </div>
-                                    <div class="radio-temp-row" $RADIO_ON>$MAIN_RADIO_ROW</div>
+                                    <div class="radio-temp-row" $RADIO_ON>
+                                        <span>$MAIN_RADIO_ROW</span>
+                                    </div>
                                 </div>
                                 <table id="mainTable" class="report_table">
                                     <thead><tr>
@@ -4012,12 +4008,14 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>$NODE_NAMES</span><br>
                                     <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
-                                    <div class="temp-load-row">
+                                    <div class="cputemp-load-row">
                                         <span>CPU: $NODE_TEMPS</span>
                                         <span>Load: $NODE_LOADS</span>
                                         <span>Devices: $NODE_DEVICE_TOTAL $NTOTAL</span>
                                     </div>
-                                    <div class="radio-temp-row" $RADIO_ON>$NODE_RADIO_ROW</div>
+                                    <div class="radio-temp-row" $RADIO_ON>
+                                        <span>$NODE_RADIO_ROW</span>
+                                    </div>
                                 </div>
                                 <table id="nodeTable" class="report_table">
                                     <thead><tr>
@@ -4046,12 +4044,14 @@ cat <<HTML >> "$WEB_PAGE"
                                 <span>$ALL_NAMES</span><br>
                                 <span>Updated: $CUR_TIME</span>
                                 <hr class="separator-line">
-                                <div class="temp-load-row allcol-style" style="font-size: ${TS}px;">
+                                <div class="cputemp-load-row allcol-style" style="font-size: ${TS}px;">
                                     <span>CPU: $ALL_TEMP</span>
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
                                 </div>
-                                <div class="radio-temp-row" $RADIO_ON font-size: ${TS}px;">$ALL_RADIO_ROW</div>
+                                <div class="radio-temp-row" $RADIO_ON style="font-size: ${TS}px;">
+                                    <span>$ALL_RADIO_ROW</span>
+                                </div>
                             </div>
                             <table id="allTable" class="report_table">
                                 <thead><tr>
@@ -4186,7 +4186,7 @@ function triggerRefresh() {
 
         var columns = ['#mainCol', '#nodeCol', '#allCol'];
         columns.forEach(function(colId) {
-            var row = document.querySelector(colId + ' .temp-load-row');
+            var row = document.querySelector(colId + ' .cputemp-load-row');
             if (row) {
                 var spans = row.querySelectorAll(':scope > span');
                 if (spans[0]) spans[0].innerText = "CPU: --";
