@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #=================================================================#
 
-SCRIPT_VERSION="2.1.2"
+SCRIPT_VERSION="2.1.3"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -221,18 +221,22 @@ menu_vars() {
     DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"
     DATE_INTL="$GR$(date +"%-d-%b %-H:%M:%S")$NC"
     DATE_ISO="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"
+    DATE_ISO2="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"
     DATE_USA1="$BL$(date +"%b-%d %-I:%M:%S %p")$NC"
     DATE_INTL1="$BL$(date +"%d-%b %-I:%M:%S %p")$NC"
     DATE_ISO1="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
+    DATE_ISO3="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
 
     REPORT_UNIT="${REPORT_UNIT:-USA}"
 	case "$REPORT_UNIT" in
         USA)  DN="USA";  DU="$GR°F$NC"; CT="$DATE_USA" ;;
         INTL) DN="INTL"; DU="$GR°C$NC"; CT="$DATE_INTL" ;;
         ISO)  DN="ISO";  DU="$GR°C$NC"; CT="$DATE_ISO" ;;
+        ISO2)  DN="ISO";  DU="$GR°F$NC"; CT="$DATE_ISO" ;;
         USA1) DN="USA";  DU="$BL°F$NC"; CT="$DATE_USA1" ;;
         INTL1)DN="INTL"; DU="$BL°C$NC"; CT="$DATE_INTL1" ;;
         ISO1) DN="ISO";  DU="$BL°C$NC"; CT="$DATE_ISO1" ;;
+        ISO3) DN="ISO";  DU="$BL°F$NC"; CT="$DATE_ISO1" ;;
     esac
 
     THEME=${THEME:-ORIGINAL}
@@ -614,11 +618,13 @@ set_temp_date() {
         echo -e "  $N1  USA   ($GR°F$NC)            ($DATE_USA)       "
         echo -e "  $N2  INTL  ($GR°C$NC)            ($DATE_INTL)      "
         echo -e "  $N3  ISO   ($GR°C$NC)          ($DATE_ISO)         "
+        echo -e "  $N4  ISO   ($GR°F$NC)          ($DATE_ISO2)        "
         echo -e "                                                     "
         echo -e "                               [12-HR AM/PM]         "
-        echo -e "  $N4  USA   ($BL°F$NC)           ($DATE_USA1)       "
-        echo -e "  $N5  INTL  ($BL°C$NC)           ($DATE_INTL1)      "
-        echo -e "  $N6  ISO   ($BL°C$NC)         ($DATE_ISO1)         "
+        echo -e "  $N5  USA   ($BL°F$NC)           ($DATE_USA1)       "
+        echo -e "  $N6  INTL  ($BL°C$NC)           ($DATE_INTL1)      "
+        echo -e "  $N7  ISO   ($BL°C$NC)         ($DATE_ISO1)         "
+        echo -e "  $N8  ISO   ($BL°F$NC)         ($DATE_ISO3)         "
         echo -e "                                                     "
         echo -e "  $LE  Exit back to main menu                        "
         echo -e "                                                     "
@@ -629,9 +635,11 @@ set_temp_date() {
                 1) NEW_UNIT="USA" ;;
                 2) NEW_UNIT="INTL" ;;
                 3) NEW_UNIT="ISO" ;;
-                4) NEW_UNIT="USA1" ;;
-                5) NEW_UNIT="INTL1" ;;
-                6) NEW_UNIT="ISO1" ;;
+                4) NEW_UNIT="ISO2" ;;
+                5) NEW_UNIT="USA1" ;;
+                6) NEW_UNIT="INTL1" ;;
+                7) NEW_UNIT="ISO1" ;;
+                8) NEW_UNIT="ISO3" ;;
                 e|E) return ;;
                 *) freeze 2; continue ;;
             esac
@@ -1226,13 +1234,12 @@ set_github_branch() {
             selection
             case "$choice" in
                 1) BRANCH="0" ;;
-                2) BRANCH="0" ;;
+                2) BRANCH="1" ;;
                 e|E) break 2 ;;
                 *) freeze 2; continue ;;
             esac
             break
         done
-        break # remove on Development creation.
         if grep -q "^BRANCH=" "$CONFIG"; then
             sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
         else
@@ -1886,10 +1893,11 @@ update_time() {
         USA)  T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
         INTL) T_FMT="+%-d-%b %-H:%M:%S"; D_FMT="+%-d-%b %-H:%M"; TEMP_UNIT="C" ;;
         ISO)  T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C" ;;
+        ISO3) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="F" ;;
         USA1) T_FMT="+%b-%-d %-I:%M:%S %p"; D_FMT="+%b-%-d %-I:%M %p"; TEMP_UNIT="F" ;;
         INTL1)T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
         ISO1) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C" ;;
-        *)    T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
+        ISO3) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
 }
