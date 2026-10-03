@@ -240,7 +240,8 @@ menu_vars() {
     esac
 
     THEME=${THEME:-ORIGINAL}
-    TM_STAT="$GR$THEME$NC"
+    TM1_STAT="$GR$THEME$NC"
+    TM_STAT="$BL$THEME$NC"
 
     RTIME=${RTIME:-1}
     case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
@@ -314,17 +315,10 @@ do_install() {
     echo -e "\n$GR[+] Downloading latest version($NC v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
 
-    mkdir -p "$(dirname "$PROFILE_ADD")"
-    [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
-    if ! grep -q "alias wrssh=" "$PROFILE_ADD" 2>/dev/null; then
-        echo "alias wrssh=\"$REPORT_SCRIPT install\" # added by Wireless Report SSH" >> "$PROFILE_ADD"
-        echo -e "\n$GR[+] Adding alias 'wrssh' to $PROFILE_ADD$NC"
-    fi
-
     if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
-		printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
 		sys_log "(v$REMOTE_VERSION) successfully installed."
+        printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
 		exec "$REPORT_SCRIPT" install "$@"
 		echo -e "$RD[!]Error: Failed to restart script!$NC" >&2; exit 1
 	fi
@@ -348,6 +342,14 @@ do_install() {
     inject_menu
 
     echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
+
+    mkdir -p "$(dirname "$PROFILE_ADD")"
+    [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
+    if ! grep -q "alias wrssh=" "$PROFILE_ADD" 2>/dev/null; then
+        echo "alias wrssh=\"$REPORT_SCRIPT install\" # added by Wireless Report SSH" >> "$PROFILE_ADD"
+        echo -e "\n$GR[+] Adding alias 'wrssh' to $PROFILE_ADD$NC"
+    fi
+
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
     echo "$REPORT_SCRIPT inject & # Inject Wireless Report SSH" >> "$SS_FILE"
@@ -982,7 +984,7 @@ set_theme() {
     while true; do
         show_header
         echo -e "$BL=================================================="
-        echo -e "$NC Set Theme                    Current: $TM_STAT   "
+        echo -e "$NC Set Theme                    Current: $TM1_STAT  "
         echo -e "$BL=================================================="
         echo -e "                                                     "
         echo -e "  $N1 Original Theme                                 "
@@ -1251,8 +1253,8 @@ set_github_branch() {
         if do_update; then
             exec "$REPORT_SCRIPT" install "$@"
         else
-            echo -e "$RD[!]Error: Branch update failed!$NC" >&2
-            exit 1
+            echo -e "\n$RD[!]Error: Branch update failed!$NC" >&2
+            pause
         fi
     done
 }
@@ -2206,7 +2208,7 @@ get_band() {
             case "$iface" in
                 wl0*) Label="5G" ;;
                 wl1*) Label="6G" ;;
-                wl2*) Label="6G-2" ;;
+                wl2*) Label="6G2" ;;
                 wl3*) Label="2.4G" ;;
             esac
             ;;
@@ -2216,7 +2218,7 @@ get_band() {
         *AXE16000*|*BE25000*)
             case "$iface" in
                 wl0*) Label="5G" ;;
-                wl1*) Label="5G-2" ;;
+                wl1*) Label="5G2" ;;
                 wl2*) Label="6G" ;;
                 wl3*) Label="2.4G" ;;
             esac
@@ -2258,7 +2260,7 @@ get_band() {
             case "$iface" in
                 wl0*|eth4*|eth7*) Label="2.4G" ;;
                 wl1*|eth5*|eth8*) Label="5G" ;;
-                wl2*|eth6*|eth9*) Label="5G-2" ;;
+                wl2*|eth6*|eth9*) Label="5G2" ;;
             esac
             ;;
 
@@ -2536,7 +2538,7 @@ get_main_wifi_radios() {
 
 clear_node_wifi_vars() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
-        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "n_${var_safe_key}=''"
         done
@@ -2545,7 +2547,7 @@ clear_node_wifi_vars() {
 
 get_node_wifi_radios() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
-        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "val=\$n_${var_safe_key}"
             [ -n "$val" ] && eval "BAND_HAS_CONTENT_${var_safe_key}=1"
@@ -2566,7 +2568,7 @@ get_node_wifi_radios() {
 get_main_radio_row() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
         MAIN_RADIO_ROW=""
-        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "band_html=\$MAIN_BAND_${var_safe_key}"
             if [ -n "$band_html" ]; then
@@ -2582,7 +2584,7 @@ get_main_radio_row() {
 get_node_radio_row() {
     if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
         NODE_RADIO_ROW=""
-        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "has_content=\${BAND_HAS_CONTENT_${var_safe_key:-0}:-0}"
             [ "$has_content" -ne 1 ] && continue
@@ -2608,7 +2610,7 @@ get_all_radio_row() {
             *)     node_separator="$BULLET_ALL" ;;
         esac
 
-        for band_key in "2.4G" "5G" "5G-2" "6G" "6G-2"; do
+        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
 
             eval "main_val=\$MAIN_BAND_${var_safe_key}"
