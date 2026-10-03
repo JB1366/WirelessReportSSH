@@ -1731,7 +1731,7 @@ runtime_tracking() {
         }
         .button-refresh:before {
             content: \"Avg: ${AVERAGE}s over $NEW_COUNT scans\";
-            left: -80px;
+            left: -70px;
             bottom: 185%;
         }
         .button-refresh:after {
@@ -1741,7 +1741,7 @@ runtime_tracking() {
         }
         .button-refresh .button-trigger:before, .button-refresh select:before {
             content: \"High: ${NEW_MAX}s   Low: ${NEW_MIN}s\";
-            left: -80px;
+            left: -70px;
             top: 185%;
         }
         .button-refresh .button-trigger:after, .button-refresh select:after {
@@ -3954,9 +3954,9 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span id="refresh-countdown"></span>
                                 </div>
                             </div>
-                            <button id="btnMain" class="button-tables active" onclick="switchTab('split')" $ROUTER_ONLY>Main</button>
+                            <button id="btnMain" class="button-tables active" onclick="switchTab('split')" $ROUTER_ONLY>Main View</button>
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices</button>
-                            <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Side by Side ◫</button>
+                            <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
                         </div>
                     </div>
