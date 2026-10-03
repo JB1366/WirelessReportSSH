@@ -1688,7 +1688,9 @@ runtime_tracking() {
 
         echo "$NEW_TOTAL $NEW_COUNT $NEW_MIN $NEW_MAX" > "$STATS_FILE"
 
-        case "$RTIME_LOG" in 1) sys_log "Report completed in $RUNTIME. AVG: ${AVERAGE}s (L: ${NEW_MIN}s/H: ${NEW_MAX}s) over $NEW_COUNT scans." ;; esac
+        case "$RTIME_LOG" in
+            1) sys_log "Report completed in $RUNTIME. AVG: ${AVERAGE}s (L: ${NEW_MIN}s/H: ${NEW_MAX}s) over $NEW_COUNT scans." ;;
+        esac
 
         RUNTIME_CSS=".button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }
         .button-refresh, .button-refresh select, .button-refresh .button-trigger {
@@ -2199,13 +2201,13 @@ get_band() {
     local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$m" in
 		# Quad-Band Mapping (5G, 6G, 6G-2, 2.4G)
-		# Models: GT-BE98(Pro), BQ16
+		# Models: GT-BE98_PRO, BQ16
         *BE98*|*BQ16*)
             case "$iface" in
-                wl0*|eth7*)  Label="5G" ;;
-                wl1*|eth8*)  Label="6G" ;;
-                wl2*|eth9*)  Label="6G-2" ;;
-                wl3*|eth10*) Label="2.4G" ;;
+                wl0*) Label="5G" ;;
+                wl1*) Label="6G" ;;
+                wl2*) Label="6G-2" ;;
+                wl3*) Label="2.4G" ;;
             esac
             ;;
 
@@ -2213,14 +2215,14 @@ get_band() {
 		# Models: GT-AXE16000, GT-BE25000
         *AXE16000*|*BE25000*)
             case "$iface" in
-                wl0*|eth7*)  Label="5G" ;;
-                wl1*|eth8*)  Label="5G-2" ;;
-                wl2*|eth9*)  Label="6G" ;;
-                wl3*|eth10*) Label="2.4G" ;;
+                wl0*) Label="5G" ;;
+                wl1*) Label="5G-2" ;;
+                wl2*) Label="6G" ;;
+                wl3*) Label="2.4G" ;;
             esac
             ;;
 
-        # Tri-Band ZenWiFi-BT10 Specific
+        # Tri-Band ZenWiFi-BT10 Specific (6G, 5G, 2.4G)
         *BT10*)
             case "$iface" in
                 wl0*) Label="6G" ;;
@@ -2234,38 +2236,37 @@ get_band() {
         #         GS-BE12000, BT6, ZENWIFI-BT8(MTK), ET8, ET9, ET12
         *AXE7800*|*AXE11000*|*BE96U*|*BE92U*|*BE19000*|*BE18000*|*BE12000*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
             case "$iface" in
-                wl0*|eth1*|eth4*|eth8*|ra[0-9]*)         Label="2.4G" ;;
-                wl1*|eth2*|eth5*|eth7*|eth10*|rai[0-9]*) Label="5G" ;;
-                wl2*|eth6*|eth9*|rax[0-9]*)              Label="6G" ;;
+                wl0*|eth4*|eth8*|ra[0-9]*)  Label="2.4G" ;;
+                wl1*|eth5*|eth7*|rai[0-9]*) Label="5G" ;;
+                wl2*|eth6*|eth9*|rax[0-9]*) Label="6G" ;;
             esac
             ;;
 
         # Tri-Band Mapping (2.4G, 5G, 5G-2)
-        # Models: GT-AX11000_PRO, RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
+        # Models: GT-AXE11000_PRO, GT-AX11000, RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
         *AXE11000_PRO*|*AX11000*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
-                wl0*|eth1*|eth4*|eth8*)        Label="2.4G" ;;
-                wl1*|eth2*|eth5*|eth7*|eth10*) Label="5G" ;;
-                wl2*|eth6*|eth9*)              Label="5G-2" ;;
-            esac
-            ;;
-        # Dual-Band Mapping
-        # Models: DSL-AX82U, RT-AX86S
-        *AX82U|AX86S*)
-            case "$iface" in
-                wl0*|eth5*) Label="2.4G" ;;
-                wl1*|eth6*) Label="5G" ;;
-                *)          Label="Unknown" ;;
+                wl0*|eth4*|eth8*) Label="2.4G" ;;
+                wl1*|eth5*|eth7*) Label="5G" ;;
+                wl2*|eth6*|eth9*) Label="5G-2" ;;
             esac
             ;;
 
-        # Dual-Band Mapping
+        # Dual-Band Mapping (2.4G, 5G)
+        # Models: DSL-AX82U, RT-AX86S
+        *AX82U*|*AX86S*)
+            case "$iface" in
+                wl0*|eth5*) Label="2.4G" ;;
+                wl1*|eth6*) Label="5G" ;;
+            esac
+            ;;
+
+        # Dual-Band Mapping (2.4G, 5G)
 		# Models: RT-AX86U, ZENWIFI-BD4(QCA)
         *)
             case "$iface" in
-                wl0*|eth1*|eth4*|eth6*|eth8*|ath0*)  Label="2.4G" ;;
-                wl1*|eth2*|eth5*|eth7*|eth10*|ath1*) Label="5G" ;;
-                *)                                   Label="Unknown" ;;
+                wl0*|eth4*|eth6*|ath0*) Label="2.4G" ;;
+                wl1*|eth5*|eth7*|ath1*) Label="5G" ;;
             esac
             ;;
     esac
@@ -2501,7 +2502,6 @@ get_main_wifi_radios() {
                         T_CLASS=$(get_temp_class "$T_UNIT")
                         R_HTML="<span class='${T_CLASS}'>${T_UNIT}</span>"
                         VAR_SAFE_LABEL=$(echo "$BAND_LABEL" | tr '.-' '__')
-
                         eval "CURR_VAL=\$MAIN_BAND_${VAR_SAFE_LABEL}"
                         if [ -n "$CURR_VAL" ]; then
                             eval "MAIN_BAND_${VAR_SAFE_LABEL}=\"\$CURR_VAL\${BULLET}\$R_HTML\""
