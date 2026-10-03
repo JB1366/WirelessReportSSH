@@ -3000,8 +3000,8 @@ MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
 
-do_numbered_node; runtime_tracking
 get_theme; check_version header_box
+do_numbered_node; runtime_tracking
 
 JS_DIFF="${DIFF:-5.00}"
 mv "$NEW_HISTORY" "$HISTORY_DB"
