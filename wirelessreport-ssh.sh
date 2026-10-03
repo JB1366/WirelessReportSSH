@@ -1867,10 +1867,10 @@ do_numbered_node() {
 
     # TEMP/UPTIME STYLE
     case "$NUMBERED_NODE" in
-        [1-2]) TS=14; US=14 ;;
-        3)     TS=14; US=11 ;;
-        4)     TS=12; US=10 ;;
-        *)     TS=10; US=8 ;;
+        [1-2]) TS=14; US="" ;;
+        3)     TS=14; US="uptime-style" ;;
+        4)     TS=12; US="uptime-style" ;;
+        *)     TS=10; US="uptime-style" ;;
     esac
 }
 
@@ -3623,12 +3623,28 @@ cat <<HTML >> "$WEB_PAGE"
     .uptime-row {
         text-align: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 14px;
     }
 
-    .allcol-style {
+    .temp-style {
         text-align: center;
         justify-content: flex-start;
+        font-size: ${TS}px;
+    }
+
+    .uptime-style {
+        text-align: center;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .uptime-style > span {
+        display: block;
+        line-height: 1.2;
+    }
+
+    .uptime-style > span + span {
+        margin-top: 5px;
     }
 
     .stat-cool {
@@ -4056,7 +4072,7 @@ cat <<HTML >> "$WEB_PAGE"
                                     <tbody>$NODE_ROWS</tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="7" class="uptime-row">
+                                            <td colspan="7" class="uptime-row ${US}">
                                                 <span>Uptime: $NODE_UPTIMES</span>
                                                 <span>Reboot: $NODE_BOOTTIMES</span>
                                             </td>
@@ -4070,12 +4086,12 @@ cat <<HTML >> "$WEB_PAGE"
                                 <span>$ALL_NAMES</span><br>
                                 <span>Updated: $CUR_TIME</span>
                                 <hr class="separator-line">
-                                <div class="cputemp-load-row allcol-style" style="font-size: ${TS}px;">
+                                <div class="cputemp-load-row temp-style">
                                     <span>CPU: $ALL_TEMP</span>
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
                                 </div>
-                                <div class="radio-temp-row" $RADIO_ON style="font-size: ${TS}px;">
+                                <div class="radio-temp-row temp-style" $RADIO_ON>
                                     <span>$ALL_RADIO_ROW</span>
                                 </div>
                             </div>
@@ -4092,7 +4108,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 <tbody>$ALL_ROWS</tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="7" class="uptime-row allcol-style" style="font-size: ${US}px;">
+                                        <td colspan="7" class="uptime-row ${US}">
                                             <span>Uptime: $ALL_UPTIME</span>
                                             <span>Reboot: $ALL_BOOTTIME</span>
                                         </td>
