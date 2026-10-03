@@ -1808,7 +1808,7 @@ get_theme() {
         "DARKMODE")
             RT_TOOLTIP="#000000"
             THEME_CSS=".top-header { background: transparent !important; }
-            .header-box { background: rgba(0,0,0,0.9); }
+            .header-box { background: #000000; }
             .section-header { background: transparent !important; }
             .report-column { background: transparent !important; }
             table.report_table td { background: transparent !important; }
@@ -1824,7 +1824,7 @@ get_theme() {
         "ORIGINAL"|*)
             RT_TOOLTIP="#000000"
             THEME_CSS=".top-header { background: transparent !important; }
-            .header-box { background: rgba(0,0,0,0.9); }
+            .header-box { background: #000000; }
             .section-header { background: linear-gradient(to bottom, #171b1f, #354961); }
             .report-column { background: #1c232b; }
             table.report_table td { background: #1c232b; }
@@ -3000,8 +3000,8 @@ MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
 
-get_theme; check_version header_box
-do_numbered_node; runtime_tracking
+get_theme; runtime_tracking
+do_numbered_node; check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
 mv "$NEW_HISTORY" "$HISTORY_DB"
@@ -3125,7 +3125,6 @@ cat <<HTML >> "$WEB_PAGE"
         visibility: hidden;
         width: max-content;
         min-width: 120px;
-        background: rgba(0, 0, 0, 0.9);
         color: white;
         text-align: center;
         border: 1px solid #0096ff;
