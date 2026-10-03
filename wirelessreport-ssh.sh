@@ -2077,14 +2077,16 @@ final_check() {
 }
 
 check_new_mac() {
-	local mac="$1"
+    local mac="$1"
+    is_mac_new=""
+
     if [ ! -f "$KNOWN_DB" ]; then
         touch "$KNOWN_DB"
     fi
     if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
         echo "$mac" >> "$KNOWN_DB"
         echo "$mac" >> "$KNOWN_CACHE"
-        echo "new-device-row"
+        is_mac_new="new-device-row"
     fi
 }
 
@@ -2096,38 +2098,40 @@ get_rx_tx() {
     [ "$tx_disp" = "0" ] && tx_disp="1"
 
     if [ "$rx_disp" = "1" ] && [ "$tx_disp" = "1" ]; then
-        lrd="1 / 72"
+        rxtx="1 / 72"
     else
-        lrd="${rx_disp} / ${tx_disp}"
+        rxtx="${rx_disp} / ${tx_disp}"
     fi
     if [ "$rx_disp" -gt "$tx_disp" ] 2>/dev/null; then
         T=$rx_disp; rx_disp=$tx_disp; tx_disp=$T
-        lrd="$rx_disp / $tx_disp"
+        rxtx="$rx_disp / $tx_disp"
     fi
-
-    lrd_val=$(printf "%04d" "${tx_disp:-0}")
+    rxtx_val=$(printf "%04d" "${tx_disp:-0}")
 }
 
 get_rssi_trend() {
     local mac="$1"
     local current_rssi="$2"
     local rssi_name="${3:-""}"
+    trend=""
 
     if [ "$RS_HIST" = "1" ]; then
-		local rband=$(get_band "$iface" "$width" "$ROUTER" "band")
-		local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
-		local history_str="${entry#*|}"; local prev_entry="${history_str##*,}"
-		local prev_rssi="${prev_entry%%|*}"; local trend_icon=""
+        local rband="$Label"
+        local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
+        local history_str="${entry#*|}"
+        local prev_entry="${history_str##*,}"
+        local prev_rssi="${prev_entry%%|*}"
+        local trend_icon=""
 
         if [ -z "$prev_rssi" ]; then
-			trend_icon="<span class='trend-box'>•</span>"
-		elif [ "$current_rssi" -gt "$prev_rssi" ]; then
-			trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
-		elif [ "$current_rssi" -lt "$prev_rssi" ]; then
-			trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
-		else
-			trend_icon="<span class='trend-box'>•</span>"
-		fi
+            trend_icon="<span class='trend-box'>•</span>"
+        elif [ "$current_rssi" -gt "$prev_rssi" ]; then
+            trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
+        elif [ "$current_rssi" -lt "$prev_rssi" ]; then
+            trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
+        else
+            trend_icon="<span class='trend-box'>•</span>"
+        fi
 
         case "$RS_HIST_DATE" in
             1)
@@ -2137,71 +2141,72 @@ get_rssi_trend() {
         esac
 
         local new_history="${history_str:+$history_str,}$new_entry"
-		local final_history="$new_history"
-		local commas_only="${final_history//[^,]/}"
-		local count=$(( ${#commas_only} + 1 ))
+        local final_history="$new_history"
+        local commas_only="${final_history//[^,]/}"
+        local count=$(( ${#commas_only} + 1 ))
 
         while [ "$count" -gt "$RS_HIST_ENTRIES" ]; do
-			final_history="${final_history#*,}"
-			count=$((count - 1))
-		done
+            final_history="${final_history#*,}"
+            count=$((count - 1))
+        done
 
         echo "$mac|$final_history" >> "$NEW_HISTORY"
 
-        local rssi_history=""; local IFS=','
+        local rssi_history=""
+        local IFS=','
         for entry in $final_history; do
-			rssi="${entry%%|*}"; rest="${entry#*|}"
-			name="${rest%%|*}"; rest="${rest#*|}"
-            case "$RS_HIST_DATE" in
-                1) rband_val="${rest%%|*}"; time="${rest#*|}" ;;
-                *) rband_val="$rest"; time="" ;;
-            esac
-            if [ "$time" = "$rest" ]; then time=""; fi
+            local rssi_val="${entry%%|*}"
+            local rest="${entry#*|}"
+            local name_val="${rest%%|*}"
+            rest="${rest#*|}"
 
-			if [ "$rssi" -ge -50 ]; then
+            case "$RS_HIST_DATE" in
+                1) rband_val="${rest%%|*}"; time_val="${rest#*|}" ;;
+                *) rband_val="$rest"; time_val="" ;;
+            esac
+
+            if [ "$time_val" = "$rest" ]; then time_val=""; fi
+            if [ "$rssi_val" -ge -50 ]; then
                 style="color: #30d158; font-weight: bold;"
-			elif [ "$rssi" -ge -60 ]; then
+            elif [ "$rssi_val" -ge -60 ]; then
                 style="color: #64d2ff; font-weight: bold;"
-			elif [ "$rssi" -ge -70 ]; then
+            elif [ "$rssi_val" -ge -70 ]; then
                 style="color: #ffd60a; font-weight: bold;"
-			else
+            else
                 style="color: #ff453a; font-weight: bold;"
             fi
-            rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi [$name] [$rband_val]${time:+ $time}</span>"
-		done
+            rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi_val [$name_val] [$rband_val]${time_val:+ $time_val}</span>"
+        done
         unset IFS
-		echo -n "$trend_icon<span class='rssi-tooltip'>$rssi_history</span>"
-	else
-		local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
-		local old="${entry##*|}"
+        trend="$trend_icon<span class='rssi-tooltip'>$rssi_history</span>"
+    else
+        local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
+        local old="${entry##*|}"
 
         echo "$mac|$current_rssi" >> "$NEW_HISTORY"
 
         if [ -z "$old" ] || [ "$old" -eq 0 ]; then
-            echo "<span class='trend-box'>•</span>"
+            trend="<span class='trend-box'>•</span>"
             return
         fi
         if [ "$current_rssi" -gt "$old" ]; then
-            echo "<span class='trend-box trend-up rssi-excl'>↑</span>"
+            trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
         elif [ "$current_rssi" -lt "$old" ]; then
-            echo "<span class='trend-box trend-down rssi-poor'>↓</span>"
+            trend="<span class='trend-box trend-down rssi-poor'>↓</span>"
         else
-            echo "<span class='trend-box'>•</span>"
+            trend="<span class='trend-box'>•</span>"
         fi
-	fi
+    fi
 }
 
 get_band() {
-    local iface=$1
-    local width=$2
-    local model=$3
-    local Label="Unknown"
-    local w_text=""
+    iface=$1; width=$2; model=$3
+    Label=""; t_width=""
     if [ -n "$width" ]; then
-        w_text=" ($width)"
+        t_width=" ($width)"
     fi
-    local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
-    case "$m" in
+    device=$(echo "$model" | tr '[:lower:]' '[:upper:]')
+    case "$device" in
 		# Quad-Band Mapping
 		# Models: GT-BE98_PRO, BQ16
         *BE98*|*BQ16*)
@@ -2283,7 +2288,7 @@ get_band() {
             ;;
 
         # Dual-Band Mapping
-		# Models: RT-AX86U, ZENWIFI-BD4[QCA]
+		# Models: RT-AX86U[6-7]
         *)
             case "$iface" in
                 wl0*|eth4*|eth6*|eth8*) Label="2.4G" ;;
@@ -2296,13 +2301,13 @@ get_band() {
 
     # Wireless Backhaul
     if [ -n "$width" ]; then
-        if [ "$width" -eq 320 ] && [ "$Label" = "Unknown" ]; then
+        if [ "$width" -eq 320 ] && [ "$Label" = "" ]; then
             Label="6G"
         elif [ "$width" -ge 80 ] && [ "$width" -le 160 ]; then
-            if [ "$Label" = "2.4G" ] || [ "$Label" = "Unknown" ]; then
+            if [ "$Label" = "2.4G" ] || [ "$Label" = "" ]; then
                 Label="5G"
             fi
-        elif [ "$Label" = "Unknown" ]; then
+        elif [ "$Label" = "" ]; then
             case "$iface" in
                 *0*) Label="2.4G" ;;
                 *)   Label="5G" ;;
@@ -2310,18 +2315,14 @@ get_band() {
         fi
     fi
 
-    # Band UI Renderer
-	local class="" sort="0"
+	class="" sort="0"
     case "$Label" in
-		2.4G*)  class="band-24g"; sort="2.4" ;;
-		5G*)    class="band-5g"; sort="5" ;;
-		6G*)    class="band-6g"; sort="6" ;;
+		2.4G*) class="band-24g"; sort="2.4" ;;
+		5G*)   class="band-5g"; sort="5" ;;
+		6G*)   class="band-6g"; sort="6" ;;
 	esac
 
-    case "$4" in
-        band) echo "$Label" ;;
-        *)    echo "<td data-sort='$sort'><span class='$class'>$Label$w_text</span></td>" ;;
-    esac
+    case "$4" in band) echo "$Label"; return ;; esac
 }
 
 get_qca_uptime() {
@@ -2337,29 +2338,33 @@ get_qca_uptime() {
 }
 
 get_device_uptime() {
-    local T=$1
-    local pulse=""
+    local T="$1"
+    uptime_class=""
+    uptime_sort="0"
+    uptime_text="---"
+
     if [ -z "$T" ] || case "$T" in *[!0-9]*) true ;; *) false ;; esac; then
-        echo "<span data-sort='0'>---</span>"
         return
     fi
 
+    uptime_sort="$T"
     local check_mins="${PULSE_MINS:-15}"
     local pulse_sec=$((check_mins * 60))
     if [ "$check_mins" -ne 0 ] && [ "$T" -lt "$pulse_sec" ]; then
-        pulse="pulse-blue"
+        uptime_class="pulse-blue"
     fi
 
     local d=$((T / 86400))
     local rem=$((T % 86400))
     local h=$((rem / 3600))
     local m=$(((rem % 3600) / 60))
+
     if [ "$d" -gt 0 ]; then
-        printf "<span class='%s' data-sort='%s'>%02dd %02dh</span>" "$pulse" "$T" "$d" "$h"
+        uptime_text=$(printf "%02dd %02dh" "$d" "$h")
     elif [ "$h" -gt 0 ]; then
-        printf "<span class='%s' data-sort='%s'>%02dh %02dm</span>" "$pulse" "$T" "$h" "$m"
+        uptime_text=$(printf "%02dh %02dm" "$h" "$m")
     else
-        printf "<span class='%s' data-sort='%s'>00h %02dm</span>" "$pulse" "$T" "$m"
+        uptime_text=$(printf "00h %02dm" "$m")
     fi
 }
 
@@ -2393,12 +2398,14 @@ get_max_column() {
 hostcolor_main_name() {
 	case "$HOST_COLOR" in
         1)
-            IP_COLOR=""; MAC_COLOR="color: #64d2ff;"
+            IP_COLOR=""
+            MAC_COLOR="color: #64d2ff;"
             NAME_MAIN="<span style='color: $MAIN_COLOR;'>$name</span>"
             name="$NAME_MAIN"
             ;;
         *)
-            IP_COLOR="color: #64d2ff;"; MAC_COLOR=""
+            IP_COLOR="color: #64d2ff;"
+            MAC_COLOR=""
             ;;
     esac
 }
@@ -2427,13 +2434,13 @@ get_row() {
 		<td class='rssi-container' data-sort='$rssi'>
 			$bars <span style='$rssi_style'>$rssi</span> $trend
 		</td>
-		<td style='$rssi_style;' data-sort='$lrd_val'>$lrd</td>
+		<td style='$rssi_style;' data-sort='$rxtx_val'>$rxtx</td>
 		<td>
 			<span class='ssid-val' data-sort='$ssid'>$ssid</span>
 			<span class='iface-val' data-sort='$iface'>$iface</span>
 		</td>
-		$band
-		<td>$uptime</td>
+		<td data-sort='$sort'><span class='$class'>$Label$t_width</span></td>
+		<td><span class='$uptime_class' data-sort='$uptime_sort'>$uptime_text</span></td>
 	</tr>"
 }
 
@@ -2578,6 +2585,7 @@ get_main_radio_row() {
                 MAIN_RADIO_ROW="${MAIN_RADIO_ROW}<span>${band_key}: ${band_html}</span>"
             fi
         done
+        [ -z "$MAIN_RADIO_ROW" ] && MAIN_RADIO_ROW="<span>No Radio Temp Data</span>"
     fi
 }
 
@@ -2598,7 +2606,7 @@ get_node_radio_row() {
                 esac
             fi
         done
-        [ -z "$NODE_RADIO_ROW" ] && NODE_RADIO_ROW="<span>--</span>"
+        [ -z "$NODE_RADIO_ROW" ] && NODE_RADIO_ROW="<span>No Radio Temp Data</span>"
     fi
 }
 
@@ -2612,13 +2620,12 @@ get_all_radio_row() {
 
         for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
-
             eval "main_val=\$MAIN_BAND_${var_safe_key}"
             eval "node_val=\$NODE_BAND_${var_safe_key}"
-
             [ "$main_val" = "<span>--</span>" ] && main_val=""
             [ "$node_val" = "<span>--</span>" ] && node_val=""
 
+            node_val=$(echo "$node_val" | sed 's|<span>--</span>|<span style="color: #0096ff;">--</span>|g')
             if [ -n "$node_val" ] && [ "$NUMBERED_NODE" -ge 3 ]; then
                 node_val=$(echo "$node_val" | sed "s| *<span[^>]*>•</span> *|$BULLET_ALL|g")
             fi
@@ -2629,7 +2636,7 @@ get_all_radio_row() {
             elif [ -n "$main_val" ]; then
                 combined="$main_val"
             elif [ -n "$node_val" ]; then
-                combined="<span>--</span>${node_separator}${node_val}"
+                combined="<span style='color: #0096ff;'>--</span>${node_separator}${node_val}"
             fi
 
             case "$combined" in
@@ -2648,7 +2655,7 @@ get_all_radio_row() {
                     ;;
             esac
         done
-        [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>--</span>"
+        [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
     fi
 }
 
@@ -2898,22 +2905,21 @@ for iface in $IFACE_LIST; do
             MAC_LIST=$(brctl showmacs "$BRIDGE" 2>/dev/null | grep -v "yes" | awk '{print $2}')
         fi
 	fi
-    case "$MAC_LIST" in "") continue ;; esac
 
 	for mac in $MAC_LIST; do
 		case "$mac" in ""|"mac") continue ;; esac
 		get_mac_address || continue
+        check_new_mac "$mac"
 		get_ip
         parse_main_sta "$iface" "$data_iface"
 		get_rx_tx
 		final_check
-		is_mac_new=$(check_new_mac "$mac")
-		trend=$(get_rssi_trend "$mac" "$rssi" "$MAIN_NAME")
-		band=$(get_band "$iface" "$width" "$ROUTER")
-		uptime=$(get_device_uptime "$uptime")
+        get_device_uptime "$uptime"
 		get_bars_rssi_style
 		get_max_column
 		hostcolor_main_name
+        get_band "$iface" "$width" "$ROUTER"
+        get_rssi_trend "$mac" "$rssi" "$MAIN_NAME"
 		get_row
 		MAIN_ROWS="${MAIN_ROWS}${ROW}${NL}"
 		MAIN_DEVICE_TOTAL=$((MAIN_DEVICE_TOTAL + 1))
@@ -2982,17 +2988,17 @@ for line in $SSH_NODES; do
 			case "$ssh_node_data" in "") continue ;; esac
 			parse_node_data "$ssh_node_data"
 			get_mac_address || continue
+            check_new_mac "$mac"
 			get_ip
             get_rx_tx
 			final_check
-            is_mac_new=$(check_new_mac "$mac")
-			trend=$(get_rssi_trend "$mac" "$rssi" "$NODE_NAME")
-			band=$(get_band "$iface" "$width" "$ROUTER")
-			get_qca_uptime
-			uptime=$(get_device_uptime "$uptime")
+            get_qca_uptime
+			get_device_uptime "$uptime"
 			get_bars_rssi_style
 			get_max_column
 			hostcolor_node_name
+            get_band "$iface" "$width" "$ROUTER"
+            get_rssi_trend "$mac" "$rssi" "$NODE_NAME"
             get_row
             NODE_ROWS="${NODE_ROWS}${ROW}${NL}"
             NODE_DEVICES=$((NODE_DEVICES + 1))
