@@ -2200,7 +2200,7 @@ get_band() {
     fi
     local m=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$m" in
-		# Quad-Band Mapping (5G, 6G, 6G-2, 2.4G)
+		# Quad-Band Mapping
 		# Models: GT-BE98_PRO, BQ16
         *BE98*|*BQ16*)
             case "$iface" in
@@ -2211,7 +2211,7 @@ get_band() {
             esac
             ;;
 
-        # Quad-Band Mapping (5G, 5G-2, 6G, 2.4G)
+        # Quad-Band Mapping
 		# Models: GT-AXE16000, GT-BE25000
         *AXE16000*|*BE25000*)
             case "$iface" in
@@ -2222,7 +2222,17 @@ get_band() {
             esac
             ;;
 
-        # Tri-Band ZenWiFi-BT10 Specific (6G, 5G, 2.4G)
+        # Tri-Band Mapping Specific
+        # Models: ZENWIFI-BT8[MTK]
+        *BT8*)
+            case "$iface" in
+                wl0*|ra[0-9]*)  Label="2.4G" ;;
+                wl1*|rai[0-9]*) Label="5G" ;;
+                wl2*|rax[0-9]*) Label="6G" ;;
+            esac
+            ;;
+
+        # Tri-Band ZenWiFi-BT10 Specific
         *BT10*)
             case "$iface" in
                 wl0*) Label="6G" ;;
@@ -2231,28 +2241,37 @@ get_band() {
             esac
             ;;
 
-        # Tri-Band Mapping (2.4G, 5G, 6G)
-        # Models: RT-AXE7800, GT-AXE11000, RT-BE96U, RT-BE92U, GT-BE19000, GS-BE18000
-        #         GS-BE12000, BT6, ZENWIFI-BT8(MTK), ET8, ET9, ET12
-        *AXE7800*|*AXE11000*|*BE96U*|*BE92U*|*BE19000*|*BE18000*|*BE12000*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
+        # Tri-Band Mapping
+        # Models: GT-AXE11000, RT-AXE7800, GS-BE12000, GS-BE18000, GT-BE19000
+        #         RT-BE92U, RT-BE96U, BT6, ET8, ET9, ET12
+        *AXE11000*|*AXE7800*|*BE12000*|*BE18000*|*BE19000*|*BE92U*|*BE96U*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
             case "$iface" in
-                wl0*|eth4*|eth8*|ra[0-9]*)  Label="2.4G" ;;
-                wl1*|eth5*|eth7*|rai[0-9]*) Label="5G" ;;
-                wl2*|eth6*|eth9*|rax[0-9]*) Label="6G" ;;
+                wl0*|eth4*|eth7*) Label="2.4G" ;;
+                wl1*|eth5*|eth8*) Label="5G" ;;
+                wl2*|eth6*|eth9*) Label="6G" ;;
             esac
             ;;
 
-        # Tri-Band Mapping (2.4G, 5G, 5G-2)
-        # Models: GT-AXE11000_PRO, GT-AX11000, RT-AX92U, GT6, XT8, XT9, ZENWIFI-XT12
-        *AXE11000_PRO*|*AX11000*|*AX92U*|*GT6*|*XT8*|*XT9*|*XT12*)
+        # Tri-Band Mapping
+        # Models: GT-AXE11000_PRO, GT-AX11000, GT6, RT-AX92U, XT8, XT9, ZENWIFI-XT12
+        *AXE11000_PRO*|*AX11000*|*GT6*|*AX92U*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
-                wl0*|eth4*|eth8*) Label="2.4G" ;;
-                wl1*|eth5*|eth7*) Label="5G" ;;
+                wl0*|eth4*|eth7*) Label="2.4G" ;;
+                wl1*|eth5*|eth8*) Label="5G" ;;
                 wl2*|eth6*|eth9*) Label="5G-2" ;;
             esac
             ;;
 
-        # Dual-Band Mapping (2.4G, 5G)
+        # Dual-Band Mapping Specific
+		# Models: ZENWIFI-BD4[QCA]
+        *BD4*)
+            case "$iface" in
+                wl0*|ath0*) Label="2.4G" ;;
+                wl1*|ath1*) Label="5G" ;;
+            esac
+            ;;
+
+        # Dual-Band Mapping Specific
         # Models: DSL-AX82U, RT-AX86S
         *AX82U*|*AX86S*)
             case "$iface" in
@@ -2261,12 +2280,12 @@ get_band() {
             esac
             ;;
 
-        # Dual-Band Mapping (2.4G, 5G)
-		# Models: RT-AX86U, ZENWIFI-BD4(QCA)
+        # Dual-Band Mapping
+		# Models: RT-AX86U, ZENWIFI-BD4[QCA]
         *)
             case "$iface" in
-                wl0*|eth4*|eth6*|ath0*) Label="2.4G" ;;
-                wl1*|eth5*|eth7*|ath1*) Label="5G" ;;
+                wl0*|eth4*|eth6*|eth8*) Label="2.4G" ;;
+                wl1*|eth5*|eth7*|eth9*) Label="5G" ;;
             esac
             ;;
     esac
