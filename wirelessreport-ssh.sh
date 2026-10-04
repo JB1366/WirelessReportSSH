@@ -2094,7 +2094,7 @@ get_rssi_trend() {
     local mac="$1"
     local current_rssi="$2"
     local rssi_name="${3:-""}"
-    trend=""
+    trend="<span class='trend-box'>•</span>"
 
     if [ "$RS_HIST" = "1" ]; then
         local rband="$Label"
@@ -2102,27 +2102,19 @@ get_rssi_trend() {
         local history_str="${entry#*|}"
         local prev_entry="${history_str##*,}"
         local prev_rssi="${prev_entry%%|*}"
-        local trend_icon=""
+        local trend_icon="<span class='trend-box'>•</span>"
 
-        if [ -z "$prev_rssi" ]; then
-            trend_icon="<span class='trend-box'>•</span>"
-        elif [ "$current_rssi" -gt "$prev_rssi" ]; then
-            trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
-        elif [ "$current_rssi" -lt "$prev_rssi" ]; then
-            trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
-        else
-            trend_icon="<span class='trend-box'>•</span>"
-        fi
+        [ -n "$prev_rssi" ] && {
+            [ "$current_rssi" -gt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
+            [ "$current_rssi" -lt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
+        }
 
         case "$RS_HIST_DATE" in
-            1)
-                local new_entry="$current_rssi|$rssi_name|$rband|$CUR_TIME" ;;
-            *)
-                local new_entry="$current_rssi|$rssi_name|$rband" ;;
+            1) local new_entry="$current_rssi|$rssi_name|$rband|$CUR_TIME" ;;
+            *) local new_entry="$current_rssi|$rssi_name|$rband" ;;
         esac
 
-        local new_history="${history_str:+$history_str,}$new_entry"
-        local final_history="$new_history"
+        local final_history="${history_str:+$history_str,}$new_entry"
         local commas_only="${final_history//[^,]/}"
         local count=$(( ${#commas_only} + 1 ))
 
@@ -2146,16 +2138,13 @@ get_rssi_trend() {
                 *) rband_val="$rest"; time_val="" ;;
             esac
 
-            if [ "$time_val" = "$rest" ]; then time_val=""; fi
-            if [ "$rssi_val" -ge -50 ]; then
-                style="color: #30d158; font-weight: bold;"
-            elif [ "$rssi_val" -ge -60 ]; then
-                style="color: #64d2ff; font-weight: bold;"
-            elif [ "$rssi_val" -ge -70 ]; then
-                style="color: #ffd60a; font-weight: bold;"
-            else
-                style="color: #ff453a; font-weight: bold;"
-            fi
+            case "$rssi_val" in
+                -[0-9]|-[1-4][0-9]) style="color: #30d158; font-weight: bold;" ;;
+                -[5][0-9])         style="color: #64d2ff; font-weight: bold;" ;;
+                -[6][0-9])         style="color: #ffd60a; font-weight: bold;" ;;
+                *)                 style="color: #ff453a; font-weight: bold;" ;;
+            esac
+
             rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi_val [$name_val] [$rband_val]${time_val:+ $time_val}</span>"
         done
         unset IFS
@@ -2166,16 +2155,9 @@ get_rssi_trend() {
 
         echo "$mac|$current_rssi" >> "$NEW_HISTORY"
 
-        if [ -z "$old" ] || [ "$old" -eq 0 ]; then
-            trend="<span class='trend-box'>•</span>"
-            return
-        fi
-        if [ "$current_rssi" -gt "$old" ]; then
-            trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
-        elif [ "$current_rssi" -lt "$old" ]; then
-            trend="<span class='trend-box trend-down rssi-poor'>↓</span>"
-        else
-            trend="<span class='trend-box'>•</span>"
+        if [ -n "$old" ] && [ "$old" -ne 0 ]; then
+            [ "$current_rssi" -gt "$old" ] && trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
+            [ "$current_rssi" -lt "$old" ] && trend="<span class='trend-box trend-down rssi-poor'>↓</span>"
         fi
     fi
 }
@@ -2496,29 +2478,32 @@ get_main_wifi_radios() {
     esac
 
     if [ "$RADIO_TEMPS" = "1" ]; then
-        RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
-        if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
-            BAND_LABEL="$(get_band "$iface" "" "$ROUTER" "band")"
-            if [ -n "$BAND_LABEL" ] && [ "$BAND_LABEL" != "" ]; then
-                case "$SEEN_BANDS" in
-                    *"|$BAND_LABEL|"*) ;;
-                    *)
-                        SEEN_BANDS="${SEEN_BANDS}|$BAND_LABEL|"
-                        C_VAL=$(echo "$RAW_TEMP" | awk -F' ' '{printf "%.0f\n", $1/2+20}')
-                        T_UNIT=$(get_temp_unit "$C_VAL")
-                        T_CLASS=$(get_temp_class "$T_UNIT")
-                        R_HTML="<span class='${T_CLASS}'>${T_UNIT}</span>"
-                        VAR_SAFE_LABEL=$(echo "$BAND_LABEL" | tr '.-' '__')
-                        eval "CURR_VAL=\$MAIN_BAND_${VAR_SAFE_LABEL}"
-                        if [ -n "$CURR_VAL" ]; then
-                            eval "MAIN_BAND_${VAR_SAFE_LABEL}=\"\$CURR_VAL\${BULLET}\$R_HTML\""
-                        else
-                            eval "MAIN_BAND_${VAR_SAFE_LABEL}=\"\$R_HTML\""
-                        fi
-                        ;;
-                esac
+        for iface in wl0 wl1 wl2 wl3; do
+            [ -d "/sys/class/net/$iface" ] || continue
+            RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
+            if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
+                BAND_LABEL="$(get_band "$iface" "" "$ROUTER" "band")"
+                if [ -n "$BAND_LABEL" ] && [ "$BAND_LABEL" != "" ]; then
+                    case "$SEEN_BANDS" in
+                        *"|$BAND_LABEL|"*) ;;
+                        *)
+                            SEEN_BANDS="${SEEN_BANDS}|$BAND_LABEL|"
+                            C_VAL=$(echo "$RAW_TEMP" | awk -F' ' '{printf "%.0f\n", $1/2+20}')
+                            T_UNIT=$(get_temp_unit "$C_VAL")
+                            T_CLASS=$(get_temp_class "$T_UNIT")
+                            R_HTML="<span class='${T_CLASS}'>${T_UNIT}</span>"
+                            VAR_SAFE_LABEL=$(echo "$BAND_LABEL" | tr '.-' '__')
+                            eval "CURR_VAL=\$MAIN_BAND_${VAR_SAFE_LABEL}"
+                            if [ -n "$CURR_VAL" ]; then
+                                eval "MAIN_BAND_${VAR_SAFE_LABEL}=\"\$CURR_VAL\${BULLET}\$R_HTML\""
+                            else
+                                eval "MAIN_BAND_${VAR_SAFE_LABEL}=\"\$R_HTML\""
+                            fi
+                            ;;
+                    esac
+                fi
             fi
-        fi
+        done
     fi
 }
 
@@ -2847,6 +2832,8 @@ for iface in $RAW_IFACES; do
     fi
 done
 
+get_main_wifi_radios
+
 IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
@@ -2857,8 +2844,6 @@ for iface in $IFACE_LIST; do
 		${WL3_PHYS:+"$WL3_PHYS"*}) data_iface="wl3" ;;
 		*) data_iface="$iface" ;;
 	esac
-
-    get_main_wifi_radios
 
     ssid=$(nvram get "${iface}_ssid")
     [ "${#ssid}" -ge 16 ] && ssid=""
@@ -2872,15 +2857,6 @@ for iface in $IFACE_LIST; do
 
     MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null)
     MAC_LIST=${MAC_LIST//assoclist /}
-    if [ -z "$MAC_LIST" ]; then
-		BRIDGE=$(brctl show 2>/dev/null | grep "$iface" | awk '{print $1}')
-		if [ -z "$BRIDGE" ]; then
-            BRIDGE=$(brctl show 2>/dev/null | grep -B1 "$iface" | grep -v "\-\-" | head -n1 | awk '{print $1}')
-        fi
-        if [ -n "$BRIDGE" ]; then
-            MAC_LIST=$(brctl showmacs "$BRIDGE" 2>/dev/null | grep -v "yes" | awk '{print $2}')
-        fi
-	fi
 
 	for mac in $MAC_LIST; do
 		case "$mac" in ""|"mac") continue ;; esac
