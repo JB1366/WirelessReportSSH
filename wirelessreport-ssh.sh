@@ -2613,10 +2613,6 @@ get_node_radio_row() {
 get_all_radio_row() {
     if [ "$RADIO_TEMPS" = "1" ]; then
         ALL_RADIO_ROW=""
-        case "$NUMBERED_NODE" in
-            [1-2]) node_separator=" ${BULLET} " ;;
-            *)     node_separator="$BULLET_ALL" ;;
-        esac
 
         for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
@@ -2624,19 +2620,15 @@ get_all_radio_row() {
             eval "node_val=\$NODE_BAND_${var_safe_key}"
             [ "$main_val" = "<span>--</span>" ] && main_val=""
             [ "$node_val" = "<span>--</span>" ] && node_val=""
-
             node_val=$(echo "$node_val" | sed 's|<span>--</span>|<span style="color: #0096ff;">--</span>|g')
-            if [ -n "$node_val" ] && [ "$NUMBERED_NODE" -ge 3 ]; then
-                node_val=$(echo "$node_val" | sed "s| *<span[^>]*>•</span> *|$BULLET_ALL|g")
-            fi
 
             combined=""
             if [ -n "$main_val" ] && [ -n "$node_val" ]; then
-                combined="${main_val}${node_separator}${node_val}"
+                combined="${main_val}${BULLET}${node_val}"
             elif [ -n "$main_val" ]; then
                 combined="$main_val"
             elif [ -n "$node_val" ]; then
-                combined="<span style='color: #0096ff;'>--</span>${node_separator}${node_val}"
+                combined="<span style='color: #0096ff;'>--</span>${BULLET}${node_val}"
             fi
 
             case "$combined" in
@@ -2644,8 +2636,8 @@ get_all_radio_row() {
                     display_key="${band_key//__/-}"
                     item_html="<span>${display_key}: ${combined}</span>"
 
-                    if [ "$NUMBERED_NODE" -gt 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
-                        ALL_RADIO_ROW="${ALL_RADIO_ROW}<br>"
+                    if [ "$NUMBERED_NODE" -ge 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
+                        ALL_RADIO_ROW="${ALL_RADIO_ROW}<div class="radio-temp-spacer"></div>"
                     fi
 
                     case "$ALL_RADIO_ROW" in
@@ -3624,6 +3616,11 @@ cat <<HTML >> "$WEB_PAGE"
         white-space: normal;
         width: 100%;
         overflow: visible !important;
+    }
+
+    .radio-temp-spacer {
+        display: block;
+        height: 6px;
     }
 
     .uptime-row {
