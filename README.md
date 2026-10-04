@@ -1,7 +1,10 @@
 Wireless Report SSH<br>
 \
 \
-![Screenshot](https://github.com/JB1366/WirelessReportSSH/blob/main/Screenshot.png)
+![Screenshot1](https://github.com/JB1366/WirelessReportSSH/blob/main/Screenshot1.png)
+\
+\
+![Screenshot2](https://github.com/JB1366/WirelessReportSSH/blob/main/Screenshot2.png)
 \
 \
 to download script:
