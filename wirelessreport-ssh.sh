@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #=================================================================#
 
-SCRIPT_VERSION="2.1.3"
+SCRIPT_VERSION="2.1.4"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -195,6 +195,7 @@ version_compare() {
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
+
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
 
@@ -203,7 +204,6 @@ menu_vars() {
 
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
 	for i in E S R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
-
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
 
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"; echo -e "$BL"
@@ -294,14 +294,11 @@ do_install() {
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
         pause; return 1
     fi
-
     mkdir -p "$INSTALL_DIR" 2>/dev/null
     if [ ! -f "$CONFIG" ]; then touch "$CONFIG"; fi
 
     local is_update=0
-	if [ -f "$REPORT_SCRIPT" ]; then
-        is_update=1
-    fi
+	if [ -f "$REPORT_SCRIPT" ]; then is_update=1; fi
 
     if [ "$is_update" = "1" ]; then
         while true; do
@@ -417,6 +414,7 @@ ScriptUpdateFromAMTM() {
 get_usb() {
     [ -n "$USB_PATH" ] && return
     local mount mountpoint ROOT_PATH
+
     mountpoint="$(awk '$1 ~ /^\/dev\/sd/ && $2 ~ /^\/tmp\/mnt\// {print $2}' /proc/mounts | sort -u)"
     for mount in $mountpoint; do
         if [ -d "$mount/wirelessreport-ssh" ]; then
@@ -424,6 +422,7 @@ get_usb() {
             break
         fi
     done
+
     if [ -z "$USB_PATH" ]; then
         ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
         if [ -n "$ROOT_PATH" ]; then
@@ -432,9 +431,11 @@ get_usb() {
             USB_PATH="$INSTALL_DIR/data"
         fi
     fi
+
     [ -n "$USB_PATH" ] && mkdir -p "$USB_PATH"
     [ -f "$USB_PATH/rssi_history.db" ] || touch "$USB_PATH/rssi_history.db"
     [ -f "$USB_PATH/known_macs.db" ] || touch "$USB_PATH/known_macs.db"
+
     KNOWN_DB="$USB_PATH/known_macs.db"
     HISTORY_DB="$USB_PATH/rssi_history.db"
     ERROR_LOG="$USB_PATH/ssh_error.log"
@@ -1948,55 +1949,68 @@ get_load_class() {
     esac
 }
 
-get_mac_address() {
-	mac_prefix="${mac#??:}"
-    mac_prefix="${mac_prefix%:??}"
-	is_node_pfx=0; bh="no"
-
-    case "$NODE_PFX" in *"$mac_prefix"*) is_node_pfx=1 ;; esac
-
-    if [ "$mac_prefix" = "$MAIN_PFX" ] || [ "$is_node_pfx" -eq 1 ]; then
-		    if [ "$BACKHAUL" != "1" ]; then return 1; fi
-			bh="yes"
-	fi
-
-    case "$bh" in yes) mac_check="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_check="$mac" ;; esac
-    case " $SEEN_MACS_VAR " in *" $mac_check "*) return 1 ;; esac
-
-    get_name "$mac"
-
-    case "$bh" in yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_final="$mac" ;; esac
-    case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
-
-    SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
-	return 0
-}
-
 get_name() {
     name=""; ip=""
+
     # YazDHCP
     if [ -f "$YAZ_CACHE" ] && grep -q -m1 "^$mac|" "$YAZ_CACHE"; then
         local entry=$(grep -m1 "^$mac|" "$YAZ_CACHE")
         name="${entry##*|}"
+
     # Custom Client List
     elif [ -f "$CUSTOM_CLIENTS_CACHE" ] && grep -q -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE"; then
         local entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE")
         name="${entry#*|}"
+
     # Networkmap Client / MLO
     elif entry=$(sed 's/},"/ \n"/g' /jffs/nmp_cl_json.js | grep -i "$mac" | head -n 1) && [ -n "$entry" ]; then
         local raw_parent=$(echo "$entry" | sed -n 's/.*"mlo_all_mac":"<\([^"]*\)".*/\1/p' | tr '[:lower:]' '[:upper:]')
         local parent_mac=$(echo "$raw_parent" | cut -d'<' -f1)
         [ -n "$parent_mac" ] && [ "$parent_mac" != "$mac" ] && mac="$parent_mac"
         name=$(echo "$entry" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
+
     # Wireless Backhaul
     elif temp="${mac#*:}"; local mid_mac="${temp%:*}"; [ -n "$mid_mac" ] && [ -f "$DEVICE_LIST_CACHE" ] && grep -q -i "$mid_mac" "$DEVICE_LIST_CACHE"; then
         local node_match=$(grep -i "$mid_mac" "$DEVICE_LIST_CACHE")
         local node_alias=$(echo "$node_match" | cut -d'>' -f2)
         name="${node_alias:-NODE}-BH"
         ip=$(awk -F'>' -v target="$node_alias" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
+
     # Fallback
     else
         name="$mac"
+    fi
+}
+
+get_mac_address() {
+    bh="no"
+    if [ "$BACKHAUL" = "1" ]; then
+        case "$name" in *-BH) bh="yes" ;; esac
+        if [ "$bh" = "no" ]; then
+            mac_prefix="${mac#??:}"
+            mac_prefix="${mac_prefix%:??}"
+            case "$NODE_PFX" in *"$mac_prefix"*) bh="yes" ;; esac
+            [ "$mac_prefix" = "$MAIN_PFX" ] && bh="yes"
+        fi
+    fi
+    case "$bh" in
+        yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;;
+        *)   mac_final="$mac" ;;
+    esac
+    if [ "$bh" = "yes" ]; then
+        case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
+    fi
+    SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
+    return 0
+}
+
+check_new_mac() {
+    local mac="$1"
+    is_mac_new=""
+    if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
+        echo "$mac" >> "$KNOWN_CACHE"
+        NEW_MAC_DIRTY=1
+        is_mac_new="new-device-row"
     fi
 }
 
@@ -2006,8 +2020,7 @@ get_ip() {
     elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); then
         ip="${line#*|}"
     elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); then
-        ip="${line#*|}"
-        ip="${ip%%|*}"
+        ip="${line#*|}"; ip="${ip%%|*}"
     elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); then
         ip="${line#*|}"
     fi
@@ -2055,20 +2068,6 @@ final_check() {
     width="${width:-20}"
     ssid="${ssid:-Wireless}"
     case "$rssi" in 0|1|""|"-"|*[!0-9-]*) rssi=-54 ;; esac
-}
-
-check_new_mac() {
-    local mac="$1"
-    is_mac_new=""
-
-    if [ ! -f "$KNOWN_DB" ]; then
-        touch "$KNOWN_DB"
-    fi
-    if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
-        echo "$mac" >> "$KNOWN_DB"
-        echo "$mac" >> "$KNOWN_CACHE"
-        is_mac_new="new-device-row"
-    fi
 }
 
 get_rx_tx() {
@@ -2780,8 +2779,9 @@ done
 #=============================#
 #  Main Scan/Device Assembly  #
 #=============================#
-SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
-MAIN_DEVICE_TOTAL=0; SEEN_BANDS=""
+SEEN_MACS_VAR=""; SEEN_BANDS=""
+MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
+MAIN_DEVICE_TOTAL=0; NL=$'\n';
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$SEEN_MACS"; > "$NEW_HISTORY"
 
@@ -2824,7 +2824,11 @@ WL1_PHYS=$2
 WL2_PHYS=$3
 WL3_PHYS=$4
 
-RAW_IFACES=$(printf "%s\n" $WL_BASES $(ifconfig -a | grep -oE "wl[0-9]+\.[0-9]+") | sort -u)
+RAW_IFACES=$(printf "%s\n" $WL_BASES $(ifconfig -a |
+grep -oE "wl[0-9]+\.[0-9]+" |
+grep -vE "\.(1[1-9]|[2-9][0-9])$") |
+sort -u)
+
 ACTIVE_IFACES=""
 for iface in $RAW_IFACES; do
     if wl -i "$iface" bss 2>/dev/null | grep -q "up"; then
@@ -2860,6 +2864,7 @@ for iface in $IFACE_LIST; do
 
 	for mac in $MAC_LIST; do
 		case "$mac" in ""|"mac") continue ;; esac
+		get_name "$mac"
 		get_mac_address || continue
         check_new_mac "$mac"
 		get_ip
@@ -2891,7 +2896,6 @@ wait
 #========================#
 BULLET=" <span style='color:white; font-size: 14px;'>•</span> "
 BULLET_LG=" <span style='color:white; font-size: 20px;'>•</span> "
-BULLET_ALL="<span style='color:white; font-size: 14px;'>•</span>"
 NODE_NAMES=""; NODE_TEMPS=""; NODE_LOADS=""; NODE_BOOTTIMES=""; NODE_UPTIMES=""
 NODE_TOTALS=""; COLOR_INDEX=0; NUMBERED_NODE=0; NODE_DEVICE_TOTAL=0
 
@@ -2939,7 +2943,8 @@ for line in $SSH_NODES; do
         while read -r ssh_node_data; do
 			case "$ssh_node_data" in "") continue ;; esac
 			parse_node_data "$ssh_node_data"
-			get_mac_address || continue
+			get_name "$mac"
+            get_mac_address || continue
             check_new_mac "$mac"
 			get_ip
             get_rx_tx
@@ -4556,6 +4561,11 @@ document.addEventListener('contextmenu', function(e) {
 </body>
 </html>
 HTML
+
+if [ "$NEW_MAC_DIRTY" = "1" ]; then
+    mkdir -p "$(dirname "$KNOWN_DB")"
+    cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null
+fi
 
 rm -rf "$SEEN_MACS" "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" "$LEASES_CACHE" 2>/dev/null
 rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$DEVICE_LIST_CACHE" "$NODE_DATA_DIR" 2>/dev/null
