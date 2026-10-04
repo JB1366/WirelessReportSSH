@@ -268,8 +268,8 @@ menu_vars() {
     TABLE_HEADERS=${TABLE_HEADERS:-1}
     case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
 
-    WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-1}
-    case "$WIFI_RADIO_TEMPS" in 1) WF_STAT="$ON" ;; *) WF_STAT="$OFF" ;; esac
+    RADIO_TEMPS=${RADIO_TEMPS:-1}
+    case "$RADIO_TEMPS" in 1) WF_STAT="$ON" ;; *) WF_STAT="$OFF" ;; esac
 
     RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
     case "$RS_HIST_ENTRIES" in ""|*[!0-9]*) RS_HIST_ENTRIES=5 ;; esac
@@ -1081,11 +1081,11 @@ set_options() {
                     fi
                     ;;
                 7)
-                    if grep -q "WIFI_RADIO_TEMPS=" "$CONFIG"; then
-                        case "$WIFI_RADIO_TEMPS" in 1) NEW_WF="0" ;; *) NEW_WF="1" ;; esac
-                        sed -i "s/WIFI_RADIO_TEMPS=.*/WIFI_RADIO_TEMPS=\"$NEW_WF\"/" "$CONFIG"
+                    if grep -q "RADIO_TEMPS=" "$CONFIG"; then
+                        case "$RADIO_TEMPS" in 1) NEW_WF="0" ;; *) NEW_WF="1" ;; esac
+                        sed -i "s/RADIO_TEMPS=.*/RADIO_TEMPS=\"$NEW_WF\"/" "$CONFIG"
                     else
-                        echo 'WIFI_RADIO_TEMPS="0"' >> "$CONFIG"
+                        echo 'RADIO_TEMPS="0"' >> "$CONFIG"
                     fi
                     ;;
                 inject|inject2)
@@ -2511,12 +2511,12 @@ ROW
 }
 
 get_main_wifi_radios() {
-    case "$WIFI_RADIO_TEMPS" in
+    case "$RADIO_TEMPS" in
         0) RADIO_ON="style=\"display: none !important;\"" ;;
         *) RADIO_ON="" ;;
     esac
 
-    if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
+    if [ "$RADIO_TEMPS" = "1" ]; then
         RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
         if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
             BAND_LABEL="$(get_band "$iface" "" "$ROUTER" "band")"
@@ -2544,8 +2544,8 @@ get_main_wifi_radios() {
 }
 
 clear_node_wifi_vars() {
-    if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
-        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
+    if [ "$RADIO_TEMPS" = "1" ]; then
+        for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "n_${var_safe_key}=''"
         done
@@ -2553,8 +2553,8 @@ clear_node_wifi_vars() {
 }
 
 get_node_wifi_radios() {
-    if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
-        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
+    if [ "$RADIO_TEMPS" = "1" ]; then
+        for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "val=\$n_${var_safe_key}"
             [ -n "$val" ] && eval "BAND_HAS_CONTENT_${var_safe_key}=1"
@@ -2573,9 +2573,9 @@ get_node_wifi_radios() {
 }
 
 get_main_radio_row() {
-    if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
+    if [ "$RADIO_TEMPS" = "1" ]; then
         MAIN_RADIO_ROW=""
-        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
+        for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "band_html=\$MAIN_BAND_${var_safe_key}"
             if [ -n "$band_html" ]; then
@@ -2590,9 +2590,9 @@ get_main_radio_row() {
 }
 
 get_node_radio_row() {
-    if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
+    if [ "$RADIO_TEMPS" = "1" ]; then
         NODE_RADIO_ROW=""
-        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
+        for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "has_content=\${BAND_HAS_CONTENT_${var_safe_key:-0}:-0}"
             [ "$has_content" -ne 1 ] && continue
@@ -2611,14 +2611,14 @@ get_node_radio_row() {
 }
 
 get_all_radio_row() {
-    if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
+    if [ "$RADIO_TEMPS" = "1" ]; then
         ALL_RADIO_ROW=""
         case "$NUMBERED_NODE" in
             [1-2]) node_separator=" ${BULLET} " ;;
             *)     node_separator="$BULLET_ALL" ;;
         esac
 
-        for band_key in "2.4G" "5G" "5G2" "6G" "6G2"; do
+        for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "main_val=\$MAIN_BAND_${var_safe_key}"
             eval "node_val=\$NODE_BAND_${var_safe_key}"
@@ -2659,14 +2659,17 @@ get_all_radio_row() {
     fi
 }
 
-ssh_init; get_usb; check_github
-update_time; device_default_colors
+ssh_init
+get_usb
+check_github
+update_time
+device_default_colors
 
 run_report() {
 #=================#
 #  Node Scan(s)   #
 #=================#
-IPPAD=${IPPAD:-1}; WIFI_RADIO_TEMPS=${WIFI_RADIO_TEMPS:-1}
+IPPAD=${IPPAD:-1}; RADIO_TEMPS=${RADIO_TEMPS:-1}
 HOST_COLOR=${HOST_COLOR:-0}; TABLE_HEADERS=${TABLE_HEADERS:-1}
 read -r START_RUNTIME _ < /proc/uptime
 
@@ -2687,7 +2690,7 @@ for line in $SSH_NODES; do
                 ALL_IFACES=\$(ifconfig -a | grep -oE \"(ath|wl)[0-9]*(\.[0-9]+)?\")
             elif [ -f \"/usr/sbin/wl\" ] || [ -f \"/usr/bin/wl\" ]; then
                 HW_ENGINE=\"BRCM\"
-                ALL_IFACES=\$(ifconfig -a | grep -oE \"(wl|eth5|eth6|eth7|eth8|eth9|eth10)[0-9]*(\.[0-9]+)?\")
+                ALL_IFACES=\$(ifconfig -a | grep -oE \"(wl|eth4|eth5|eth6|eth7|eth8|eth9)[0-9]*(\.[0-9]+)?\")
             elif [ -d \"/sys/module/mt_wifi\" ] || [ -d \"/sys/module/mt79xx\" ] || [ -f \"/usr/sbin/cfg_client\" ] || ifconfig -a | grep -qE \"(ra|rai|rax)[0-9]\"; then
                 HW_ENGINE=\"MTK\"
                 ALL_IFACES=\$(ifconfig -a | grep -oE \"(ra|rai|rax)[0-9]*(\.[0-9]+)?\")
@@ -2703,10 +2706,10 @@ for line in $SSH_NODES; do
                     fi
                     if [ -z \"\$SN\" ] || [ \${#SN} -ge 16 ]; then
                         case \"\$iface\" in
-                            eth6|eth8)  SN=\$(nvram get wl0_ssid) ;;
-                            eth7|eth10) SN=\$(nvram get wl1_ssid) ;;
-                            eth9)       SN=\$(nvram get wl2_ssid) ;;
-                            *)          SN=\$(nvram get \"\${iface%.*}_ssid\") ;;
+                            eth5|eth6) SN=\$(nvram get wl0_ssid) ;;
+                            eth7|eth8) SN=\$(nvram get wl1_ssid) ;;
+                            eth9)      SN=\$(nvram get wl2_ssid) ;;
+                            *)         SN=\$(nvram get \"\${iface%.*}_ssid\") ;;
                         esac
                     fi
                 fi
@@ -2794,7 +2797,7 @@ for line in $SSH_NODES; do
             echo \"TEMP|\$(cut -c1-2 /sys/class/thermal/thermal_zone0/temp 2>/dev/null)\"
             echo \"LOAD|\$(cut -d' ' -f1 /proc/loadavg)\"
             echo \"UPTIME|\$(cut -d. -f1 /proc/uptime)\"
-            if [ "$WIFI_RADIO_TEMPS" = "1" ]; then
+            if [ "$RADIO_TEMPS" = "1" ]; then
                 NODE_ROUTER=\$(nvram get productid 2>/dev/null)
                 for iface in \$ALL_IFACES; do
                     case \"\$iface\" in
@@ -2821,10 +2824,11 @@ done
 #  Main Scan/Device Assembly  #
 #=============================#
 SEEN_MACS_VAR=""; NL=$'\n'; MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
-MAIN_DEVICE_TOTAL=0; RADIO_TEMPS=""; SEEN_BANDS=""
+MAIN_DEVICE_TOTAL=0; SEEN_BANDS=""
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$SEEN_MACS"; > "$NEW_HISTORY"
 
+WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
 YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
 if [ -f "$KNOWN_DB" ]; then cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null; else > "$KNOWN_CACHE"; fi
@@ -3027,8 +3031,10 @@ MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
 
-get_theme; runtime_tracking
-do_numbered_node; check_version header_box
+get_theme
+runtime_tracking
+do_numbered_node
+check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
 mv "$NEW_HISTORY" "$HISTORY_DB"
@@ -3594,7 +3600,7 @@ cat <<HTML >> "$WEB_PAGE"
         animation: routerPulse 1.5s infinite ease-in-out;
     }
 
-    .cputemp-load-row {
+    .temp-load-row {
         display: block;
         font-size: 14px;
         color: #f2f2f7;
@@ -3605,7 +3611,7 @@ cat <<HTML >> "$WEB_PAGE"
         overflow: visible !important;
     }
 
-    .cputemp-load-row > span:not(:last-child) {
+    .temp-load-row > span:not(:last-child) {
         margin-right: 1px;
     }
 
@@ -3854,13 +3860,13 @@ cat <<HTML >> "$WEB_PAGE"
         padding: 0 4px !important;
     }
 
-    #popoutModal .report-column .section-header .cputemp-load-row {
+    #popoutModal .report-column .section-header .temp-load-row {
         margin-top: -2px !important;
         margin-bottom: -2px !important;
         display: block !important;
     }
 
-    #popoutModal .report-column .section-header .cputemp-load-row span {
+    #popoutModal .report-column .section-header .temp-load-row span {
         font-size: 14px !important;
         font-weight: bold !important;
     }
@@ -4009,7 +4015,7 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>$MAIN_NAME</span><br>
                                     <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
-                                    <div class="cputemp-load-row">
+                                    <div class="temp-load-row">
                                         <span>CPU: $MAIN_TEMP</span>
                                         <span>Load: $MAIN_LOAD</span>
                                         <span>Devices: $MAIN_DEVICE_TOTAL</span>
@@ -4050,7 +4056,7 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span>$NODE_NAMES</span><br>
                                     <span>Updated: $CUR_TIME</span>
                                     <hr class="separator-line">
-                                    <div class="cputemp-load-row">
+                                    <div class="temp-load-row">
                                         <span>CPU: $NODE_TEMPS</span>
                                         <span>Load: $NODE_LOADS</span>
                                         <span>Devices: $NODE_DEVICE_TOTAL $NTOTAL</span>
@@ -4086,7 +4092,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 <span>$ALL_NAMES</span><br>
                                 <span>Updated: $CUR_TIME</span>
                                 <hr class="separator-line">
-                                <div class="cputemp-load-row temp-style">
+                                <div class="temp-load-row temp-style">
                                     <span>CPU: $ALL_TEMP</span>
                                     <span>Load: $ALL_LOAD</span>
                                     <span>Devices: $ALL_DEVICES</span>
@@ -4228,7 +4234,7 @@ function triggerRefresh() {
 
         var columns = ['#mainCol', '#nodeCol', '#allCol'];
         columns.forEach(function(colId) {
-            var row = document.querySelector(colId + ' .cputemp-load-row');
+            var row = document.querySelector(colId + ' .temp-load-row');
             if (row) {
                 var spans = row.querySelectorAll(':scope > span');
                 if (spans[0]) spans[0].innerText = "CPU: --";
