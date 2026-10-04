@@ -2,6 +2,11 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.1.3-wifi_radio_temp updates.
+      -script refactoring.
+      -added F option to ISO date/time.
+      -rename top buttons.
+      -activate dev branch.
 v2.1.2-fix gt>4 device wifi-radio row formatting.
 v2.1.1-add wifi-radio temps.
       -update runtime tracking.
