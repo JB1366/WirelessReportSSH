@@ -1550,7 +1550,11 @@ node_auth() {
     echo -e "$BL=================================================="
     echo -e ""
 
-    AIMESH_NODES=$(nvram get asus_device_list | sed 's/</\n/g' | grep '>2$' | awk -F '>' '{print $2 "|" $3}' |  sort -t . -k 4,4n)
+    AIMESH_NODES=$(nvram get asus_device_list |
+        sed 's/</\n/g' |
+        grep '>2$' |
+        awk -F '>' '{print $2 "|" $3}' |
+        sort -t . -k 4,4n)
 
     if [ -z "$AIMESH_NODES" ]; then
         echo -e "$RD[!] No AiMesh Nodes detected in NVRAM.$NC"
@@ -1844,7 +1848,7 @@ get_theme() {
 
 do_numbered_node() {
     case "$NUMBERED_NODE" in
-        0) ROUTER_ONLY="style=\"display: none !important;\"" ;;
+        0) ROUTER_ONLY='style="display: none !important;"' ;;
         *) ROUTER_ONLY="" ;;
     esac
 
@@ -1855,9 +1859,7 @@ do_numbered_node() {
 
     case "$NUMBERED_NODE" in
         [1-9])
-            ALL_DEVICES="<span class='stat-cool'>$ALL_DEVICES</span> \
-            <span class='right-arrow'>—›</span> \
-            $MAIN_DEVICE_TOTAL$BULLET$NODE_TOTALS"
+            ALL_DEVICES="<span class='stat-cool'>$ALL_DEVICES</span><span class='right-arrow'>—›</span>$MAIN_DEVICE_TOTAL$BULLET$NODE_TOTALS"
             ;;
         *)
             ALL_DEVICES="$MAIN_DEVICE_TOTAL"
@@ -1971,64 +1973,44 @@ get_mac_address() {
 }
 
 get_name() {
-	name=""; ip=""
-
+    name=""; ip=""
     # YazDHCP
-	if [ -f "$YAZ_CACHE" ]; then
-		local entry=$(grep -m1 "^$mac|" "$YAZ_CACHE")
-		name="${entry##*|}"
-	fi
-
+    if [ -f "$YAZ_CACHE" ] && grep -q -m1 "^$mac|" "$YAZ_CACHE"; then
+        local entry=$(grep -m1 "^$mac|" "$YAZ_CACHE")
+        name="${entry##*|}"
     # Custom Client List
-	if [ -z "$name" ] || [ "$name" = "*" ]; then
-		if [ -f "$CUSTOM_CLIENTS_CACHE" ]; then
-			local entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE")
-			name="${entry#*|}"
-		fi
-	fi
-
+    elif [ -f "$CUSTOM_CLIENTS_CACHE" ] && grep -q -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE"; then
+        local entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE")
+        name="${entry#*|}"
     # Networkmap Client / MLO
-	if [ -z "$name" ] || [ "$name" = "*" ]; then
-		local entry=$(sed 's/},"/ \n"/g' /jffs/nmp_cl_json.js | grep -i "$mac" | head -n 1)
-		local raw_parent=$(echo "$entry" | sed -n 's/.*"mlo_all_mac":"<\([^"]*\)".*/\1/p' | tr '[:lower:]' '[:upper:]')
-		local parent_mac=$(echo "$raw_parent" | cut -d'<' -f1)
-        if [ -n "$parent_mac" ] && [ "$parent_mac" != "$mac" ]; then
-            mac="$parent_mac"
-        fi
-		name=$(echo "$entry" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
-    fi
-
+    elif entry=$(sed 's/},"/ \n"/g' /jffs/nmp_cl_json.js | grep -i "$mac" | head -n 1) && [ -n "$entry" ]; then
+        local raw_parent=$(echo "$entry" | sed -n 's/.*"mlo_all_mac":"<\([^"]*\)".*/\1/p' | tr '[:lower:]' '[:upper:]')
+        local parent_mac=$(echo "$raw_parent" | cut -d'<' -f1)
+        [ -n "$parent_mac" ] && [ "$parent_mac" != "$mac" ] && mac="$parent_mac"
+        name=$(echo "$entry" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
     # Wireless Backhaul
-	if [ -z "$name" ] || [ "$name" = "*" ] || [ "$name" = "$mac" ]; then
-		local temp="${mac#*:}"; local mid_mac="${temp%:*}"
-		if [ -n "$mid_mac" ]; then
-			local node_match=""
-            if [ -f "$DEVICE_LIST_CACHE" ]; then
-                node_match=$(grep -i "$mid_mac" "$DEVICE_LIST_CACHE")
-            fi
-            if [ -n "$node_match" ]; then
-				node_alias=$(echo "$node_match" | cut -d'>' -f2)
-				name="${node_alias:-NODE}-BH"
-                ip=$(awk -F'>' -v target="$node_alias" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
-			fi
-		fi
-	fi
-
+    elif temp="${mac#*:}"; local mid_mac="${temp%:*}"; [ -n "$mid_mac" ] && [ -f "$DEVICE_LIST_CACHE" ] && grep -q -i "$mid_mac" "$DEVICE_LIST_CACHE"; then
+        local node_match=$(grep -i "$mid_mac" "$DEVICE_LIST_CACHE")
+        local node_alias=$(echo "$node_match" | cut -d'>' -f2)
+        name="${node_alias:-NODE}-BH"
+        ip=$(awk -F'>' -v target="$node_alias" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
     # Fallback
-	case "$name" in ""|"*") name="$mac" ;; esac
+    else
+        name="$mac"
+    fi
 }
 
 get_ip() {
-	if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE") && [ -n "$line" ]; then
+    if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE"); then
         ip="${line#*|}"
-    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE") && [ -n "$line" ]; then
+    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); then
         ip="${line#*|}"
-    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE") && [ -n "$line" ]; then
+    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); then
         ip="${line#*|}"
-    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE") && [ -n "$line" ]; then
+        ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); then
         ip="${line#*|}"
     fi
-    ip="${ip%%|*}"
 
     case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 
@@ -2201,9 +2183,7 @@ get_rssi_trend() {
 get_band() {
     iface=$1; width=$2; model=$3
     Label=""; t_width=""
-    if [ -n "$width" ]; then
-        t_width=" ($width)"
-    fi
+    if [ -n "$width" ]; then t_width=" ($width)"; fi
     device=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$device" in
 		# Quad-Band Mapping
@@ -2483,12 +2463,12 @@ parse_node_out() {
                 N_LOAD="$f2" ;;
             "UPTIME")
                 N_UPTIME_RAW="$f2" ;;
-            "RADIO_TEMP")
+            "RADIOTEMP")
                 N_ROUTER="$f2"
                 N_IFACE="$f3"
                 N_CVAL="$f4"
                 N_BAND_LABEL="$(get_band "$N_IFACE" "" "$N_ROUTER" "band")"
-                if [ -n "$N_BAND_LABEL" ] && [ "$N_BAND_LABEL" != "Unknown" ]; then
+                if [ -n "$N_BAND_LABEL" ] && [ "$N_BAND_LABEL" != "" ]; then
                     N_UNIT=$(get_temp_unit "$N_CVAL")
                     N_CLASS=$(get_temp_class "$N_UNIT")
                     N_HTML="<span class='${N_CLASS}'>${N_UNIT}</span>"
@@ -2511,7 +2491,7 @@ ROW
 
 get_main_wifi_radios() {
     case "$RADIO_TEMPS" in
-        0) RADIO_ON="style=\"display: none !important;\"" ;;
+        0) RADIO_ON='style="display: none !important;"' ;;
         *) RADIO_ON="" ;;
     esac
 
@@ -2519,7 +2499,7 @@ get_main_wifi_radios() {
         RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
         if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
             BAND_LABEL="$(get_band "$iface" "" "$ROUTER" "band")"
-            if [ -n "$BAND_LABEL" ] && [ "$BAND_LABEL" != "Unknown" ]; then
+            if [ -n "$BAND_LABEL" ] && [ "$BAND_LABEL" != "" ]; then
                 case "$SEEN_BANDS" in
                     *"|$BAND_LABEL|"*) ;;
                     *)
@@ -2612,7 +2592,6 @@ get_node_radio_row() {
 get_all_radio_row() {
     if [ "$RADIO_TEMPS" = "1" ]; then
         ALL_RADIO_ROW=""
-
         for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "main_val=\$MAIN_BAND_${var_safe_key}"
@@ -2660,8 +2639,10 @@ run_report() {
 #=================#
 #  Node Scan(s)   #
 #=================#
-IPPAD=${IPPAD:-1}; RADIO_TEMPS=${RADIO_TEMPS:-1}
-HOST_COLOR=${HOST_COLOR:-0}; TABLE_HEADERS=${TABLE_HEADERS:-1}
+IPPAD=${IPPAD:-1}
+RADIO_TEMPS=${RADIO_TEMPS:-1}
+HOST_COLOR=${HOST_COLOR:-0};
+TABLE_HEADERS=${TABLE_HEADERS:-1}
 read -r START_RUNTIME _ < /proc/uptime
 
 NODE_DATA_DIR="/tmp/node_data"
@@ -2801,7 +2782,7 @@ for line in $SSH_NODES; do
                             *[!0-9]*|'') ;;
                             *)
                                 C_VAL=\$(( (raw_num / 2) + 20 ))
-                                echo \"RADIO_TEMP|\$NODE_ROUTER|\$iface|\$C_VAL\"
+                                echo \"RADIOTEMP|\$NODE_ROUTER|\$iface|\$C_VAL\"
                                 ;;
                         esac
                     fi
