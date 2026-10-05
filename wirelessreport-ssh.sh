@@ -2071,9 +2071,8 @@ get_ip() {
 }
 
 check_fallback() {
-    width="${width:-20}"
     ssid="${ssid:-Wireless}"
-    case "$rssi" in 0|1|""|"-"|*[!0-9-]*) rssi=-54 ;; esac
+    case "$rssi" in 0|1|""|"-"|*[!0-9-]*) rssi="--" ;; esac
 }
 
 get_rx_tx() {
@@ -2169,7 +2168,7 @@ get_rssi_trend() {
 
 get_band() {
     iface=$1; width=$2; model=$3
-    Label=""; t_width=""
+    Label=""; t_width=""; width="${width:-}"
     if [ -n "$width" ]; then t_width=" ($width)"; fi
     device=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$device" in
@@ -2335,6 +2334,14 @@ get_device_uptime() {
 }
 
 get_bars_rssi_style() {
+    case "$rssi" in
+        ''|'--'|*[!0-9-]*)
+            bars="<span class='rssi-na'>--</span>"
+            rssi_style="color: #8e8e93; font-weight: normal;"
+            return
+            ;;
+    esac
+
     if [ "$rssi" -ge -50 ]; then
         bars="<span class='rssi_bars rssi-excl'>||||</span>"
         rssi_style="color: #30d158; font-weight: bold;"
@@ -2481,8 +2488,8 @@ get_main_radios() {
         0) RADIO_ON='style="display: none !important;"' ;;
         *) RADIO_ON="" ;;
     esac
-    WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
     if [ "$RADIO_TEMPS" = "1" ]; then
+        WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
         for iface in wl0 wl1 wl2 wl3; do
             [ -d "/sys/class/net/$iface" ] || continue
             RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
@@ -3237,6 +3244,10 @@ cat <<HTML >> "$WEB_PAGE"
         padding: 1px 5px;
         border-radius: 3px;
         margin-left: 4px;
+    }
+
+    .rssi-na {
+        color: #8e8e93;
     }
 
     .rssi-excl {
@@ -4598,10 +4609,7 @@ document.addEventListener('contextmenu', function(e) {
 </html>
 HTML
 
-if [ "$NEW_MAC" = "1" ]; then
-    mkdir -p "$(dirname "$KNOWN_DB")"
-    cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null
-fi
+if [ "$NEW_MAC" = "1" ]; then cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null; fi
 
 rm -rf "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" 2>/dev/null
 rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA_DIR" 2>/dev/null
