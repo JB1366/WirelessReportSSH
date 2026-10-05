@@ -1962,14 +1962,14 @@ get_mac_address() {
 	fi
 
     case "$bh" in yes) mac_check="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_check="$mac" ;; esac
-    case " $SEEN_MACS_VAR " in *" $mac_check "*) return 1 ;; esac
+    case " $SEEN_MACS " in *" $mac_check "*) return 1 ;; esac
 
     get_name "$mac"
 
     case "$bh" in yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_final="$mac" ;; esac
-    case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
+    case " $SEEN_MACS " in *" $mac_final "*) return 1 ;; esac
 
-    SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
+    SEEN_MACS="$SEEN_MACS $mac_final"
 	return 0
 }
 
@@ -2771,9 +2771,8 @@ done
 #=============================#
 #  Main Scan/Device Assembly  #
 #=============================#
-SEEN_MACS_VAR=""; SEEN_BANDS=""
 MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
-MAIN_DEVICE_TOTAL=0; NL=$'\n';
+MAIN_DEVICE_TOTAL=0; NL=$'\n'; SEEN_BANDS=""
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$SEEN_MACS"; > "$NEW_HISTORY"
 
@@ -4557,9 +4556,9 @@ if [ "$NEW_MAC_DIRTY" = "1" ]; then
     cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null
 fi
 
-rm -rf "$SEEN_MACS" "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" "$LEASES_CACHE" 2>/dev/null
-rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$DEVICE_LIST_CACHE" "$NODE_DATA_DIR" 2>/dev/null
-
+rm -rf "$SEEN_MACS" "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" 2>/dev/null
+rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA_DIR" 2>/dev/null
+rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
 case "$1" in
