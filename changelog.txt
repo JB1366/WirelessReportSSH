@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.1.4-script refactoring, optimizations.
 v2.1.3-wifi_radio_temp updates.
       -script refactoring.
       -added F option to ISO date/time.

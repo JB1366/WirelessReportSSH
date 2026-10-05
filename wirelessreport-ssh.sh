@@ -213,7 +213,11 @@ menu_vars() {
     SE_FILE="/jffs/scripts/service-event"
     PROFILE_ADD="/jffs/configs/profile.add"
 
-    case "$SSH_KEY" in "") KEY="${RD}NO$NC" ;; *) KEY="${GR}YES$NC" ;; esac
+    case "$SSH_KEY" in
+        "") KEY="${RD}NO$NC" ;;
+        *) KEY="${GR}YES$NC" ;;
+    esac
+
     PORT="$GR$SSH_PORT$NC"
 
     DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"
@@ -1128,7 +1132,7 @@ set_runtime_tracking() {
         echo -e "$BL=================================================="
         echo -e "                                                     "
         echo -e "  $N1 Toggle Runtime Tracking: ($RT_STAT)            "
-        echo -e "  $N2 Toggle Stats to Syslog: ($WS_STAT)             "
+        echo -e "  $N2 Log Stats to Syslog: ($WS_STAT)                "
         echo -e "                                                     "
         echo -e "  $LE Exit back to Set Options Menu                  "
         echo -e "                                                     "
@@ -2005,7 +2009,7 @@ check_new_mac() {
     is_mac_new=""
     if ! grep -qi "^$mac$" "$KNOWN_CACHE"; then
         echo "$mac" >> "$KNOWN_CACHE"
-        NEW_MAC_DIRTY=1
+        NEW_MAC=1
         is_mac_new="new-device-row"
     fi
 }
@@ -3931,8 +3935,8 @@ cat <<HTML >> "$WEB_PAGE"
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
                         <div class="top-buttons">
                             <div class="button-refresh">
-                                <button class="button-trigger button-tables" onclick="triggerRefresh()">
-                                Refresh <span>${RUNTIME}</span></button>
+                                <button class="button-trigger button-tables" onclick="triggerRefresh()">Refresh
+                                <span> ${RUNTIME}</span></button>
                                 <div class="button-auto-refresh">
                                     <span>Auto:</span>
                                     <select id="refresh-option">
@@ -4550,7 +4554,7 @@ document.addEventListener('contextmenu', function(e) {
 </html>
 HTML
 
-if [ "$NEW_MAC_DIRTY" = "1" ]; then
+if [ "$NEW_MAC" = "1" ]; then
     mkdir -p "$(dirname "$KNOWN_DB")"
     cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null
 fi
