@@ -2036,27 +2036,22 @@ get_ip() {
             ;;
     esac
 
-    ip_to_number "$ip"
-    ip_sort="$IP_NUM"
-}
-
-ip_to_number() {
-    local ip="$1" o1 o2 o3 o4
-    o1="${ip%%.*}"; local rest="${ip#*.}"
+    local ip_val="$ip" o1 o2 o3 o4
+    o1="${ip_val%%.*}"; local rest="${ip_val#*.}"
     o2="${rest%%.*}"; rest="${rest#*.}"
     o3="${rest%%.*}"; o4="${rest#*.}"
 
-    case "$o1" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
-    case "$o2" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
-    case "$o3" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
-    case "$o4" in *[!0-9]*|"") IP_NUM="000000000000"; return ;; esac
+    case "$o1" in *[!0-9]*|"") ip_sort="000000000000"; return ;; esac
+    case "$o2" in *[!0-9]*|"") ip_sort="000000000000"; return ;; esac
+    case "$o3" in *[!0-9]*|"") ip_sort="000000000000"; return ;; esac
+    case "$o4" in *[!0-9]*|"") ip_sort="000000000000"; return ;; esac
 
     o1=${o1#${o1%%[!0]*}}; [ -z "$o1" ] && o1=0
     o2=${o2#${o2%%[!0]*}}; [ -z "$o2" ] && o2=0
     o3=${o3#${o3%%[!0]*}}; [ -z "$o3" ] && o3=0
     o4=${o4#${o4%%[!0]*}}; [ -z "$o4" ] && o4=0
 
-    IP_NUM=$(printf "%03d%03d%03d%03d" "${o1:-0}" "${o2:-0}" "${o3:-0}" "${o4:-0}")
+    ip_sort=$(printf "%03d%03d%03d%03d" "${o1:-0}" "${o2:-0}" "${o3:-0}" "${o4:-0}")
 }
 
 check_fallback() {
@@ -2470,7 +2465,7 @@ get_main_radios() {
         0) RADIO_ON='style="display: none !important;"' ;;
         *) RADIO_ON="" ;;
     esac
-
+    WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
     if [ "$RADIO_TEMPS" = "1" ]; then
         for iface in wl0 wl1 wl2 wl3; do
             [ -d "/sys/class/net/$iface" ] || continue
@@ -2776,11 +2771,11 @@ done
 #=============================#
 MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
 SEEN_MACS=""; SEEN_BANDS=""
-MAIN_DEVICE_TOTAL=0; NL=$'\n'
+NL=$'\n'; MAIN_DEVICE_TOTAL=0
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$NEW_HISTORY"
 
-WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
+
 
 if [ -f "$KNOWN_DB" ]; then
     cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null
