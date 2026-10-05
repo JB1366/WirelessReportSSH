@@ -1949,17 +1949,39 @@ get_load_class() {
     esac
 }
 
+get_mac_address() {
+	mac_prefix="${mac#??:}"
+    mac_prefix="${mac_prefix%:??}"
+	is_node_pfx=0; bh="no"
+
+    case "$NODE_PFX" in *"$mac_prefix"*) is_node_pfx=1 ;; esac
+
+    if [ "$mac_prefix" = "$MAIN_PFX" ] || [ "$is_node_pfx" -eq 1 ]; then
+		    if [ "$BACKHAUL" != "1" ]; then return 1; fi
+			bh="yes"
+	fi
+
+    case "$bh" in yes) mac_check="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_check="$mac" ;; esac
+    case " $SEEN_MACS_VAR " in *" $mac_check "*) return 1 ;; esac
+
+    get_name "$mac"
+
+    case "$bh" in yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;; *) mac_final="$mac" ;; esac
+    case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
+
+    SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
+	return 0
+}
+
 get_name() {
     name=""; ip=""
 
     # YazDHCP
-    if [ -f "$YAZ_CACHE" ] && grep -q -m1 "^$mac|" "$YAZ_CACHE"; then
-        local entry=$(grep -m1 "^$mac|" "$YAZ_CACHE")
+    if [ -f "$YAZ_CACHE" ] && entry=$(grep -m1 "^$mac|" "$YAZ_CACHE"); then
         name="${entry##*|}"
 
     # Custom Client List
-    elif [ -f "$CUSTOM_CLIENTS_CACHE" ] && grep -q -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE"; then
-        local entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE")
+    elif [ -f "$CUSTOM_CLIENTS_CACHE" ] && entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE"); then
         name="${entry#*|}"
 
     # Networkmap Client / MLO
@@ -1982,27 +2004,6 @@ get_name() {
     fi
 }
 
-get_mac_address() {
-    bh="no"
-    if [ "$BACKHAUL" = "1" ]; then
-        case "$name" in *-BH) bh="yes" ;; esac
-        if [ "$bh" = "no" ]; then
-            mac_prefix="${mac#??:}"
-            mac_prefix="${mac_prefix%:??}"
-            case "$NODE_PFX" in *"$mac_prefix"*) bh="yes" ;; esac
-            [ "$mac_prefix" = "$MAIN_PFX" ] && bh="yes"
-        fi
-    fi
-    case "$bh" in
-        yes) mac_final="${CLEAN_IP}_${iface}_${mac}" ;;
-        *)   mac_final="$mac" ;;
-    esac
-    if [ "$bh" = "yes" ]; then
-        case " $SEEN_MACS_VAR " in *" $mac_final "*) return 1 ;; esac
-    fi
-    SEEN_MACS_VAR="$SEEN_MACS_VAR $mac_final"
-    return 0
-}
 
 check_new_mac() {
     local mac="$1"
@@ -2470,7 +2471,7 @@ $1
 ROW
 }
 
-get_main_wifi_radios() {
+get_main_radios() {
     case "$RADIO_TEMPS" in
         0) RADIO_ON='style="display: none !important;"' ;;
         *) RADIO_ON="" ;;
@@ -2506,7 +2507,7 @@ get_main_wifi_radios() {
     fi
 }
 
-clear_node_wifi_vars() {
+clear_node_radio_vars() {
     if [ "$RADIO_TEMPS" = "1" ]; then
         for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
@@ -2515,7 +2516,7 @@ clear_node_wifi_vars() {
     fi
 }
 
-get_node_wifi_radios() {
+get_node_radios() {
     if [ "$RADIO_TEMPS" = "1" ]; then
         for band_key in $WIFI_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
@@ -2817,14 +2818,14 @@ M_UPTIME=$(get_router_uptime "$s")
 M_TIME=$(( $(date +%s) - s ))
 M_BOOT=$(date -d @$M_TIME "$D_FMT")
 
-WL_BASES=$(nvram get wl_ifnames)
-set -- $WL_BASES
-WL0_PHYS=$1
-WL1_PHYS=$2
-WL2_PHYS=$3
-WL3_PHYS=$4
+WL_IFNAMES=$(nvram get wl_ifnames)
+set -- $WL_IFNAMES
+IF_WL0=$1
+IF_WL1=$2
+IF_WL2=$3
+IF_WL3=$4
 
-RAW_IFACES=$(printf "%s\n" $WL_BASES $(ifconfig -a |
+RAW_IFACES=$(printf "%s\n" $WL_IFNAMES $(ifconfig -a |
 grep -oE "wl[0-9]+\.[0-9]+" |
 grep -vE "\.(1[1-9]|[2-9][0-9])$") |
 sort -u)
@@ -2836,16 +2837,16 @@ for iface in $RAW_IFACES; do
     fi
 done
 
-get_main_wifi_radios
+get_main_radios
 
 IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
     case "$iface" in
-		${WL0_PHYS:+"$WL0_PHYS"*}) data_iface="wl0" ;;
-		${WL1_PHYS:+"$WL1_PHYS"*}) data_iface="wl1" ;;
-		${WL2_PHYS:+"$WL2_PHYS"*}) data_iface="wl2" ;;
-		${WL3_PHYS:+"$WL3_PHYS"*}) data_iface="wl3" ;;
+		${IF_WL0:+"$IF_WL0"*}) data_iface="wl0" ;;
+		${IF_WL1:+"$IF_WL1"*}) data_iface="wl1" ;;
+		${IF_WL2:+"$IF_WL2"*}) data_iface="wl2" ;;
+		${IF_WL3:+"$IF_WL3"*}) data_iface="wl3" ;;
 		*) data_iface="$iface" ;;
 	esac
 
@@ -2864,7 +2865,6 @@ for iface in $IFACE_LIST; do
 
 	for mac in $MAC_LIST; do
 		case "$mac" in ""|"mac") continue ;; esac
-		get_name "$mac"
 		get_mac_address || continue
         check_new_mac "$mac"
 		get_ip
@@ -2929,9 +2929,9 @@ for line in $SSH_NODES; do
             *)  NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;;
         esac
 
-        clear_node_wifi_vars
+        clear_node_radio_vars
         parse_node_out "$NODE_OUT"
-        get_node_wifi_radios
+        get_node_radios
 
         N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
@@ -2943,7 +2943,6 @@ for line in $SSH_NODES; do
         while read -r ssh_node_data; do
 			case "$ssh_node_data" in "") continue ;; esac
 			parse_node_data "$ssh_node_data"
-			get_name "$mac"
             get_mac_address || continue
             check_new_mac "$mac"
 			get_ip
