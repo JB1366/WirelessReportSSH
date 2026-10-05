@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #=================================================================#
 
-SCRIPT_VERSION="2.1.4"
+SCRIPT_VERSION="2.1.5"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -2774,25 +2774,56 @@ done
 #=============================#
 #  Main Scan/Device Assembly  #
 #=============================#
-MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""; SEEN_MACS=""
-MAIN_DEVICE_TOTAL=0; NL=$'\n'; SEEN_BANDS=""
+MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
+SEEN_MACS=""; SEEN_BANDS=""
+MAIN_DEVICE_TOTAL=0; NL=$'\n'
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$NEW_HISTORY"
 
 WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
-YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
-awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
-if [ -f "$KNOWN_DB" ]; then cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null; else > "$KNOWN_CACHE"; fi
-if [ -f "$HISTORY_DB" ]; then cp "$HISTORY_DB" "$HISTORY_CACHE" 2>/dev/null; else > "$HISTORY_CACHE"; fi
-if [ -f "$YAZDHCP" ]; then awk -F',' 'NR>1 {print toupper($1) "|" $2 "|" $3}' "$YAZDHCP" > "$YAZ_CACHE"; else > "$YAZ_CACHE"; fi
-awk '{print toupper($2)"|"$3}' /var/lib/misc/dnsmasq*.leases > "$LEASES_CACHE" 2>/dev/null || > "$LEASES_CACHE"
-nvram get dhcp_staticlist | sed 's/>>/  /g; s/[<>]/ /g' | \
-awk '{print toupper($1)"|"$2}' > "$DHCPSTATIC_CACHE" 2>/dev/null || > "$DHCPSTATIC_CACHE"
-nvram get asus_device_list | sed 's/</\n/g' > "$DEVICE_LIST_CACHE" 2>/dev/null || > "$DEVICE_LIST_CACHE"
-nvram get custom_clientlist | sed 's/</\n/g' | awk -F'>' '{if($2!="") print toupper($2)"|"$1}' > "$CUSTOM_CLIENTS_CACHE" 2>/dev/null || > "$CUSTOM_CLIENTS_CACHE"
 
-MAIN_PFX=$(nvram get lan_hwaddr | cut -c 4-14 | tr '[:lower:]' '[:upper:]')
-NODE_PFX=$(nvram get cfg_relist | grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' | cut -c 4-14 | sort -u | tr '[:lower:]' '[:upper:]')
+if [ -f "$KNOWN_DB" ]; then
+    cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null
+else
+    > "$KNOWN_CACHE"
+fi
+
+if [ -f "$HISTORY_DB" ]; then
+    cp "$HISTORY_DB" "$HISTORY_CACHE" 2>/dev/null
+else
+    > "$HISTORY_CACHE"
+fi
+
+YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
+if [ -f "$YAZDHCP" ]; then
+    awk -F',' 'NR>1 {print toupper($1) "|" $2 "|" $3}' "$YAZDHCP" > "$YAZ_CACHE"
+else
+    > "$YAZ_CACHE"
+fi
+
+awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
+
+awk '{print toupper($2)"|"$3}' /var/lib/misc/dnsmasq*.leases > "$LEASES_CACHE" 2>/dev/null || > "$LEASES_CACHE"
+
+nvram get dhcp_staticlist |
+sed 's/>>/  /g; s/[<>]/ /g' |
+awk '{print toupper($1)"|"$2}' > "$DHCPSTATIC_CACHE" 2>/dev/null || > "$DHCPSTATIC_CACHE"
+
+nvram get asus_device_list |
+sed 's/</\n/g' > "$DEVICE_LIST_CACHE" 2>/dev/null || > "$DEVICE_LIST_CACHE"
+
+nvram get custom_clientlist |
+sed 's/</\n/g' |
+awk -F'>' '{if($2!="") print toupper($2)"|"$1}' > "$CUSTOM_CLIENTS_CACHE" 2>/dev/null || > "$CUSTOM_CLIENTS_CACHE"
+
+MAIN_PFX=$(nvram get lan_hwaddr |
+cut -c 4-14 |
+tr '[:lower:]' '[:upper:]')
+
+NODE_PFX=$(nvram get cfg_relist |
+grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' |
+cut -c 4-14 | sort -u |
+tr '[:lower:]' '[:upper:]')
 
 ROUTER=$(nvram get productid)
 MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
@@ -2802,21 +2833,22 @@ fi
 case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
 
 read -r M_LOAD _ < /proc/loadavg
-MC_LOAD=$(get_load_class "$M_LOAD")
 read -r M_T < /sys/class/thermal/thermal_zone0/temp 2>/dev/null
+read -r M_U < /proc/uptime; M_U=${M_U%.*}
+
+MC_LOAD=$(get_load_class "$M_LOAD")
 M_TEMP=$(get_temp_unit $(( ${M_T:-0} / 1000 )))
 MC_TEMP=$(get_temp_class "$M_TEMP")
-read -r s _ < /proc/uptime; s=${s%.*}
-M_UPTIME=$(get_router_uptime "$s")
-M_TIME=$(( $(date +%s) - s ))
-M_BOOT=$(date -d @$M_TIME "$D_FMT")
+M_UPTIME=$(get_router_uptime "$M_U")
+MB_TIME=$(( $(date +%s) - M_U ))
+M_BOOT=$(date -d @$MB_TIME "$D_FMT")
 
 WL_IFNAMES=$(nvram get wl_ifnames)
 set -- $WL_IFNAMES
-IF_WL0=$1
-IF_WL1=$2
-IF_WL2=$3
-IF_WL3=$4
+WL_IFNAME0=$1
+WL_IFNAME1=$2
+WL_IFNAME2=$3
+WL_IFNAME3=$4
 
 RAW_IFACES=$(printf "%s\n" $WL_IFNAMES $(ifconfig -a |
 grep -oE "wl[0-9]+\.[0-9]+" |
@@ -2836,10 +2868,10 @@ IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
     case "$iface" in
-		${IF_WL0:+"$IF_WL0"*}) data_iface="wl0" ;;
-		${IF_WL1:+"$IF_WL1"*}) data_iface="wl1" ;;
-		${IF_WL2:+"$IF_WL2"*}) data_iface="wl2" ;;
-		${IF_WL3:+"$IF_WL3"*}) data_iface="wl3" ;;
+		${WL_IFNAME0:+"$WL_IFNAME0"*}) data_iface="wl0" ;;
+		${WL_IFNAME1:+"$WL_IFNAME1"*}) data_iface="wl1" ;;
+		${WL_IFNAME2:+"$WL_IFNAME2"*}) data_iface="wl2" ;;
+		${WL_IFNAME3:+"$WL_IFNAME3"*}) data_iface="wl3" ;;
 		*) data_iface="$iface" ;;
 	esac
 
@@ -2916,6 +2948,7 @@ for line in $SSH_NODES; do
         NODE_SUP="<sup>$NUMBERED_NODE</sup>"
         NODE_NUM="<span style='color:$NODE_COLOR;'>$NODE_SUP</span>"
         case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
+
         NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NNS</span>"
         case "$NODE_NAMES" in
             "") NODE_NAMES="$NODE_BRAND" ;;
