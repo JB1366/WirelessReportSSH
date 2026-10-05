@@ -35,7 +35,6 @@ CONFIG="$INSTALL_DIR/webui-ssh.conf"
 WEB_PAGE="/tmp/wireless-ssh.asp"
 TEMP_MENU="/tmp/menuTree.js"
 NEW_HISTORY="/tmp/rssi_new.db"
-SEEN_MACS="/tmp/seen_macs.txt"
 YAZ_CACHE="/tmp/yaz_cache.tmp"
 ARP_CACHE="/tmp/arp_cache.tmp"
 KNOWN_CACHE="/tmp/known_macs.cache"
@@ -2771,10 +2770,10 @@ done
 #=============================#
 #  Main Scan/Device Assembly  #
 #=============================#
-MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
+MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""; SEEN_MACS=""
 MAIN_DEVICE_TOTAL=0; NL=$'\n'; SEEN_BANDS=""
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
-> "$SEEN_MACS"; > "$NEW_HISTORY"
+> "$NEW_HISTORY"
 
 WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
 YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
@@ -4556,7 +4555,7 @@ if [ "$NEW_MAC_DIRTY" = "1" ]; then
     cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null
 fi
 
-rm -rf "$SEEN_MACS" "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" 2>/dev/null
+rm -rf "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" 2>/dev/null
 rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA_DIR" 2>/dev/null
 rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
