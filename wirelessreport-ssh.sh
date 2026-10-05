@@ -1953,13 +1953,13 @@ get_load_class() {
 }
 
 get_mac_address() {
-	mac_prefix="${mac#??:}"
-    mac_prefix="${mac_prefix%:??}"
-	is_node_pfx=0; bh="no"
+	mac_midmac="${mac#??:}"
+    mac_midmac="${mac_midmac%:??}"
+	is_node_midmac=0; bh="no"
 
-    case "$NODE_PFX" in *"$mac_prefix"*) is_node_pfx=1 ;; esac
+    case "$NODE_MIDMAC" in *"$mac_midmac"*) is_node_midmac=1 ;; esac
 
-    if [ "$mac_prefix" = "$MAIN_PFX" ] || [ "$is_node_pfx" -eq 1 ]; then
+    if [ "$mac_midmac" = "$MAIN_MIDMAC" ] || [ "$is_node_midmac" -eq 1 ]; then
 		    if [ "$BACKHAUL" != "1" ]; then return 1; fi
 			bh="yes"
 	fi
@@ -2059,7 +2059,7 @@ ip_to_number() {
     IP_NUM=$(printf "%03d%03d%03d%03d" "${o1:-0}" "${o2:-0}" "${o3:-0}" "${o4:-0}")
 }
 
-final_check() {
+check_fallback() {
     width="${width:-20}"
     ssid="${ssid:-Wireless}"
     case "$rssi" in 0|1|""|"-"|*[!0-9-]*) rssi=-54 ;; esac
@@ -2343,14 +2343,14 @@ get_bars_rssi_style() {
     fi
 }
 
-get_max_column() {
+get_max_var_length() {
 	if [ "${#name}" -gt 20 ]; then name="${name:0:20}"; fi
 	if [ "${#mac}"  -gt 17 ]; then mac="${mac:0:17}"; fi
 	if [ "${#ip}"   -gt 15 ]; then ip="${ip:0:15}"; fi
 	if [ "${#ssid}" -gt 15 ]; then ssid="${ssid:0:15}"; fi
 }
 
-hostcolor_main_name() {
+get_hostcolor_main() {
 	case "$HOSTNAME_COLOR" in
         1)
             IP_COLOR=""
@@ -2365,7 +2365,7 @@ hostcolor_main_name() {
     esac
 }
 
-hostcolor_node_name() {
+get_hostcolor_node() {
     case "$HOSTNAME_COLOR" in
         1)
             NAME_NODE="<span style='color:$NODE_COLOR;'>$name</span>"
@@ -2816,11 +2816,11 @@ nvram get custom_clientlist |
 sed 's/</\n/g' |
 awk -F'>' '{if($2!="") print toupper($2)"|"$1}' > "$CUSTOM_CLIENTS_CACHE" 2>/dev/null || > "$CUSTOM_CLIENTS_CACHE"
 
-MAIN_PFX=$(nvram get lan_hwaddr |
+MAIN_MIDMAC=$(nvram get lan_hwaddr |
 cut -c 4-14 |
 tr '[:lower:]' '[:upper:]')
 
-NODE_PFX=$(nvram get cfg_relist |
+NODE_MIDMAC=$(nvram get cfg_relist |
 grep -oE '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' |
 cut -c 4-14 | sort -u |
 tr '[:lower:]' '[:upper:]')
@@ -2850,13 +2850,13 @@ WL_IFNAME1=$2
 WL_IFNAME2=$3
 WL_IFNAME3=$4
 
-RAW_IFACES=$(printf "%s\n" $WL_IFNAMES $(ifconfig -a |
+MAIN_IFACES=$(printf "%s\n" $WL_IFNAMES $(ifconfig -a |
 grep -oE "wl[0-9]+\.[0-9]+" |
 grep -vE "\.(1[1-9]|[2-9][0-9])$") |
 sort -u)
 
 ACTIVE_IFACES=""
-for iface in $RAW_IFACES; do
+for iface in $MAIN_IFACES; do
     if wl -i "$iface" bss 2>/dev/null | grep -q "up"; then
         ACTIVE_IFACES="$ACTIVE_IFACES $iface"
     fi
@@ -2895,11 +2895,11 @@ for iface in $IFACE_LIST; do
 		get_ip
         parse_main_sta "$iface" "$data_iface"
 		get_rx_tx
-		final_check
+		check_fallback
         get_device_uptime "$uptime"
 		get_bars_rssi_style
-		get_max_column
-		hostcolor_main_name
+		get_max_var_length
+		get_hostcolor_main
         get_band "$iface" "$width" "$ROUTER"
         get_rssi_trend "$mac" "$rssi" "$MAIN_NAME"
 		get_row
@@ -2947,9 +2947,9 @@ for line in $SSH_NODES; do
         NODE_COLOR=$(echo $NODE_COLORS | cut -d' ' -f$((COLOR_INDEX)))
         NODE_SUPERSCRIPT="<sup>$NUMBERED_NODE</sup>"
         NODE_NUMBER="<span style='color:$NODE_COLOR;'>$NODE_SUPERSCRIPT</span>"
-        case "$HOSTNAME_COLOR" in 1) SUPERSCRIPT_NN="" ;; *) SUPERSCRIPT_NN="$NODE_SUPERSCRIPT" ;; esac
+        case "$HOSTNAME_COLOR" in 1) NODENAME_SS="" ;; *) NODENAME_SS="$NODE_SUPERSCRIPT" ;; esac
 
-        NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$SUPERSCRIPT_NN</span>"
+        NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NODENAME_SS</span>"
         case "$NODE_NAMES" in
             "") NODE_NAMES="$NODE_BRAND" ;;
             *)  NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;;
@@ -2959,10 +2959,10 @@ for line in $SSH_NODES; do
         parse_node_out "$NODE_OUT"
         get_node_radios
 
-        N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class "$N_TEMP")
         NC_LOAD=$(get_load_class "$N_LOAD")
+        N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW:-0} )) "$D_FMT")
         NODE_DEVICES=0
 
@@ -2973,12 +2973,12 @@ for line in $SSH_NODES; do
             check_new_mac "$mac"
 			get_ip
             get_rx_tx
-			final_check
+			check_fallback
             get_qca_uptime
 			get_device_uptime "$uptime"
 			get_bars_rssi_style
-			get_max_column
-			hostcolor_node_name
+			get_max_var_length
+			get_hostcolor_node
             get_band "$iface" "$width" "$ROUTER"
             get_rssi_trend "$mac" "$rssi" "$NODE_NAME"
             get_row
