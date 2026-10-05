@@ -264,8 +264,8 @@ menu_vars() {
         *) PD_STAT="${RD}Disabled$NC" ;;
     esac
 
-    HOST_COLOR=${HOST_COLOR:-0}
-    case "$HOST_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
+    HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
+    case "$HOSTNAME_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
 
     TABLE_HEADERS=${TABLE_HEADERS:-1}
     case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
@@ -601,7 +601,7 @@ do_uninstall() {
         echo -e "\n$YL[!] RSS Keys and Fingerprints preserved in /jffs/.ssh$NC"
     fi
 
-    unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOST_COLOR SSH_KEY
+    unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOSTNAME_COLOR SSH_KEY
     unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT unintsall_script
 
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
@@ -1068,11 +1068,11 @@ set_options() {
                 4)
                     set_ip_padding ;;
                 5)
-                    if grep -q "HOST_COLOR=" "$CONFIG"; then
-                        case "$HOST_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
-                        sed -i "s/HOST_COLOR=.*/HOST_COLOR=\"$NEW_HC\"/" "$CONFIG"
+                    if grep -q "HOSTNAME_COLOR=" "$CONFIG"; then
+                        case "$HOSTNAME_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
+                        sed -i "s/HOSTNAME_COLOR=.*/HOSTNAME_COLOR=\"$NEW_HC\"/" "$CONFIG"
                     else
-                        echo 'HOST_COLOR="1"' >> "$CONFIG"
+                        echo 'HOSTNAME_COLOR="1"' >> "$CONFIG"
                     fi
                     ;;
                 6)
@@ -2351,7 +2351,7 @@ get_max_column() {
 }
 
 hostcolor_main_name() {
-	case "$HOST_COLOR" in
+	case "$HOSTNAME_COLOR" in
         1)
             IP_COLOR=""
             MAC_COLOR="color: #64d2ff;"
@@ -2366,17 +2366,17 @@ hostcolor_main_name() {
 }
 
 hostcolor_node_name() {
-    case "$HOST_COLOR" in
+    case "$HOSTNAME_COLOR" in
         1)
             NAME_NODE="<span style='color:$NODE_COLOR;'>$name</span>"
-            NODE_NUM="<span class='hidden-node-number'>$NODE_SUP</span>"
+            NODE_NUMBER="<span class='hidden-node-number'>$NODE_SUPERSCRIPT</span>"
             ;;
         *)
             NAME_NODE="<span style='color:#ffffff;'>$name</span>"
-            NODE_NUM="<span style='color:$NODE_COLOR;'>$NODE_SUP</span>"
+            NODE_NUMBER="<span style='color:$NODE_COLOR;'>$NODE_SUPERSCRIPT</span>"
             ;;
     esac
-	name="$NAME_NODE$NODE_NUM"
+	name="$NAME_NODE$NODE_NUMBER"
 }
 
 get_row() {
@@ -2620,7 +2620,7 @@ run_report() {
 #=================#
 IPPAD=${IPPAD:-1}
 RADIO_TEMPS=${RADIO_TEMPS:-1}
-HOST_COLOR=${HOST_COLOR:-0};
+HOSTNAME_COLOR=${HOSTNAME_COLOR:-0};
 TABLE_HEADERS=${TABLE_HEADERS:-1}
 read -r START_RUNTIME _ < /proc/uptime
 
@@ -2945,11 +2945,11 @@ for line in $SSH_NODES; do
         NUMBERED_NODE=$((NUMBERED_NODE + 1))
 		COLOR_INDEX=$((COLOR_INDEX + 1))
         NODE_COLOR=$(echo $NODE_COLORS | cut -d' ' -f$((COLOR_INDEX)))
-        NODE_SUP="<sup>$NUMBERED_NODE</sup>"
-        NODE_NUM="<span style='color:$NODE_COLOR;'>$NODE_SUP</span>"
-        case "$HOST_COLOR" in 1) NNS="" ;; *) NNS="$NODE_SUP" ;; esac
+        NODE_SUPERSCRIPT="<sup>$NUMBERED_NODE</sup>"
+        NODE_NUMBER="<span style='color:$NODE_COLOR;'>$NODE_SUPERSCRIPT</span>"
+        case "$HOSTNAME_COLOR" in 1) SUPERSCRIPT_NN="" ;; *) SUPERSCRIPT_NN="$NODE_SUPERSCRIPT" ;; esac
 
-        NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$NNS</span>"
+        NODE_BRAND="<span class='router-style' style='color:$NODE_COLOR;'>${NODE_NAME}$SUPERSCRIPT_NN</span>"
         case "$NODE_NAMES" in
             "") NODE_NAMES="$NODE_BRAND" ;;
             *)  NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;;
