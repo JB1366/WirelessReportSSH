@@ -2833,14 +2833,14 @@ fi
 case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
 
 read -r M_LOAD _ < /proc/loadavg
-read -r M_T < /sys/class/thermal/thermal_zone0/temp 2>/dev/null
-read -r M_U < /proc/uptime; M_U=${M_U%.*}
+read -r M_TP < /sys/class/thermal/thermal_zone0/temp 2>/dev/null
+read -r M_UP _ < /proc/uptime; M_UP=${M_UP%.*}
 
 MC_LOAD=$(get_load_class "$M_LOAD")
-M_TEMP=$(get_temp_unit $(( ${M_T:-0} / 1000 )))
+M_TEMP=$(get_temp_unit $(( ${M_TP:-0} / 1000 )))
 MC_TEMP=$(get_temp_class "$M_TEMP")
-M_UPTIME=$(get_router_uptime "$M_U")
-MB_TIME=$(( $(date +%s) - M_U ))
+M_UPTIME=$(get_router_uptime "$M_UP")
+MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
 
 WL_IFNAMES=$(nvram get wl_ifnames)
