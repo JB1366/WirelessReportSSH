@@ -1977,23 +1977,20 @@ get_name() {
     name=""; ip=""
 
     # YazDHCP
-    if [ -f "$YAZ_CACHE" ] && entry=$(grep -m1 "^$mac|" "$YAZ_CACHE"); then
-        name="${entry##*|}"
+    if [ -f "$YAZ_CACHE" ] && entry=$(grep -m1 "^$mac|" "$YAZ_CACHE"); then name="${entry##*|}"
 
     # Custom Client List
-    elif [ -f "$CUSTOM_CLIENTS_CACHE" ] && entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE"); then
-        name="${entry#*|}"
+    elif [ -f "$CUSTOM_CLIENTS_CACHE" ] && entry=$(grep -m1 "^$mac|" "$CUSTOM_CLIENTS_CACHE"); then name="${entry#*|}"
 
     # Networkmap Client / MLO
     elif entry=$(sed 's/},"/ \n"/g' /jffs/nmp_cl_json.js | grep -i "$mac" | head -n 1) && [ -n "$entry" ]; then
         local raw_parent=$(echo "$entry" | sed -n 's/.*"mlo_all_mac":"<\([^"]*\)".*/\1/p' | tr '[:lower:]' '[:upper:]')
         local parent_mac=$(echo "$raw_parent" | cut -d'<' -f1)
-        [ -n "$parent_mac" ] && [ "$parent_mac" != "$mac" ] && mac="$parent_mac"
+        if [ -n "$parent_mac" ] && [ "$parent_mac" != "$mac" ]; then mac="$parent_mac"; fi
         name=$(echo "$entry" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
 
     # Wireless Backhaul
-    elif temp="${mac#*:}"; local mid_mac="${temp%:*}"; [ -n "$mid_mac" ] && [ -f "$DEVICE_LIST_CACHE" ] && grep -q -i "$mid_mac" "$DEVICE_LIST_CACHE"; then
-        local node_match=$(grep -i "$mid_mac" "$DEVICE_LIST_CACHE")
+    elif temp="${mac#*:}"; mid_mac="${temp%:*}"; [ -n "$mid_mac" ] && [ -f "$DEVICE_LIST_CACHE" ] && node_match=$(grep -i -m1 "$mid_mac" "$DEVICE_LIST_CACHE"); then
         local node_alias=$(echo "$node_match" | cut -d'>' -f2)
         name="${node_alias:-NODE}-BH"
         ip=$(awk -F'>' -v target="$node_alias" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
@@ -2003,7 +2000,6 @@ get_name() {
         name="$mac"
     fi
 }
-
 
 check_new_mac() {
     local mac="$1"
@@ -2016,15 +2012,10 @@ check_new_mac() {
 }
 
 get_ip() {
-    if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE"); then
-        ip="${line#*|}"
-    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); then
-        ip="${line#*|}"
-    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); then
-        ip="${line#*|}"; ip="${ip%%|*}"
-    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); then
-        ip="${line#*|}"
-    fi
+    if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE"); then ip="${line#*|}"
+    elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); then ip="${line#*|}"
+    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); then ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); then ip="${line#*|}"; fi
 
     case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 
