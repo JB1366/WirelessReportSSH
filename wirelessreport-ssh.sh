@@ -1926,7 +1926,7 @@ get_temp_unit() {
     esac
 }
 
-get_temp_class() {
+get_temp_class_cpu() {
     local temp=$1
 	local val="${temp%%[^0-9]*}"
     case "$val" in ""|*[!0-9]*) echo "stat-cool"; return ;; esac
@@ -1938,6 +1938,22 @@ get_temp_class() {
     else
         if [ "$val" -ge 194 ]; then echo "stat-hot"
         elif [ "$val" -ge 167 ]; then echo "stat-warm"
+        else echo "stat-cool"; fi
+    fi
+}
+
+get_temp_class_radios() {
+    local temp=$1
+    local val="${temp%%[^0-9]*}"
+    case "$val" in ""|*[!0-9]*) echo "stat-cool"; return ;; esac
+
+    if [ "$REPORT_UNIT" = "C" ]; then
+        if [ "$val" -ge 80 ]; then echo "stat-hot"
+        elif [ "$val" -ge 70 ]; then echo "stat-warm"
+        else echo "stat-cool"; fi
+    else
+        if [ "$val" -ge 176 ]; then echo "stat-hot"
+        elif [ "$val" -ge 158 ]; then echo "stat-warm"
         else echo "stat-cool"; fi
     fi
 }
@@ -2441,7 +2457,7 @@ parse_node_out() {
                 N_BAND_LABEL="$(get_band "$N_IFACE" "" "$N_ROUTER" "band")"
                 if [ -n "$N_BAND_LABEL" ] && [ "$N_BAND_LABEL" != "" ]; then
                     N_UNIT=$(get_temp_unit "$N_CVAL")
-                    N_CLASS=$(get_temp_class "$N_UNIT")
+                    N_CLASS=$(get_temp_class_radios "$N_UNIT")
                     N_HTML="<span class='${N_CLASS}'>${N_UNIT}</span>"
                     N_VAR_SAFE=$(echo "$N_BAND_LABEL" | tr '.-' '__')
                     eval "n_${N_VAR_SAFE}=\"\$N_HTML\""
@@ -2479,7 +2495,7 @@ get_main_radios() {
                             SEEN_BANDS="${SEEN_BANDS}|$BAND_LABEL|"
                             C_VAL=$(echo "$RAW_TEMP" | awk -F' ' '{printf "%.0f\n", $1/2+20}')
                             T_UNIT=$(get_temp_unit "$C_VAL")
-                            T_CLASS=$(get_temp_class "$T_UNIT")
+                            T_CLASS=$(get_temp_class_radios "$T_UNIT")
                             R_HTML="<span class='${T_CLASS}'>${T_UNIT}</span>"
                             VAR_SAFE_LABEL=$(echo "$BAND_LABEL" | tr '.-' '__')
                             eval "CURR_VAL=\$MAIN_BAND_${VAR_SAFE_LABEL}"
@@ -2833,7 +2849,7 @@ read -r M_UP _ < /proc/uptime; M_UP=${M_UP%.*}
 
 MC_LOAD=$(get_load_class "$M_LOAD")
 M_TEMP=$(get_temp_unit $(( ${M_TP:-0} / 1000 )))
-MC_TEMP=$(get_temp_class "$M_TEMP")
+MC_TEMP=$(get_temp_class_cpu "$M_TEMP")
 M_UPTIME=$(get_router_uptime "$M_UP")
 MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
@@ -2955,7 +2971,7 @@ for line in $SSH_NODES; do
         get_node_radios
 
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
-		NC_TEMP=$(get_temp_class "$N_TEMP")
+		NC_TEMP=$(get_temp_class_cpu "$N_TEMP")
         NC_LOAD=$(get_load_class "$N_LOAD")
         N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW:-0} )) "$D_FMT")
