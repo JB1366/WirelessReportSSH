@@ -595,7 +595,7 @@ do_uninstall() {
     rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
 
-    unintsall_script="1"
+    uninstall_script="1"
     del_ssh_keys || return 1
     if [ "$KEY_NO" = true ]; then
         echo -e "\n$YL[!] RSS Keys and Fingerprints preserved in /jffs/.ssh$NC"
@@ -1931,7 +1931,7 @@ get_temp_class_cpu() {
 	local val="${temp%%[^0-9]*}"
     case "$val" in ""|*[!0-9]*) echo "stat-cool"; return ;; esac
 
-    if [ "$REPORT_UNIT" = "C" ]; then
+    if [ "$TEMP_UNIT" = "C" ]; then
         if [ "$val" -ge 90 ]; then echo "stat-hot"
         elif [ "$val" -ge 75 ]; then echo "stat-warm"
         else echo "stat-cool"; fi
@@ -1947,7 +1947,7 @@ get_temp_class_radios() {
     local val="${temp%%[^0-9]*}"
     case "$val" in ""|*[!0-9]*) echo "stat-cool"; return ;; esac
 
-    if [ "$REPORT_UNIT" = "C" ]; then
+    if [ "$TEMP_UNIT" = "C" ]; then
         if [ "$val" -ge 80 ]; then echo "stat-hot"
         elif [ "$val" -ge 70 ]; then echo "stat-warm"
         else echo "stat-cool"; fi
@@ -2127,7 +2127,7 @@ get_rssi_trend() {
             count=$((count - 1))
         done
 
-        echo "$mac|$final_history" >> "$NEW_HISTORY"
+        RSSI_HIST_BUFFER="${RSSI_HIST_BUFFER}${mac}|${final_history}${NL}"
 
         local rssi_history=""
         local IFS=','
@@ -2157,7 +2157,7 @@ get_rssi_trend() {
         local entry=$(grep -F "$mac|" "$HISTORY_CACHE" 2>/dev/null)
         local old="${entry##*|}"
 
-        echo "$mac|$current_rssi" >> "$NEW_HISTORY"
+        RSSI_HIST_BUFFER="${RSSI_HIST_BUFFER}${mac}|${current_rssi}${NL}"
 
         if [ -n "$old" ] && [ "$old" -ne 0 ]; then
             [ "$current_rssi" -gt "$old" ] && trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
@@ -2790,7 +2790,7 @@ done
 #  Main Scan/Device Assembly  #
 #=============================#
 MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
-SEEN_MACS=""; SEEN_BANDS=""
+SEEN_MACS=""; SEEN_BANDS=""; RSSI_HIST_BUFFER=""
 NL=$'\n'; MAIN_DEVICE_TOTAL=0
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$NEW_HISTORY"
@@ -3024,6 +3024,7 @@ do_numbered_node
 check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
+printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 
 #=================#
