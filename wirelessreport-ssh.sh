@@ -602,7 +602,7 @@ do_uninstall() {
     fi
 
     unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOSTNAME_COLOR SSH_KEY
-    unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT unintsall_script
+    unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT uninstall_script
 
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
@@ -1486,7 +1486,7 @@ del_ssh_keys() {
 		echo -e "\n$YL[!] RSA Keys exist.$NC\n"
         KEY_NO=false
         while true; do
-            if [ "$unintsall_script" = "1" ]; then
+            if [ "$uninstall_script" = "1" ]; then
                 printf "Uninstalling Wireless Report SSH, Do you want to delete RSA Keys? (y/n): "; read -r delete
             else
                 printf "Do you want to delete Keys? (y/n): "; read -r delete
@@ -1495,7 +1495,7 @@ del_ssh_keys() {
                 y|Y)
                     break ;;
                 n|N)
-                    if [ "$unintsall_script" = "1" ]; then
+                    if [ "$uninstall_script" = "1" ]; then
                         KEY_NO=true
                     fi
                     return ;;
@@ -1505,7 +1505,7 @@ del_ssh_keys() {
         done
 	else
 		echo -e "\n$YL[!] No active RSA keys found to delete.$NC\n"
-		if [ "$unintsall_script" = "1" ]; then
+		if [ "$uninstall_script" = "1" ]; then
             return
         fi
         pause
@@ -1534,7 +1534,7 @@ del_ssh_keys() {
 	chmod 600 /root/.ssh/authorized_keys
 	echo -e "\n$GR[✓] RSA Keys removed successfully.$NC"
 	ssh_init
-    if [ "$unintsall_script" = "1" ]; then
+    if [ "$uninstall_script" = "1" ]; then
         return
     else
         pause || return
