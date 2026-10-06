@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #=================================================================#
 
-SCRIPT_VERSION="2.1.5"
+SCRIPT_VERSION="2.1.6"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -77,11 +77,11 @@ show_header() {
 install_menu() {
 	while true; do
 		show_header
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
 		check_version
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
 		echo -e "                                                     "
-		echo -e "  $N1  Install/Update                                "
+        echo -e "  $N1  Install/Update                                "
 		echo -e "  $N2  Uninstall                                     "
 		echo -e "  $N3  Set Temp/Date ($DU) ($CT)                     "
 		echo -e "  $N4  Set Device Nicknames                          "
@@ -91,9 +91,7 @@ install_menu() {
         echo -e "  $N8  Config RSSI Tooltip History ($CH)             "
 		echo -e "  $N9  SSH Config/Options  Key:($KEY)                "
 		echo -e "                                                     "
-        echo -e "  $LE  Exit                                          "
-		echo -e "                                                     "
-		echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
 		while true; do
 			selection
 			case "$choice" in
@@ -613,11 +611,11 @@ do_uninstall() {
 set_temp_date() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC                  Set Temp/Date                   "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC  Current: $DN $DU        Date: $CT               "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                               $NC [MILITARY]        "
         echo -e "  $N1  USA   ($GR°F$NC)            ($DATE_USA)       "
         echo -e "  $N2  INTL  ($GR°C$NC)            ($DATE_INTL)      "
@@ -630,9 +628,7 @@ set_temp_date() {
         echo -e "  $N7  ISO   ($BL°C$NC)         ($DATE_ISO1)         "
         echo -e "  $N8  ISO   ($BL°F$NC)         ($DATE_ISO3)         "
         echo -e "                                                     "
-        echo -e "  $LE  Exit back to main menu                        "
-        echo -e "                                                     "
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -663,17 +659,15 @@ device_default_colors() {
 set_device_nicknames() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC               Set Device Nicknames               "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
 		echo -e "  $N1 Default Nicknames                              "
 		echo -e "  $N2 Location Nicknames                             "
 		echo -e "  $N3 Manual Nicknames                               "
 		echo -e "                                                     "
-		echo -e "  $LE Exit back to main menu                         "
-		echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
         local NODE_CLR OLD_NAME NEW_LOC NODE_LOC OLD_NICK manual_main input_node
 
@@ -697,7 +691,7 @@ set_device_nicknames() {
 
             node_idx=$((node_idx + 1))
         done
-        echo -e "\n$BL=================================================="
+        echo -e "\n$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -848,9 +842,9 @@ set_device_colors() {
     done
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC                Set Device Colors                 "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
         echo -e "$NC  Current Device Configuration:                   "
         echo -e "                                                     "
@@ -885,7 +879,7 @@ set_device_colors() {
         echo -e "  $LS Save Changes & Exit                            "
         echo -e "  $LE Exit back to main menu                         "
         echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
             case "$node_choice" in
@@ -985,17 +979,15 @@ set_device_colors() {
 set_theme() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC Set Theme                    Current: $TM1_STAT  "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
         echo -e "  $N1 Original Theme                                 "
         echo -e "  $N2 Darkmode Theme                                 "
         echo -e "  $N3 Asus WebUI Theme                               "
         echo -e "                                                     "
-        echo -e "  $LE Exit back to main menu                         "
-        echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1018,9 +1010,9 @@ set_theme() {
 set_options() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC                  Set Options                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
         echo -e "  $N1  Toggle Runtime Tracking: ($RT_STAT)           "
         echo -e "  $N2  Toggle Wireless Backhaul: ($WB_STAT)          "
@@ -1030,9 +1022,7 @@ set_options() {
         echo -e "  $N6  Toggle Loading Table Headers: ($TH_STAT)      "
         echo -e "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)           "
         echo -e "                                                     "
-        echo -e "  $LE  Exit back to main menu                        "
-        echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1126,16 +1116,14 @@ set_options() {
 set_runtime_tracking() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC               Runtime Tracking                   "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
         echo -e "  $N1 Toggle Runtime Tracking: ($RT_STAT)            "
         echo -e "  $N2 Log Stats to Syslog: ($WS_STAT)                "
         echo -e "                                                     "
-        echo -e "  $LE Exit back to Set Options Menu                  "
-        echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1189,17 +1177,15 @@ set_runtime_tracking() {
 set_ip_padding() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC IP Column Padding       Current: ($PD_STAT)      "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
         echo -e "  $N1 192.168.50.3     (${RD}Disabled$NC)            "
         echo -e "  $N2 192.168.50.003   (${BL}Last Octet$NC)          "
         echo -e "  $N3 192.168.050.003  (${GR}Last 2 Octets$NC)       "
         echo -e "                                                     "
-        echo -e "  $LE Exit back to Set Options Menu                  "
-        echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1222,18 +1208,16 @@ set_ip_padding() {
 set_github_branch() {
     while true; do
         show_header
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC                Set Github Branch                 "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC  Branch: [$BN]          $CURRENT                 "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
         echo -e "  $N1 main (JB1366)                                  "
         echo -e "  $N2 Development (JB1366)                           "
         echo -e "                                                     "
-        echo -e "  $LE Exit back to Set Options Menu                  "
-        echo -e "                                                     "
-        echo -e "$BL=================================================="
+        echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1264,18 +1248,17 @@ set_github_branch() {
 set_rssi_tooltip() {
 	while true; do
 		show_header
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
         echo -e "$NC         Config RSSI Tooltip History              "
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
 		echo -e "                                                     "
 		echo -e "  $N1 Toggle RSSI History: [$CH]                     "
 		echo -e "  $N2 Set History Depth:   [$CE] entries             "
 		echo -e "  $N3 Toggle Timestamps:   [$TS]                     "
 		echo -e "                                                     "
 		echo -e "  $LS Save Changes & Exit                            "
-        echo -e "  $LE Exit back to main menu                         "
 		echo -e "                                                     "
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1334,11 +1317,11 @@ set_rssi_tooltip() {
 check_ssh() {
 	while true; do
 		show_header
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
 		echo -e "$NC                 SSH Environment                  "
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
 		echo -e "$NC SSH-Key: $KEY                         Port: $PORT"
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
 		echo -e "                                                     "
 		echo -e "  $N1  Generate RSA Keys & Provision AiMesh Nodes    "
 		echo -e "  $N2  Provision Main Router Only                    "
@@ -1348,9 +1331,7 @@ check_ssh() {
 		echo -e "  $N6  View SSH Error Log                            "
 		echo -e "  $N7  Node Authentication                           "
 		echo -e "                                                     "
-		echo -e "  $LE  Exit back to main menu                        "
-		echo -e "                                                     "
-		echo -e "$BL=================================================="
+		echo -e "$BL══════════════════════════════════════════════════"
         while true; do
             selection
             case "$choice" in
@@ -1372,35 +1353,35 @@ check_ssh() {
                         3)
                             del_ssh_keys ;;
                         4)
-                            echo -e "\n$BL================ Authorized Keys =================$NC\n"
+                            echo -e "\n$BL════════════════ Authorized Keys ═════════════════$NC\n"
                             if [ -f "/root/.ssh/authorized_keys" ]; then
                                 cat /root/.ssh/authorized_keys
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-                            echo -e "\n\n$BL==================================================$NC"
+                            echo -e "\n\n$BL══════════════════════════════════════════════════$NC"
                             pause
                             ;;
                         5)
-                            echo -e "\n$BL================== Known Hosts  ==================$NC\n"
+                            echo -e "\n$BL═════════════════ Known Hosts ════════════════════$NC\n"
                             if [ -f "/jffs/.ssh/known_hosts" ]; then
                                 cat /jffs/.ssh/known_hosts
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-                            echo -e "\n$BL==================================================$NC"
+                            echo -e "\n$BL══════════════════════════════════════════════════$NC"
                             pause
                             ;;
                         6)
-                            echo -e "\n$BL================= SSH Error Log ==================$NC\n"
+                            echo -e "\n$BL═════════════════ SSH Error Log ══════════════════$NC\n"
                             if [ -f "$ERROR_LOG" ]; then
                                 cat "$ERROR_LOG"
-                                echo -e "\n\n$BL==================================================$NC"
+                                echo -e "\n\n$BL══════════════════════════════════════════════════$NC"
                                 printf "\nRemove error log? (y/n): "; read -r rm_log
                                 case "$rm_log" in [yY]) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC" ;; esac
                             else
                                 echo -e "$YL[!] File not found.$NC"
-                                echo -e "\n$BL==================================================$NC"
+                                echo -e "\n$BL══════════════════════════════════════════════════$NC"
                             fi
                             pause
                             ;;
@@ -1467,9 +1448,9 @@ get_ssh_keys() {
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
 
-    echo -e "$BL=================================================="
+    echo -e "$BL══════════════════════════════════════════════════"
 	echo -e "$NC               ACTION REQUIRED NOW                "
-    echo -e "$BL=================================================="
+    echo -e "$BL══════════════════════════════════════════════════"
     echo -e "                                                     "
 	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management  "
 	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n      "
@@ -1548,10 +1529,10 @@ node_auth() {
     fi
 
     echo -e "\n$GR[✓] RSA Key found at: $WH$SSH_KEY$NC\n"
-    echo -e "$BL=================================================="
+    echo -e "$BL══════════════════════════════════════════════════"
     echo -e "$NC         Verifying Node Authentication            "
-    echo -e "$BL=================================================="
-    echo -e ""
+    echo -e "$BL══════════════════════════════════════════════════"
+    echo -e "                                                     "
 
     AIMESH_NODES=$(nvram get asus_device_list |
         sed 's/</\n/g' |
@@ -1666,7 +1647,7 @@ node_auth() {
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
-selection() { printf "\n$NC Selection: "; read -r choice; }
+selection() { printf "\n$NC Selection ${LE}xit :"; read -r choice; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
