@@ -2341,7 +2341,6 @@ get_bars_rssi_style() {
             return
             ;;
     esac
-
     if [ "$rssi" -ge -50 ]; then
         bars="<span class='rssi_bars rssi-excl'>||||</span>"
         rssi_style="color: #30d158; font-weight: bold;"
@@ -2422,7 +2421,6 @@ get_router_uptime() {
     d=$((s / 86400))
     h=$((s % 86400 / 3600))
     m=$((s % 3600 / 60))
-
     if [ $d -gt 0 ]; then
         echo "${d}d ${h}h ${m}m"
     elif
@@ -2605,7 +2603,6 @@ get_all_radio_row() {
             elif [ -n "$node_val" ]; then
                 combined="<span style='color: #0096ff;'>--</span>${BULLET}${node_val}"
             fi
-
             case "$combined" in
                 *°*)
                     display_key="${band_key//__/-}"
@@ -2642,9 +2639,9 @@ HOSTNAME_COLOR=${HOSTNAME_COLOR:-0};
 TABLE_HEADERS=${TABLE_HEADERS:-1}
 read -r START_RUNTIME _ < /proc/uptime
 
-NODE_DATA_DIR="/tmp/node_data"
-rm -rf "$NODE_DATA_DIR" 2>/dev/null
-mkdir -p "$NODE_DATA_DIR"
+NODE_DATA="/tmp/node_data"
+rm -rf "$NODE_DATA" 2>/dev/null
+mkdir -p "$NODE_DATA"
 
 for line in $SSH_NODES; do
 	ROUTER="${line%%|*}"
@@ -2785,7 +2782,7 @@ for line in $SSH_NODES; do
                     fi
                 done
             fi
-		" 2>/dev/null > "$NODE_DATA_DIR/${CLEAN_IP}.out"
+		" 2>/dev/null > "$NODE_DATA/${CLEAN_IP}.out"
 	) &
 done
 
@@ -2797,8 +2794,6 @@ SEEN_MACS=""; SEEN_BANDS=""
 NL=$'\n'; MAIN_DEVICE_TOTAL=0
 T_EXCL=0; T_GOOD=0; T_FAIR=0; T_POOR=0
 > "$NEW_HISTORY"
-
-
 
 if [ -f "$KNOWN_DB" ]; then
     cp "$KNOWN_DB" "$KNOWN_CACHE" 2>/dev/null
@@ -2845,18 +2840,16 @@ tr '[:lower:]' '[:upper:]')
 
 ROUTER=$(nvram get productid)
 MAIN_NAME="${MAIN_NICK:-${ROUTER:-"Main Router"}}"
-if [ "${#MAIN_NAME}" -gt 25 ]; then
-    MAIN_NAME="${MAIN_NAME:0:25}"
-fi
+if [ "${#MAIN_NAME}" -gt 25 ]; then MAIN_NAME="${MAIN_NAME:0:25}"; fi
 case "$MAIN_COLOR" in "") MAIN_COLOR="#0096ff" ;; esac
 
-read -r M_LOAD _ < /proc/loadavg
 read -r M_TP < /sys/class/thermal/thermal_zone0/temp 2>/dev/null
+read -r M_LOAD _ < /proc/loadavg
 read -r M_UP _ < /proc/uptime; M_UP=${M_UP%.*}
 
-MC_LOAD=$(get_load_class "$M_LOAD")
-M_TEMP=$(get_temp_unit $(( ${M_TP:-0} / 1000 )))
+M_TEMP=$(get_temp_unit $(( ${M_TP} / 1000 )))
 MC_TEMP=$(get_temp_class_cpu "$M_TEMP")
+MC_LOAD=$(get_load_class "$M_LOAD")
 M_UPTIME=$(get_router_uptime "$M_UP")
 MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
@@ -2951,12 +2944,10 @@ for line in $SSH_NODES; do
 	eval CUSTOM_NICK=\$NODE_NICK_$CLEAN_IP
 
     NODE_NAME="${CUSTOM_NICK:-${ROUTER:-$IP}}"
-    if [ "${#NODE_NAME}" -gt 25 ]; then
-        NODE_NAME="${NODE_NAME:0:25}"
-    fi
+    if [ "${#NODE_NAME}" -gt 25 ]; then NODE_NAME="${NODE_NAME:0:25}"; fi
 
-    if [ -f "$NODE_DATA_DIR/${CLEAN_IP}.out" ]; then
-        NODE_OUT=$(cat "$NODE_DATA_DIR/${CLEAN_IP}.out")
+    if [ -f "$NODE_DATA/${CLEAN_IP}.out" ]; then
+        NODE_OUT=$(cat "$NODE_DATA/${CLEAN_IP}.out")
     fi
 
     if [ -n "$NODE_OUT" ]; then
@@ -2981,7 +2972,7 @@ for line in $SSH_NODES; do
 		NC_TEMP=$(get_temp_class_cpu "$N_TEMP")
         NC_LOAD=$(get_load_class "$N_LOAD")
         N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
-		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW:-0} )) "$D_FMT")
+		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW} )) "$D_FMT")
         NODE_DEVICES=0
 
         while read -r ssh_node_data; do
@@ -4612,7 +4603,7 @@ HTML
 if [ "$NEW_MAC" = "1" ]; then cp -f "$KNOWN_CACHE" "$KNOWN_DB" 2>/dev/null; fi
 
 rm -rf "$HISTORY_CACHE" "$KNOWN_CACHE" "$ARP_CACHE" 2>/dev/null
-rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA_DIR" 2>/dev/null
+rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA" 2>/dev/null
 rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
