@@ -84,7 +84,7 @@ install_menu() {
         echo -e "  $N1  Install/Update                                "
 		echo -e "  $N2  Uninstall                                     "
 		echo -e "  $N3  Set Temp/Date ($DU) ($CT)                     "
-		echo -e "  $N4  Set Device Nicknames                          "
+		echo -e "  $N4  Set Nicknames & Node Order                    "
         echo -e "  $N5  Set Device Colors                             "
         echo -e "  $N6  Set Theme ($TM_STAT)                          "
 		echo -e "  $N7  Set Options                                   "
@@ -660,13 +660,14 @@ set_device_nicknames() {
     while true; do
         show_header
         echo -e "$BL══════════════════════════════════════════════════"
-        echo -e "$NC               Set Device Nicknames               "
+        echo -e "$NC            Set Nicknames & Node Order            "
         echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
 		echo -e "  $N1 Default Nicknames                              "
 		echo -e "  $N2 Location Nicknames                             "
 		echo -e "  $N3 Manual Nicknames                               "
-		echo -e "                                                     "
+		echo -e "  $N4 Sort Node Order                                "
+        echo -e "                                                     "
         echo -e "$BL══════════════════════════════════════════════════"
         local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
         local NODE_CLR OLD_NAME NEW_LOC NODE_LOC OLD_NICK manual_main input_node
@@ -785,6 +786,75 @@ set_device_nicknames() {
                         node_idx=$((node_idx + 1))
                     done
                     printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n"
+                    ;;
+                4)
+                    echo -e "\n$BL[*] Manual Node Sorting$NC\n"
+                    echo -e "Current order:\n"
+                    node_idx=1
+                    for node in $SSH_NODES; do
+                        MODEL="${node%%|*}"
+                        IP="${node#*|}"
+                        CLEAN_IP="${IP//./_}"
+                        eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
+                        HEX_CLR=$(get_node_color "$node_idx")
+                        NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+
+                        echo -e "  [$node_idx] ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+
+                        node_idx=$((node_idx + 1))
+                    done
+                    orig_count=$((node_idx - 1))
+
+                    while true; do
+                        printf "\n$BLEnter new order by index (e.g., 2 1 3):$NC "
+                        read -r new_order_input
+                        [ -z "$new_order_input" ] && { freeze 2; continue; }
+                        valid="true"
+                        entered_count=0
+                        for idx in $new_order_input; do
+                            entered_count=$((entered_count + 1))
+                            case "$idx" in
+                                *[!0-9]*|'')
+                                    valid="false"
+                                    ;;
+                                *)
+                                    if [ "$idx" -lt 1 ] || [ "$idx" -gt "$orig_count" ]; then
+                                        valid="false"
+                                    fi
+                                    ;;
+                            esac
+                        done
+
+                        if [ "$entered_count" -ne "$orig_count" ]; then
+                            valid="false"
+                        fi
+                        if [ "$valid" = "true" ]; then
+                            unique_check=$(for idx in $new_order_input; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
+                            if [ "$unique_check" -ne "$orig_count" ]; then
+                                freeze 2
+                                continue
+                            fi
+                            new_ssh_nodes=""
+                            for idx in $new_order_input; do
+                                current_idx=1
+                                for node in $SSH_NODES; do
+                                    if [ "$current_idx" -eq "$idx" ]; then
+                                        new_ssh_nodes="$new_ssh_nodes $node"
+                                        break
+                                    fi
+                                    current_idx=$((current_idx + 1))
+                                done
+                            done
+                            break
+                        else
+                            freeze 2
+                            continue
+                        fi
+                    done
+                    sed -i '/^SSH_NODES=/d' "$CONFIG"
+                    echo "SSH_NODES=\"$new_ssh_nodes\"" >> "$CONFIG"
+                    SSH_NODES="$new_ssh_nodes"
+                    printf "\n$GR[+] Node order successfully updated!$NC\n"
                     ;;
                 e|E)
                     return ;;
