@@ -84,7 +84,7 @@ install_menu() {
         echo -e "  $N1  Install/Update                                "
 		echo -e "  $N2  Uninstall                                     "
 		echo -e "  $N3  Set Temp/Date ($DU) ($CT)                     "
-		echo -e "  $N4  Set Nicknames & Node Order                    "
+		echo -e "  $N4  Set Nicknames & Node Display Order            "
         echo -e "  $N5  Set Device Colors                             "
         echo -e "  $N6  Set Theme ($TM_STAT)                          "
 		echo -e "  $N7  Set Options                                   "
@@ -660,13 +660,14 @@ set_device_nicknames() {
     while true; do
         show_header
         echo -e "$BL══════════════════════════════════════════════════"
-        echo -e "$NC            Set Nicknames & Node Order            "
+        echo -e "$NC        Set Nicknames & Node Display Order        "
         echo -e "$BL══════════════════════════════════════════════════"
         echo -e "                                                     "
-		echo -e "  $N1 Default Nicknames                              "
-		echo -e "  $N2 Location Nicknames                             "
-		echo -e "  $N3 Manual Nicknames                               "
-		echo -e "  $N4 Sort Node Order                                "
+		echo -e "  $N1 Reset to Default Nicknames                     "
+		echo -e "  $N2 Location-Based Nicknames                       "
+		echo -e "  $N3 Manual Custom Nicknames                        "
+		echo -e "                                                     "
+        echo -e "  $N4 Sort Node Display Order                        "
         echo -e "                                                     "
         echo -e "$BL══════════════════════════════════════════════════"
         local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
@@ -806,9 +807,10 @@ set_device_nicknames() {
                     orig_count=$((node_idx - 1))
 
                     while true; do
-                        printf "\n$BLEnter new order by index (e.g., 2 1 3):$NC "
+                        printf "\n Enter new order by index [E]xit $BL(e.g., 2 1 3):$NC "
                         read -r new_order_input
                         [ -z "$new_order_input" ] && { freeze 2; continue; }
+                        case "$new_order_input" in e|E) break 2 ;; esac
                         valid="true"
                         entered_count=0
                         for idx in $new_order_input; do
