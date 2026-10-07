@@ -1927,7 +1927,7 @@ do_numbered_node() {
     case "$NUMBERED_NODE" in
         [1-2]) TS=14; US="" ;;
         3)     TS=14; US="uptime-style" ;;
-        4)     TS=12; US="uptime-style" ;;
+        4)     TS=12.5; US="uptime-style" ;;
         *)     TS=10; US="uptime-style" ;;
     esac
 }
@@ -2124,7 +2124,7 @@ get_ip() {
 }
 
 check_fallback() {
-    ssid="${ssid:-Wireless}"
+    ssid="${ssid:-WIRELESS}"
     case "$rssi" in 0|1|""|"-"|*[!0-9-]*) rssi="--" ;; esac
 }
 
@@ -2268,8 +2268,8 @@ get_band() {
 
         # Tri-Band Mapping
         # Models: GT-AXE11000, RT-AXE7800, GS-BE12000, GS-BE18000, GT-BE19000
-        #         RT-BE92U, RT-BE96U, BT6, ET8, ET9, ET12
-        *AXE11000*|*AXE7800*|*BE12000*|*BE18000*|*BE19000*|*BE92U*|*BE96U*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
+        #         RT-BE92U, RT-BE96U, RT-BE9700, BT6, ET8, ET9, ET12
+        *AXE11000*|*AXE7800*|*BE12000*|*BE18000*|*BE19000*|*BE92U*|*BE96U*|*BE9700*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
             case "$iface" in
                 wl0*|eth4*|eth7*) Label="2.4G" ;;
                 wl1*|eth5*|eth8*) Label="5G" ;;
@@ -2940,13 +2940,18 @@ for iface in $IFACE_LIST; do
 	esac
 
     ssid=$(nvram get "${iface}_ssid")
-    [ "${#ssid}" -ge 16 ] && ssid=""
     if [ -z "$ssid" ]; then
         idx=${iface#*.}
         [ "$idx" != "$iface" ] && ssid=$(nvram get "gnp_name_$idx")
         [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface}_ssid")
         [ -z "$ssid" ] && ssid=$(nvram get "${iface%.*}_ssid")
         [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface%.*}_ssid")
+    fi
+    if [ "${#ssid}" -ge 30 ]; then
+        case "$ssid" in
+            *[!0-9a-fA-F]*) ;;
+            *) ssid="BACKHAUL" ;;
+        esac
     fi
 
     MAC_LIST=$(wl -i "$iface" assoclist 2>/dev/null)
