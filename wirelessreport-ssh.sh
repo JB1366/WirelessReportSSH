@@ -2193,12 +2193,15 @@ get_rssi_trend() {
                 *) rband_val="$rest"; time_val="" ;;
             esac
 
-            case "$rssi_val" in
-                -[0-9]|-[1-4][0-9]) style="color: #30d158; font-weight: bold;" ;;
-                -[5][0-9])         style="color: #64d2ff; font-weight: bold;" ;;
-                -[6][0-9])         style="color: #ffd60a; font-weight: bold;" ;;
-                *)                 style="color: #ff453a; font-weight: bold;" ;;
-            esac
+            if [ "$rssi" -ge -50 ]; then
+                style="color: #30d158; font-weight: bold;"
+			elif [ "$rssi" -ge -60 ]; then
+                style="color: #64d2ff; font-weight: bold;"
+			elif [ "$rssi" -ge -70 ]; then
+                style="color: #ffd60a; font-weight: bold;"
+			else
+                style="color: #ff453a; font-weight: bold;"
+            fi
 
             rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi_val [$name_val] [$rband_val]${time_val:+ $time_val}</span>"
         done
