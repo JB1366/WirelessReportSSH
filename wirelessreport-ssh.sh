@@ -2468,9 +2468,9 @@ get_router_uptime() {
 }
 
 parse_main_sta() {
-    local iface="$1" alt_iface="$2"
+    local iface="$1"
     read -r rssi rx tx max width uptime <<EOF
-$({ wl -i "$iface" sta_info "$mac" 2>/dev/null || wl -i "$alt_iface" sta_info "$mac" 2>/dev/null; } | awk '
+$({ wl -i "$iface" sta_info "$mac" 2>/dev/null; } | awk '
     /smoothed rssi:/      { split($0, a, ": "); rssi = a[2] }
     /rate of last rx pkt/ { rx = int($6 / 1000) }
     /rate of last tx pkt/ { split($0, a, ": "); split(a[2], b, " "); tx = int(b[1] / 1000) }
@@ -2525,8 +2525,7 @@ get_main_radios() {
     esac
     if [ "$RADIO_TEMPS" = "1" ]; then
         WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
-        for iface in wl0 wl1 wl2 wl3; do
-            [ -d "/sys/class/net/$iface" ] || continue
+        for iface in $(nvram get wl_ifnames); do
             RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
             if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
                 BAND_LABEL="$(get_band "$iface" "" "$ROUTER" "band")"
@@ -2891,45 +2890,29 @@ M_UPTIME=$(get_router_uptime "$M_UP")
 MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
 
-WL_IFNAMES=$(nvram get wl_ifnames)
-set -- $WL_IFNAMES
-WL_IFNAME0=$1
-WL_IFNAME1=$2
-WL_IFNAME2=$3
-WL_IFNAME3=$4
-
-MAIN_IFACES=$(printf "%s\n" $WL_IFNAMES $(ifconfig -a |
+WL_IFNAMES=$(printf "%s\n" $(nvram get wl_ifnames) $(ifconfig -a |
 grep -oE "wl[0-9]+\.[0-9]+" |
 grep -vE "\.(1[1-9]|[2-9][0-9])$") |
 sort -u)
 
-ACTIVE_IFACES=""
-for iface in $MAIN_IFACES; do
+MAIN_IFACES=""
+for iface in $WL_IFNAMES; do
     if wl -i "$iface" bss 2>/dev/null | grep -q "up"; then
-        ACTIVE_IFACES="$ACTIVE_IFACES $iface"
+        MAIN_IFACES="$MAIN_IFACES $iface"
     fi
 done
 
 get_main_radios
 
-IFACE_LIST=$(echo $ACTIVE_IFACES | xargs)
+IFACE_LIST=$(echo $MAIN_IFACES | xargs)
 for iface in $IFACE_LIST; do
 	case "$iface" in lo|eth0|eth1|eth2|eth3) continue ;; esac
-    case "$iface" in
-		${WL_IFNAME0:+"$WL_IFNAME0"*}) data_iface="wl0" ;;
-		${WL_IFNAME1:+"$WL_IFNAME1"*}) data_iface="wl1" ;;
-		${WL_IFNAME2:+"$WL_IFNAME2"*}) data_iface="wl2" ;;
-		${WL_IFNAME3:+"$WL_IFNAME3"*}) data_iface="wl3" ;;
-		*) data_iface="$iface" ;;
-	esac
 
     ssid=$(nvram get "${iface}_ssid")
     if [ -z "$ssid" ]; then
-        idx=${iface#*.}
+        idx="${iface#*.}"
         [ "$idx" != "$iface" ] && ssid=$(nvram get "gnp_name_$idx")
-        [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface}_ssid")
         [ -z "$ssid" ] && ssid=$(nvram get "${iface%.*}_ssid")
-        [ -z "$ssid" ] && [ -n "$data_iface" ] && ssid=$(nvram get "${data_iface%.*}_ssid")
     fi
     if [ "${#ssid}" -ge 30 ]; then
         case "$ssid" in
@@ -2946,7 +2929,7 @@ for iface in $IFACE_LIST; do
 		get_mac_address || continue
         check_new_mac "$mac"
 		get_ip
-        parse_main_sta "$iface" "$data_iface"
+        parse_main_sta "$iface"
 		get_rx_tx
 		check_fallback
         get_device_uptime "$uptime"
