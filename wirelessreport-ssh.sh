@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.1.7"
+SCRIPT_VERSION="2.1.8"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -192,6 +192,7 @@ version_compare() {
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
+
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
 
@@ -489,7 +490,6 @@ check_github() {
 ssh_init () {
 	NODE_USER=$(nvram get http_username)
 	SSH_PORT=$(nvram get sshd_port)
-    SSH_PORT=${SSH_PORT:-22}
     if [ -f "/root/.ssh/id_dropbear" ]; then
         SSH_KEY="/root/.ssh/id_dropbear"
 	else
@@ -991,6 +991,7 @@ set_device_colors() {
             hex_to_ansi; selected_hex=""
             target_prompt_color=$(hex_to_ansi "$target_hex")
             echo -e "$NC Select a new color for ${target_prompt_color}[${target_name}]:"
+            #════════════════════════════════════════#
             echo -e "                                "
             echo -e "$NB  (1) Neon-Blue (#0096ff)    "
             echo -e "$LG  (2) Lime-Green (#30d158)   "
@@ -1003,6 +1004,7 @@ set_device_colors() {
             echo -e "$PK  (9) Light-Pink (#ff70a6)   "
             echo -e "$MT (10) Mint-Green (#64ffda)   "
             echo -e "                                "
+            #════════════════════════════════════════#
             while true; do
                 printf "$NC Choose option $BL(1-10): $NC"; read -r color_choice
                 case "$color_choice" in
@@ -1121,7 +1123,8 @@ set_options() {
                             fi
                             break 2
                         else
-                            freeze 3; continue
+                            freeze 3
+                            continue
                         fi
                     done
                     pause
@@ -1719,7 +1722,7 @@ node_auth() {
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
-selection() { printf "\n$NC Selection [or ${BL}E$NC to Exit]: "; read -r choice; }
+selection() { printf "\n$NC Selection [${BL}E$NC to Exit]: "; read -r choice; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
@@ -2706,7 +2709,7 @@ for line in $SSH_NODES; do
                 ALL_IFACES=\$(ifconfig -a | grep -oE \"(ath|wl)[0-9]*(\.[0-9]+)?\")
             elif [ -f \"/usr/sbin/wl\" ] || [ -f \"/usr/bin/wl\" ]; then
                 HW_ENGINE=\"BRCM\"
-                ALL_IFACES=\$(ifconfig -a | grep -oE \"(wl|eth4|eth5|eth6|eth7|eth8|eth9)[0-9]*(\.[0-9]+)?\")
+                ALL_IFACES=\$(ifconfig -a | grep -oE \"(wl|eth5|eth6|eth7)[0-9]*(\.[0-9]+)?\")
             elif [ -d \"/sys/module/mt_wifi\" ] || [ -d \"/sys/module/mt79xx\" ] || [ -f \"/usr/sbin/cfg_client\" ] || ifconfig -a | grep -qE \"(ra|rai|rax)[0-9]\"; then
                 HW_ENGINE=\"MTK\"
                 ALL_IFACES=\$(ifconfig -a | grep -oE \"(ra|rai|rax)[0-9]*(\.[0-9]+)?\")
@@ -2715,12 +2718,12 @@ for line in $SSH_NODES; do
             for iface in \$ALL_IFACES; do
                 case \"\$iface\" in wl0.0|wl1.0|wl2.0|wl3.0) continue ;; esac
                 SN=\$(nvram get \"\${iface}_ssid\")
-                if [ -z \"\$SN\" ] || [ \${#SN} -ge 16 ]; then
+                if [ -z \"\$SN\" ] || [ \${#SN} -ge 30 ]; then
                     idx=\${iface#*.}
                     if [ \"\$idx\" != \"\$iface\" ]; then
                         SN=\$(nvram get \"gnp_name_\$idx\")
                     fi
-                    if [ -z \"\$SN\" ] || [ \${#SN} -ge 16 ]; then
+                    if [ -z \"\$SN\" ] || [ \${#SN} -ge 30 ]; then
                         case \"\$iface\" in
                             eth5|eth6) SN=\$(nvram get wl0_ssid) ;;
                             eth7|eth8) SN=\$(nvram get wl1_ssid) ;;
@@ -2730,7 +2733,7 @@ for line in $SSH_NODES; do
                     fi
                 fi
                 [ -z \"\$SN\" ] && SN=\$(nvram get wl0_ssid)
-                [ \${#SN} -ge 16 ] && SN=\"\"
+                [ \${#SN} -ge 30 ] && SN=\"\"
                 case \"\$HW_ENGINE\" in
 					BRCM)
                         for mac in \$(wl -i \"\$iface\" assoclist 2>/dev/null | awk '{print \$2}'); do
@@ -2931,7 +2934,7 @@ for iface in $IFACE_LIST; do
     if [ "${#ssid}" -ge 30 ]; then
         case "$ssid" in
             *[!0-9a-fA-F]*) ;;
-            *) ssid="BACKHAUL" ;;
+            *) ssid="" ;;
         esac
     fi
 
