@@ -2574,7 +2574,7 @@ clear_node_radio_vars() {
 
 get_node_radios() {
     if [ "$RADIO_TEMPS" = "1" ]; then
-        for band_key in $NODE_ACTIVE_BANDS; do
+        for band_key in 2.4G 5G 5G2 6G 6G2; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "val=\$n_${var_safe_key}"
             [ -n "$val" ] && eval "BAND_HAS_CONTENT_${var_safe_key}=1"
@@ -2631,43 +2631,46 @@ get_node_radio_row() {
 }
 
 get_all_radio_row() {
-    [ "$RADIO_TEMPS" != "1" ] && return
-    ALL_RADIO_ROW=""
-    for band_key in 2.4G 5G 5G2 6G 6G2; do
-        case " $MAIN_ACTIVE_BANDS $NODE_ACTIVE_BANDS " in
-            *" $band_key "*)
-                var_safe_key=$(echo "$band_key" | tr '.-' '__')
-                eval "main_val=\$MAIN_BAND_${var_safe_key}"
-                eval "node_val=\$NODE_BAND_${var_safe_key}"
-                [ "$main_val" = "<span>--</span>" ] && main_val=""
-                [ "$node_val" = "<span>--</span>" ] && node_val=""
-                node_val=$(echo "$node_val" | sed 's|<span>--</span>|<span style="color: #0096ff;">--</span>|g')
+    if [ "$RADIO_TEMPS" = "1" ]; then
+        ALL_RADIO_ROW=""
+        target_break="6G"
+        case " $MAIN_ACTIVE_BANDS $NODE_ACTIVE_BANDS " in *" 5G2 "*) target_break="5G2" ;; esac
+        for band_key in 2.4G 5G 5G2 6G 6G2; do
+            case " $MAIN_ACTIVE_BANDS $NODE_ACTIVE_BANDS " in
+                *" $band_key "*)
+                    var_safe_key=$(echo "$band_key" | tr '.-' '__')
+                    eval "main_val=\$MAIN_BAND_${var_safe_key}"
+                    eval "node_val=\$NODE_BAND_${var_safe_key}"
+                    [ "$main_val" = "<span>--</span>" ] && main_val=""
+                    [ "$node_val" = "<span>--</span>" ] && node_val=""
+                    node_val=$(echo "$node_val" | sed 's|<span>--</span>|<span style="color: #0096ff;">--</span>|g')
 
-                combined=""
-                if [ -n "$main_val" ] && [ -n "$node_val" ]; then
-                    combined="${main_val}${BULLET}${node_val}"
-                elif [ -n "$main_val" ]; then
-                    combined="$main_val"
-                elif [ -n "$node_val" ]; then
-                    combined="<span style='color: #0096ff;'>--</span>${BULLET}${node_val}"
-                fi
+                    combined=""
+                    if [ -n "$main_val" ] && [ -n "$node_val" ]; then
+                        combined="${main_val}${BULLET}${node_val}"
+                    elif [ -n "$main_val" ]; then
+                        combined="$main_val"
+                    elif [ -n "$node_val" ]; then
+                        combined="<span style='color: #0096ff;'>--</span>${BULLET}${node_val}"
+                    fi
 
-                case "$combined" in
-                    *°*)
-                        display_key="${band_key//__/-}"
-                        item_html="<span>${display_key}: ${combined}</span>"
-                        if [ "$NUMBERED_NODE" -ge 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
+                    case "$combined" in
+                        *°*)
+                            display_key="${band_key//__/-}"
+                            item_html="<span>${display_key}: ${combined}</span>"
+                            if [ "$NUMBERED_NODE" -ge 3 ] && [ "$band_key" = "$target_break" ] && [ -n "$ALL_RADIO_ROW" ]; then
                             ALL_RADIO_ROW="${ALL_RADIO_ROW}<div class=\"radio-temp-spacer\"></div>"
                         fi
-                        case "$ALL_RADIO_ROW" in
-                            *"$display_key:"*) ;;
-                            *) ALL_RADIO_ROW="${ALL_RADIO_ROW}${ALL_RADIO_ROW:+&nbsp;}${item_html}" ;;
-                        esac
-                        ;;
-                esac
-                ;;
-        esac
-    done
+                            case "$ALL_RADIO_ROW" in
+                                *"$display_key:"*) ;;
+                                *) ALL_RADIO_ROW="${ALL_RADIO_ROW}${ALL_RADIO_ROW:+&nbsp;}${item_html}" ;;
+                            esac
+                            ;;
+                    esac
+                    ;;
+            esac
+        done
+    fi
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
