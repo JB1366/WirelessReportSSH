@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.1.6"
+SCRIPT_VERSION="2.1.7"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -2297,8 +2297,8 @@ get_band() {
             ;;
 
         # Dual-Band Mapping Specific
-        # Models: DSL-AX82U, RT-AX86S
-        *AX82U*|*AX86S*)
+        # Models: DSL-AX82U, RT-AX86U/S
+        *AX82U*|*AX86U)
             case "$iface" in
                 wl0*|eth5*) Label="2.4G" ;;
                 wl1*|eth6*) Label="5G" ;;
@@ -2306,7 +2306,7 @@ get_band() {
             ;;
 
         # Dual-Band Mapping
-		# Models: RT-AX86U
+		# Models: RT-AX86U_PRO
         *)
             case "$iface" in
                 wl0*|eth6*) Label="2.4G" ;;
@@ -2503,6 +2503,11 @@ parse_node_out() {
                     N_HTML="<span class='${N_CLASS}'>${N_UNIT}</span>"
                     N_VAR_SAFE=$(echo "$N_BAND_LABEL" | tr '.-' '__')
                     eval "n_${N_VAR_SAFE}=\"\$N_HTML\""
+
+                    case " $NODE_ACTIVE_BANDS " in
+                        *" $N_BAND_LABEL "*) ;;
+                        *) NODE_ACTIVE_BANDS="${NODE_ACTIVE_BANDS}${NODE_ACTIVE_BANDS:+ }$N_BAND_LABEL" ;;
+                    esac
                 fi
                 ;;
         esac
@@ -2524,7 +2529,6 @@ get_main_radios() {
         *) RADIO_ON="" ;;
     esac
     if [ "$RADIO_TEMPS" = "1" ]; then
-        WIFI_BANDS="2.4G 5G 5G2 6G 6G2"
         for iface in $(nvram get wl_ifnames); do
             RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
             if [ -n "$RAW_TEMP" ] && echo "$RAW_TEMP" | grep -qE "^[0-9]"; then
@@ -2534,6 +2538,12 @@ get_main_radios() {
                         *"|$BAND_LABEL|"*) ;;
                         *)
                             SEEN_BANDS="${SEEN_BANDS}|$BAND_LABEL|"
+
+                            case " $MAIN_ACTIVE_BANDS " in
+                                *" $BAND_LABEL "*) ;;
+                                *) MAIN_ACTIVE_BANDS="${MAIN_ACTIVE_BANDS}${MAIN_ACTIVE_BANDS:+ }$BAND_LABEL" ;;
+                            esac
+
                             C_VAL=$(echo "$RAW_TEMP" | awk -F' ' '{printf "%.0f\n", $1/2+20}')
                             T_UNIT=$(get_temp_unit "$C_VAL")
                             T_CLASS=$(get_temp_class_radios "$T_UNIT")
@@ -2555,7 +2565,7 @@ get_main_radios() {
 
 clear_node_radio_vars() {
     if [ "$RADIO_TEMPS" = "1" ]; then
-        for band_key in $WIFI_BANDS; do
+        for band_key in $NODE_ACTIVE_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "n_${var_safe_key}=''"
         done
@@ -2564,13 +2574,13 @@ clear_node_radio_vars() {
 
 get_node_radios() {
     if [ "$RADIO_TEMPS" = "1" ]; then
-        for band_key in $WIFI_BANDS; do
+        for band_key in $NODE_ACTIVE_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "val=\$n_${var_safe_key}"
             [ -n "$val" ] && eval "BAND_HAS_CONTENT_${var_safe_key}=1"
             eval "is_init=\$NODE_BAND_INIT_${var_safe_key}"
             is_init=${is_init:-0}
-            display_val=${val:-"<span>--</span>"}
+            display_val="${val:-<span style='color: #0096ff;'>--</span>}"
             if [ "$is_init" -eq 0 ]; then
                 eval "NODE_BAND_${var_safe_key}=\"${display_val}\""
                 eval "NODE_BAND_INIT_${var_safe_key}=1"
@@ -2585,7 +2595,7 @@ get_node_radios() {
 get_main_radio_row() {
     if [ "$RADIO_TEMPS" = "1" ]; then
         MAIN_RADIO_ROW=""
-        for band_key in $WIFI_BANDS; do
+        for band_key in $MAIN_ACTIVE_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "band_html=\$MAIN_BAND_${var_safe_key}"
             if [ -n "$band_html" ]; then
@@ -2602,7 +2612,7 @@ get_main_radio_row() {
 get_node_radio_row() {
     if [ "$RADIO_TEMPS" = "1" ]; then
         NODE_RADIO_ROW=""
-        for band_key in $WIFI_BANDS; do
+        for band_key in $NODE_ACTIVE_BANDS; do
             var_safe_key=$(echo "$band_key" | tr '.-' '__')
             eval "has_content=\${BAND_HAS_CONTENT_${var_safe_key:-0}:-0}"
             [ "$has_content" -ne 1 ] && continue
@@ -2621,42 +2631,44 @@ get_node_radio_row() {
 }
 
 get_all_radio_row() {
-    if [ "$RADIO_TEMPS" = "1" ]; then
-        ALL_RADIO_ROW=""
-        for band_key in $WIFI_BANDS; do
-            var_safe_key=$(echo "$band_key" | tr '.-' '__')
-            eval "main_val=\$MAIN_BAND_${var_safe_key}"
-            eval "node_val=\$NODE_BAND_${var_safe_key}"
-            [ "$main_val" = "<span>--</span>" ] && main_val=""
-            [ "$node_val" = "<span>--</span>" ] && node_val=""
-            node_val=$(echo "$node_val" | sed 's|<span>--</span>|<span style="color: #0096ff;">--</span>|g')
+    [ "$RADIO_TEMPS" != "1" ] && return
+    ALL_RADIO_ROW=""
+    for band_key in 2.4G 5G 5G2 6G 6G2; do
+        case " $MAIN_ACTIVE_BANDS $NODE_ACTIVE_BANDS " in
+            *" $band_key "*)
+                var_safe_key=$(echo "$band_key" | tr '.-' '__')
+                eval "main_val=\$MAIN_BAND_${var_safe_key}"
+                eval "node_val=\$NODE_BAND_${var_safe_key}"
+                [ "$main_val" = "<span>--</span>" ] && main_val=""
+                [ "$node_val" = "<span>--</span>" ] && node_val=""
+                node_val=$(echo "$node_val" | sed 's|<span>--</span>|<span style="color: #0096ff;">--</span>|g')
 
-            combined=""
-            if [ -n "$main_val" ] && [ -n "$node_val" ]; then
-                combined="${main_val}${BULLET}${node_val}"
-            elif [ -n "$main_val" ]; then
-                combined="$main_val"
-            elif [ -n "$node_val" ]; then
-                combined="<span style='color: #0096ff;'>--</span>${BULLET}${node_val}"
-            fi
-            case "$combined" in
-                *°*)
-                    display_key="${band_key//__/-}"
-                    item_html="<span>${display_key}: ${combined}</span>"
+                combined=""
+                if [ -n "$main_val" ] && [ -n "$node_val" ]; then
+                    combined="${main_val}${BULLET}${node_val}"
+                elif [ -n "$main_val" ]; then
+                    combined="$main_val"
+                elif [ -n "$node_val" ]; then
+                    combined="<span style='color: #0096ff;'>--</span>${BULLET}${node_val}"
+                fi
 
-                    if [ "$NUMBERED_NODE" -ge 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
-                        ALL_RADIO_ROW="${ALL_RADIO_ROW}<div class="radio-temp-spacer"></div>"
-                    fi
-
-                    case "$ALL_RADIO_ROW" in
-                        *"$display_key:"*) ;;
-                        *) ALL_RADIO_ROW="${ALL_RADIO_ROW}${ALL_RADIO_ROW:+&nbsp;}${item_html}" ;;
-                    esac
-                    ;;
-            esac
-        done
-        [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
-    fi
+                case "$combined" in
+                    *°*)
+                        display_key="${band_key//__/-}"
+                        item_html="<span>${display_key}: ${combined}</span>"
+                        if [ "$NUMBERED_NODE" -ge 3 ] && [ "$band_key" = "6G" ] && [ -n "$ALL_RADIO_ROW" ]; then
+                            ALL_RADIO_ROW="${ALL_RADIO_ROW}<div class=\"radio-temp-spacer\"></div>"
+                        fi
+                        case "$ALL_RADIO_ROW" in
+                            *"$display_key:"*) ;;
+                            *) ALL_RADIO_ROW="${ALL_RADIO_ROW}${ALL_RADIO_ROW:+&nbsp;}${item_html}" ;;
+                        esac
+                        ;;
+                esac
+                ;;
+        esac
+    done
+    [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
 ssh_init
