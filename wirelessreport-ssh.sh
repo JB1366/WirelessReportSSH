@@ -2064,7 +2064,7 @@ get_name() {
     # Wireless Backhaul
     elif temp="${mac#*:}"; mid_mac="${temp%:*}"; [ -n "$mid_mac" ] && [ -f "$DEVICE_LIST_CACHE" ] && node_match=$(grep -i -m1 "$mid_mac" "$DEVICE_LIST_CACHE"); then
         local node_alias=$(echo "$node_match" | cut -d'>' -f2)
-        name="${node_alias:-NODE}-BH"
+        name=$(printf '%s' "${node_alias:-NODE}-BH" | awk '{print toupper($0)}')
         ip=$(awk -F'>' -v target="$node_alias" '$2 == target {print $3; exit}' "$DEVICE_LIST_CACHE")
 
     # Fallback
@@ -2271,9 +2271,9 @@ get_band() {
         #         RT-BE92U, RT-BE96U, RT-BE9700, BT6, ET8, ET9, ET12
         *AXE11000*|*AXE7800*|*BE12000*|*BE18000*|*BE19000*|*BE92U*|*BE96U*|*BE9700*|*BT6*|*BT8*|*ET8*|*ET9*|*ET12*)
             case "$iface" in
-                wl0*|eth4*|eth7*) Label="2.4G" ;;
-                wl1*|eth5*|eth8*) Label="5G" ;;
-                wl2*|eth6*|eth9*) Label="6G" ;;
+                wl0*) Label="2.4G" ;;
+                wl1*) Label="5G" ;;
+                wl2*) Label="6G" ;;
             esac
             ;;
 
@@ -2281,9 +2281,9 @@ get_band() {
         # Models: GT-AXE11000_PRO, GT-AX11000, GT6, RT-AX92U, XT8, XT9, ZENWIFI-XT12
         *AXE11000_PRO*|*AX11000*|*GT6*|*AX92U*|*XT8*|*XT9*|*XT12*)
             case "$iface" in
-                wl0*|eth4*|eth7*) Label="2.4G" ;;
-                wl1*|eth5*|eth8*) Label="5G" ;;
-                wl2*|eth6*|eth9*) Label="5G2" ;;
+                wl0*) Label="2.4G" ;;
+                wl1*) Label="5G" ;;
+                wl2*) Label="5G2" ;;
             esac
             ;;
 
@@ -2306,32 +2306,16 @@ get_band() {
             ;;
 
         # Dual-Band Mapping
-		# Models: RT-AX86U[6-7]
+		# Models: RT-AX86U
         *)
             case "$iface" in
-                wl0*|eth4*|eth6*|eth8*) Label="2.4G" ;;
-                wl1*|eth5*|eth7*|eth9*) Label="5G" ;;
+                wl0*|eth6*) Label="2.4G" ;;
+                wl1*|eth7*) Label="5G" ;;
             esac
             ;;
     esac
 
     # Unsupported: TUF-AX4200(MTK), RT-AX1800S(MTK), ZENWIFI_XD4_PLUS(MTK)
-
-    # Wireless Backhaul
-    if [ -n "$width" ]; then
-        if [ "$width" -eq 320 ] && [ "$Label" = "" ]; then
-            Label="6G"
-        elif [ "$width" -ge 80 ] && [ "$width" -le 160 ]; then
-            if [ "$Label" = "2.4G" ] || [ "$Label" = "" ]; then
-                Label="5G"
-            fi
-        elif [ "$Label" = "" ]; then
-            case "$iface" in
-                *0*) Label="2.4G" ;;
-                *)   Label="5G" ;;
-            esac
-        fi
-    fi
 
 	class="" sort="0"
     case "$Label" in
