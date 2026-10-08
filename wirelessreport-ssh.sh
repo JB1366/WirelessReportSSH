@@ -2193,11 +2193,11 @@ get_rssi_trend() {
                 *) rband_val="$rest"; time_val="" ;;
             esac
 
-            if [ "$rssi" -ge -50 ]; then
+            if [ "$rssi_val" -ge -50 ]; then
                 style="color: #30d158; font-weight: bold;"
-			elif [ "$rssi" -ge -60 ]; then
+			elif [ "$rssi_val" -ge -60 ]; then
                 style="color: #64d2ff; font-weight: bold;"
-			elif [ "$rssi" -ge -70 ]; then
+			elif [ "$rssi_val" -ge -70 ]; then
                 style="color: #ffd60a; font-weight: bold;"
 			else
                 style="color: #ff453a; font-weight: bold;"
