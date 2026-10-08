@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.1.7-minor updates.
 v2.1.6-add Sort Node Display Order.
 v2.1.5-minor updates.
 v2.1.4-script refactoring, optimizations.
