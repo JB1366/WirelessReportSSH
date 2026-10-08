@@ -807,7 +807,7 @@ set_device_nicknames() {
                     orig_count=$((node_idx - 1))
 
                     while true; do
-                        printf "\n Enter new order by index [E]xit $BL(e.g., 2 1 3):$NC "
+                        printf "\n Enter new order by index [${BL}E$NC]xit $BL(e.g., 2 1 3):$NC "
                         read -r new_order_input
                         [ -z "$new_order_input" ] && { freeze 2; continue; }
                         case "$new_order_input" in e|E) break 2 ;; esac
