@@ -949,11 +949,10 @@ set_device_colors() {
         echo -e "                                                     "
         echo -e "  $LR Restore Default Colors                         "
         echo -e "  $LS Save Changes & Exit                            "
-        echo -e "  $LE Exit back to main menu                         "
         echo -e "                                                     "
         echo -e "$BL══════════════════════════════════════════════════"
         while true; do
-            printf "\n$NC Select a Device number to change color $BL(0-$total_nodes): $NC"; read -r node_choice
+            printf "\n$NC Select number to change color [${BL}E$NC]xit (${BL}0-$total_nodes$NC): "; read -r node_choice
             case "$node_choice" in
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
@@ -1722,7 +1721,7 @@ node_auth() {
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
-selection() { printf "\n$NC Selection [${BL}E$NC to Exit]: "; read -r choice; }
+selection() { printf "\n$NC Selection [or ${BL}E$NC to Exit]: "; read -r choice; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
@@ -1831,7 +1830,6 @@ runtime_tracking() {
             opacity: 1;
             visibility: visible;
         }"
-        RUNTIME_CSS=$(echo "$RUNTIME_CSS" | sed 's/^    //')
 	else
 		RUNTIME_CSS=".button-tables.button-trigger { color: #ffffff; }
         .button-refresh:hover select, .button-refresh:hover .button-trigger { color: #0096ff !important; }"
@@ -1902,7 +1900,6 @@ get_theme() {
             .button-tables { background: transparent !important; }"
             ;;
     esac
-    THEME_CSS=$(echo "$THEME_CSS" | sed 's/^        //')
 }
 
 do_numbered_node() {
@@ -1925,7 +1922,6 @@ do_numbered_node() {
             ;;
     esac
 
-    # TEMP/UPTIME STYLE
     case "$NUMBERED_NODE" in
         [1-2]) TS=14; US="" ;;
         3)     TS=14; US="uptime-style" ;;
@@ -2907,6 +2903,8 @@ M_UPTIME=$(get_router_uptime "$M_UP")
 MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
 
+get_main_radios
+
 WL_IFNAMES=$(printf "%s\n" $(nvram get wl_ifnames) $(ifconfig -a |
 grep -oE "wl[0-9]+\.[0-9]+" |
 grep -vE "\.(1[1-9]|[2-9][0-9])$") |
@@ -2918,8 +2916,6 @@ for iface in $WL_IFNAMES; do
         MAIN_IFACES="$MAIN_IFACES $iface"
     fi
 done
-
-get_main_radios
 
 IFACE_LIST=$(echo $MAIN_IFACES | xargs)
 for iface in $IFACE_LIST; do
@@ -2993,6 +2989,7 @@ for line in $SSH_NODES; do
     fi
 
     if [ -n "$NODE_OUT" ]; then
+        clear_node_radio_vars
         NUMBERED_NODE=$((NUMBERED_NODE + 1))
 		COLOR_INDEX=$((COLOR_INDEX + 1))
         NODE_COLOR=$(echo $NODE_COLORS | cut -d' ' -f$((COLOR_INDEX)))
@@ -3006,17 +3003,17 @@ for line in $SSH_NODES; do
             *)  NODE_NAMES="$NODE_NAMES$BULLET_LG$NODE_BRAND" ;;
         esac
 
-        clear_node_radio_vars
         parse_node_out "$NODE_OUT"
-        get_node_radios
 
         N_TEMP=$(get_temp_unit "$N_TEMP_RAW")
 		NC_TEMP=$(get_temp_class_cpu "$N_TEMP")
         NC_LOAD=$(get_load_class "$N_LOAD")
         N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW} )) "$D_FMT")
-        NODE_DEVICES=0
 
+        get_node_radios
+
+        NODE_DEVICES=0
         while read -r ssh_node_data; do
 			case "$ssh_node_data" in "") continue ;; esac
 			parse_node_data "$ssh_node_data"
