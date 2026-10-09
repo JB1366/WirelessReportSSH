@@ -1727,7 +1727,7 @@ node_auth() {
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
-selection() { printf "\n$NC Selection [${BL}E$NC=Exit]: "; read -r choice; }
+selection() { printf "\n$NC Selection [${BL}E$NC]xit: "; read -r choice; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
