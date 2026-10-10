@@ -2868,7 +2868,6 @@ fi
 YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 if [ -f "$YAZDHCP" ]; then
     awk -F',' 'NR>1 {print toupper($1) "|" $2 "|" $3}' "$YAZDHCP" > "$YAZ_CACHE"
-    [ -s "$YAZ_CACHE" ] && HAS_YAZ=1
 fi
 
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
