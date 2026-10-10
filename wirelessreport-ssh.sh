@@ -4245,75 +4245,81 @@ function triggerRefresh() {
     if (isRefreshing) return; isRefreshing = true;
 
     if ("$TABLE_HEADERS" === "1") {
-        var totalCountEl = document.querySelector('.total-count');
-        if (totalCountEl) {
-            totalCountEl.innerHTML = 'Total Wireless Devices: <span class="count-highlight">0</span>';
-        }
-
-        var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
-        if (mainHeaderSpan) {
-            mainHeaderSpan.className = "router-style pulse-active";
-            mainHeaderSpan.innerText = "Loading Main Router Devices...";
-        }
-
-        var nodeHeaderSpan = document.querySelector('#nodeCol .section-header span');
-        if (nodeHeaderSpan) {
-            nodeHeaderSpan.className = "router-style pulse-active";
-            nodeHeaderSpan.innerText = "Loading AiMesh Node Devices...";
-        }
-
-        var allHeaderSpan = document.querySelector('#allCol .section-header span');
-        if (allHeaderSpan) {
-            allHeaderSpan.className = "router-style pulse-active";
-            allHeaderSpan.innerText = "Loading All Devices...";
-        }
-
-        var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
-        timestampSpans.forEach(function(span) {
-            if (span.innerText.includes("Updated:")) {
-                span.innerText = "Updated: --";
-            }
-        });
-
-        var columns = ['#mainCol', '#nodeCol', '#allCol'];
-        columns.forEach(function(colId) {
-            var row = document.querySelector(colId + ' .temp-load-row');
-            if (row) {
-                var spans = row.querySelectorAll(':scope > span');
-                if (spans[0]) spans[0].innerText = "CPU: --";
-                if (spans[1]) spans[1].innerText = "Load: --";
-                if (spans[2]) spans[2].innerText = "Devices: 0";
-            }
-
-            // Set a uniform placeholder across all radio temperature rows on initial load
-            document.querySelectorAll('.radio-temp-row').forEach(function(row) {
-                row.innerHTML = "2.4G: <span>--</span> 5G: <span>--</span> 6G: <span>--</span>";
-            });
-
-            var footerSpans = document.querySelectorAll(colId + ' tfoot span');
-            footerSpans.forEach(function(span) {
-                if (span.textContent.trim().startsWith("Uptime")) {
-                    span.innerText = "Uptime: --";
-                } else if (span.textContent.trim().startsWith("Reboot")) {
-                    span.innerText = "Reboot: --";
-                }
-            });
-        });
-
-        var tableIds = ['mainTable', 'nodeTable', 'allTable'];
-        tableIds.forEach(function(id) {
-            var table = document.getElementById(id);
-            if (table && table.tBodies[0]) {
-                table.tBodies[0].innerHTML = '';
-                //table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
-            }
-        });
-
-        var rssiSpans = document.querySelectorAll('.rssi-quality-bar .rssi-font');
-        rssiSpans.forEach(function(span) {
-            span.innerText = "0";
-        });
+    var totalCountEl = document.querySelector('.total-count');
+    if (totalCountEl) {
+        totalCountEl.innerHTML = 'Total Wireless Devices: <span class="count-highlight" style="color: #888888;">0</span>';
     }
+
+    var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
+    if (mainHeaderSpan) {
+        mainHeaderSpan.className = "router-style pulse-active";
+        mainHeaderSpan.innerText = "Loading Main Router Devices...";
+    }
+
+    var nodeHeaderSpan = document.querySelector('#nodeCol .section-header span');
+    if (nodeHeaderSpan) {
+        nodeHeaderSpan.className = "router-style pulse-active";
+        nodeHeaderSpan.innerText = "Loading AiMesh Node Devices...";
+    }
+
+    var allHeaderSpan = document.querySelector('#allCol .section-header span');
+    if (allHeaderSpan) {
+        allHeaderSpan.className = "router-style pulse-active";
+        allHeaderSpan.innerText = "Loading All Devices...";
+    }
+
+    var timestampSpans = document.querySelectorAll('.section-header span:nth-child(3), .section-header span:last-child');
+    timestampSpans.forEach(function(span) {
+        if (span.innerText.includes("Updated:")) {
+            span.style.color = "#888888";
+            span.innerText = "Updated: --";
+        }
+    });
+
+    var columns = ['#mainCol', '#nodeCol', '#allCol'];
+    columns.forEach(function(colId) {
+        var row = document.querySelector(colId + ' .temp-load-row');
+        if (row) {
+            row.style.color = "#888888";
+            var spans = row.querySelectorAll(':scope > span');
+            if (spans[0]) spans[0].innerText = "CPU: --";
+            if (spans[1]) spans[1].innerText = "Load: --";
+            if (spans[2]) spans[2].innerText = "Devices: 0";
+        }
+
+        // Set a uniform placeholder across all radio temperature rows on initial load
+        document.querySelectorAll('.radio-temp-row').forEach(function(row) {
+            row.style.color = "#888888";
+            row.innerHTML = "2.4G: <span>--</span> 5G: <span>--</span> 6G: <span>--</span>";
+        });
+
+        var footerSpans = document.querySelectorAll(colId + ' tfoot span');
+        footerSpans.forEach(function(span) {
+            if (span.textContent.trim().startsWith("Uptime")) {
+                span.style.color = "#888888";
+                span.innerText = "Uptime: --";
+            } else if (span.textContent.trim().startsWith("Reboot")) {
+                span.style.color = "#888888";
+                span.innerText = "Reboot: --";
+            }
+        });
+    });
+
+    var tableIds = ['mainTable', 'nodeTable', 'allTable'];
+    tableIds.forEach(function(id) {
+        var table = document.getElementById(id);
+        if (table && table.tBodies[0]) {
+            table.tBodies[0].innerHTML = '';
+            //table.tBodies[0].innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;"><span class="router-style pulse-active">Refreshing...</span></td></tr>';
+        }
+    });
+
+    var rssiSpans = document.querySelectorAll('.rssi-quality-bar .rssi-font');
+    rssiSpans.forEach(function(span) {
+        span.style.color = "#888888";
+        span.innerText = "0";
+    });
+}
 
     var btn = document.querySelector('.button-trigger');
     if (btn) {
