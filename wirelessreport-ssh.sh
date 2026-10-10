@@ -226,7 +226,6 @@ menu_vars() {
 
     MB=""; echo -e "$BL"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
-
     STATUS="$NC STATUS:"
     CURRENT="CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
 
