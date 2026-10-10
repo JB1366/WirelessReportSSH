@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.1.8"
+SCRIPT_VERSION="2.1.9"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -2090,8 +2090,8 @@ check_new_mac() {
 get_ip() {
     if line=$(grep -ihm 1 "^$mac|" "$ARP_CACHE"); then ip="${line#*|}"
     elif line=$(grep -ihm 1 "^$mac|" "$LEASES_CACHE"); then ip="${line#*|}"
-    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE"); then ip="${line#*|}"; ip="${ip%%|*}"
-    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE"); then ip="${line#*|}"; fi
+    elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE" 2>/dev/null); then ip="${line#*|}"; ip="${ip%%|*}"
+    elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE" 2>/dev/null); then ip="${line#*|}"; fi
 
     case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 
@@ -2868,8 +2868,7 @@ fi
 YAZDHCP="/jffs/addons/YazDHCP.d/DHCP_clients"
 if [ -f "$YAZDHCP" ]; then
     awk -F',' 'NR>1 {print toupper($1) "|" $2 "|" $3}' "$YAZDHCP" > "$YAZ_CACHE"
-else
-    > "$YAZ_CACHE"
+    [ -s "$YAZ_CACHE" ] && HAS_YAZ=1
 fi
 
 awk '$0 ~ /0x2/ {print toupper($4)"|"$1}' /proc/net/arp > "$ARP_CACHE"
