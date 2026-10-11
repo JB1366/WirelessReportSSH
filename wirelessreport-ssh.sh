@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.1.9"
+SCRIPT_VERSION="2.2.0"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
@@ -76,22 +76,22 @@ show_header() {
 
 install_menu() {
     while true; do
-        show_header;
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
+        show_header
+        printb "╔════════════════════════════════════════════════════════════╗"
         check_version
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "  $N1  Install/Update"
-        printm "$BL" "  $N2  Uninstall"
-        printm "$BL" "  $N3  Set Temperature/Date ($DU) ($CT)"
-        printm "$BL" "  $N4  Set Nicknames & Node Display Order"
-        printm "$BL" "  $N5  Set Device Colors"
-        printm "$BL" "  $N6  Set Theme ($TM_STAT)"
-        printm "$BL" "  $N7  Set Options"
-        printm "$BL" "  $N8  Config RSSI Tooltip History ($CH)"
-        printm "$BL" "  $N9  SSH Config/Options  Key:($KEY)"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1  Install/Update"
+        printm "  $N2  Uninstall"
+        printm "  $N3  Set Temperature/Date ($DU) ($CT)"
+        printm "  $N4  Set Nicknames & Node Display Order"
+        printm "  $N5  Set Device Colors"
+        printm "  $N6  Set Theme ($TM_STAT)"
+        printm "  $N7  Set Options"
+        printm "  $N8  Config RSSI Tooltip History ($CH)"
+        printm "  $N9  SSH Config/Options  Key:($KEY)"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -170,7 +170,7 @@ check_version() {
                 HASH_DIFF)     SL=" $STATUS $GR[Hash Update Available]$NC          $CURRENT" ;;
                 UP_TO_DATE|*)  SL=" $STATUS $GR[Up to date]$NC                    $CURRENT" ;;
             esac
-            printm "$BL" "$SL"
+            printm "$SL"
             ;;
     esac
 }
@@ -192,9 +192,9 @@ version_compare() {
 }
 
 printm() {
-    _box_color="$1"
-    _text="$2"
-    _target="${3:-60}"
+    _box_color="$BL"
+    _text="$1"
+    _target="${2:-60}"
     _esc=$(printf '\033')
     _plain=$(printf "%b" "$_text" | sed "s/${_esc}\[[0-9;]*m//g")
     _len=${#_plain}
@@ -208,6 +208,10 @@ printm() {
     done
     _line="${_line}${_box_color}║\033[0m\n"
     MB="${MB}${_line}"
+}
+
+printb() {
+    MB="${MB}$BL$1$NC\n"
 }
 
 menu_vars() {
@@ -633,24 +637,24 @@ do_uninstall() {
 set_temp_date() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC                   Set Temperature/Date"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" "$NC  Current: $DN $DU              Date: $CT"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" "$NC                                         [MILITARY]"
-        printm "$BL" "  $N1  USA   ($GR°F$NC)                     ($DATE_USA)"
-        printm "$BL" "  $N2  INTL  ($GR°C$NC)                     ($DATE_INTL)"
-        printm "$BL" "  $N3  ISO   ($GR°C$NC)                   ($DATE_ISO)"
-        printm "$BL" "  $N4  ISO   ($GR°F$NC)                   ($DATE_ISO2)"
-        printm "$BL" ""
-        printm "$BL" "$NC                                        [12-HR AM/PM]"
-        printm "$BL" "  $N5  USA   ($BL°F$NC)                    ($DATE_USA1)"
-        printm "$BL" "  $N6  INTL  ($BL°C$NC)                    ($DATE_INTL1)"
-        printm "$BL" "  $N7  ISO   ($BL°C$NC)                  ($DATE_ISO1)"
-        printm "$BL" "  $N8  ISO   ($BL°F$NC)                  ($DATE_ISO3)"
-        printm "$BL" ""
-		MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC                   Set Temperature/Date"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm "$NC  Current: $DN $DU              Date: $CT"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm "$NC                                         [MILITARY]"
+        printm "  $N1  USA   ($GR°F$NC)                     ($DATE_USA)"
+        printm "  $N2  INTL  ($GR°C$NC)                     ($DATE_INTL)"
+        printm "  $N3  ISO   ($GR°C$NC)                   ($DATE_ISO)"
+        printm "  $N4  ISO   ($GR°F$NC)                   ($DATE_ISO2)"
+        printm ""
+        printm "$NC                                        [12-HR AM/PM]"
+        printm "  $N5  USA   ($BL°F$NC)                    ($DATE_USA1)"
+        printm "  $N6  INTL  ($BL°C$NC)                    ($DATE_INTL1)"
+        printm "  $N7  ISO   ($BL°C$NC)                  ($DATE_ISO1)"
+        printm "  $N8  ISO   ($BL°F$NC)                  ($DATE_ISO3)"
+        printm ""
+		printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -682,18 +686,18 @@ device_default_colors() {
 set_device_nicknames() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC             Set Nicknames & Node Display Order"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-		printm "$BL" "  $N1 Reset to Default Nicknames"
-		printm "$BL" "  $N2 Location-Based Nicknames"
-		printm "$BL" "  $N3 Manual Custom Nicknames"
-		printm "$BL" ""
-        printm "$BL" "  $N4 Sort Node Display Order"
-        printm "$BL" ""
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC             Set Nicknames & Node Display Order"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+		printm "  $N1 Reset to Default Nicknames"
+		printm "  $N2 Location-Based Nicknames"
+		printm "  $N3 Manual Custom Nicknames"
+		printm ""
+        printm "  $N4 Sort Node Display Order"
+        printm ""
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
         local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
         local NODE_CLR OLD_NAME NEW_LOC NODE_LOC OLD_NICK manual_main input_node
 
@@ -703,7 +707,7 @@ set_device_nicknames() {
 
         _formatted_main=$(printf "  Main %s -> %s" "$MAIN_IP" "${MAIN_NICK:-$MAIN_ROUTER}")
         _row_text="${MAIN_CLR}${_formatted_main}$NC"
-        printm "$BL" "$_row_text"
+        printm "$_row_text"
 
         get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
         node_idx=1
@@ -717,12 +721,12 @@ set_device_nicknames() {
 
             _formatted_node=$(printf "  Node %s -> %s" "$IP" "${SAVED_NICK:-$MODEL}")
             _row_text="${NODE_CLR}${_formatted_node}$NC"
-            printm "$BL" "$_row_text"
+            printm "$_row_text"
 
             node_idx=$((node_idx + 1))
         done
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -944,20 +948,20 @@ set_device_colors() {
     done
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC                      Set Device Colors"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "$NC  Current Device Configuration:"
-        printm "$BL" ""
-        #════════════════════════════════════════════════════════════════════════#
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC                      Set Device Colors"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "$NC  Current Device Configuration:"
+        printm ""
+        #═════════════════════════════════════════════════════════════════════#
         main_display_name="${MAIN_NICK:-$main_name}"
         main_display_color=$(hex_to_ansi "$m_color_hex")
         formatted_main_ip=$(printf "(%s)" "$main_ip")
 
         _formatted_inner=$(printf "  (0) %-14s %-16s (Main)" "$main_display_name" "($main_ip)")
         _row_text="${main_display_color}${_formatted_inner}$NC"
-        printm "$BL" "$_row_text"
+        printm "$_row_text"
 
         idx=1
         for node in $SSH_NODES; do
@@ -973,16 +977,16 @@ set_device_colors() {
 
            _formatted_inner=$(printf "  (%d) %-14s %-16s (Node)" "$idx" "$node_display_name" "($IP)")
            _row_text="${display_color}${_formatted_inner}$NC"
-           printm "$BL" "$_row_text"
+           printm "$_row_text"
 
             idx=$((idx + 1))
         done
-        #════════════════════════════════════════════════════════════════════════#
-        printm "$BL" ""
-        printm "$BL" "  $LR Restore Default Colors"
-        printm "$BL" "  $LS Save Changes & Exit"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        #═════════════════════════════════════════════════════════════════════#
+        printm ""
+        printm "  $LR Restore Default Colors"
+        printm "  $LS Save Changes & Exit"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             printf "\n$NC Select number to change color [${BL}E$NC]xit (${BL}0-$total_nodes$NC): "; read -r node_choice
@@ -1085,15 +1089,15 @@ set_device_colors() {
 set_theme() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC     Set Theme                          Current: $TM1_STAT"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "  $N1 Original Theme"
-        printm "$BL" "  $N2 Darkmode Theme"
-        printm "$BL" "  $N3 Asus WebUI Theme"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC     Set Theme                          Current: $TM1_STAT"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1 Original Theme"
+        printm "  $N2 Darkmode Theme"
+        printm "  $N3 Asus WebUI Theme"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -1117,19 +1121,19 @@ set_theme() {
 set_options() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC                        Set Options"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "  $N1  Toggle Runtime Tracking: ($RT_STAT)"
-        printm "$BL" "  $N2  Toggle Wireless Backhaul: ($WB_STAT)"
-        printm "$BL" "  $N3  Configure Uptime Alert Pulse: ($UP_STAT)"
-        printm "$BL" "  $N4  Toggle IP Column Padding: ($PD_STAT)"
-        printm "$BL" "  $N5  Toggle Node Hostname Display: ($HN_STAT)"
-        printm "$BL" "  $N6  Toggle Loading Table Headers: ($TH_STAT)"
-        printm "$BL" "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC                        Set Options"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1  Toggle Runtime Tracking: ($RT_STAT)"
+        printm "  $N2  Toggle Wireless Backhaul: ($WB_STAT)"
+        printm "  $N3  Configure Uptime Alert Pulse: ($UP_STAT)"
+        printm "  $N4  Toggle IP Column Padding: ($PD_STAT)"
+        printm "  $N5  Toggle Node Hostname Display: ($HN_STAT)"
+        printm "  $N6  Toggle Loading Table Headers: ($TH_STAT)"
+        printm "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -1225,14 +1229,14 @@ set_options() {
 set_runtime_tracking() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC                     Runtime Tracking"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "  $N1 Toggle Runtime Tracking: ($RT_STAT)"
-        printm "$BL" "  $N2 Log Stats to Syslog: ($WS_STAT)"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC                     Runtime Tracking"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1 Toggle Runtime Tracking: ($RT_STAT)"
+        printm "  $N2 Log Stats to Syslog: ($WS_STAT)"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -1287,15 +1291,15 @@ set_runtime_tracking() {
 set_ip_padding() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC    IP Column Padding              Current: ($PD_STAT)"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "  $N1 192.168.50.3                         (${RD}Disabled$NC)"
-        printm "$BL" "  $N2 192.168.50.003                      (${BL}Last Octet$NC)"
-        printm "$BL" "  $N3 192.168.050.003                   (${GR}Last 2 Octets$NC)"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC    IP Column Padding              Current: ($PD_STAT)"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1 192.168.50.3                         (${RD}Disabled$NC)"
+        printm "  $N2 192.168.50.003                      (${BL}Last Octet$NC)"
+        printm "  $N3 192.168.050.003                   (${GR}Last 2 Octets$NC)"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -1319,16 +1323,16 @@ set_ip_padding() {
 set_github_branch() {
     while true; do
         show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC                      Set Github Branch"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" "$NC  Branch: [$BN]                $CURRENT"
-        MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-        printm "$BL" ""
-        printm "$BL" "  $N1 main (JB1366)"
-        printm "$BL" "  $N2 Development (JB1366)"
-        printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC                      Set Github Branch"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm "$NC  Branch: [$BN]                $CURRENT"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1 main (JB1366)"
+        printm "  $N2 Development (JB1366)"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -1360,17 +1364,17 @@ set_github_branch() {
 set_rssi_tooltip() {
 	while true; do
 		show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-        printm "$BL" "$NC                Config RSSI Tooltip History"
-		MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-		printm "$BL" ""
-		printm "$BL" "  $N1 Toggle RSSI History: [$CH]"
-		printm "$BL" "  $N2 Set History Depth:   [$CE] entries"
-		printm "$BL" "  $N3 Toggle Timestamps:   [$TS]"
-		printm "$BL" ""
-		printm "$BL" "  $LS Save Changes & Exit"
-		printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "$NC                Config RSSI Tooltip History"
+		printb "╠════════════════════════════════════════════════════════════╣"
+		printm ""
+		printm "  $N1 Toggle RSSI History: [$CH]"
+		printm "  $N2 Set History Depth:   [$CE] entries"
+		printm "  $N3 Toggle Timestamps:   [$TS]"
+		printm ""
+		printm "  $LS Save Changes & Exit"
+		printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
@@ -1430,21 +1434,21 @@ set_rssi_tooltip() {
 check_ssh() {
 	while true; do
 		show_header
-        MB="${MB}$BL╔════════════════════════════════════════════════════════════╗$NC\n"
-		printm "$BL" "$NC                       SSH Environment"
-		MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-		printm "$BL" "$NC  SSH-Key: $KEY                                   Port: $PORT"
-		MB="${MB}$BL╠════════════════════════════════════════════════════════════╣$NC\n"
-		printm "$BL" ""
-		printm "$BL" "  $N1  Generate RSA Keys & Provision AiMesh Nodes"
-		printm "$BL" "  $N2  Provision Main Router Only"
-		printm "$BL" "  $N3  Remove RSA Keys"
-		printm "$BL" "  $N4  View Authorized Keys"
-		printm "$BL" "  $N5  View Known Hosts"
-		printm "$BL" "  $N6  View SSH Error Log"
-		printm "$BL" "  $N7  Node Authentication"
-		printm "$BL" ""
-        MB="${MB}$BL╚════════════════════════════════════════════════════════════╝$NC\n"
+        printb "╔════════════════════════════════════════════════════════════╗"
+		printm "$NC                       SSH Environment"
+		printb "╠════════════════════════════════════════════════════════════╣"
+		printm "$NC  SSH-Key: $KEY                                   Port: $PORT"
+		printb "╠════════════════════════════════════════════════════════════╣"
+		printm ""
+		printm "  $N1  Generate RSA Keys & Provision AiMesh Nodes"
+		printm "  $N2  Provision Main Router Only"
+		printm "  $N3  Remove RSA Keys"
+		printm "  $N4  View Authorized Keys"
+		printm "  $N5  View Known Hosts"
+		printm "  $N6  View SSH Error Log"
+		printm "  $N7  Node Authentication"
+		printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
             selection
