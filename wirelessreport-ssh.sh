@@ -1473,30 +1473,30 @@ check_ssh() {
                         3)
                             del_ssh_keys ;;
                         4)
-                            echo -e "\n$BL════════════════ Authorized Keys ═════════════════$NC\n"
+                            echo -e "\n$BL═════════════════════ Authorized Keys ════════════════════════$NC\n"
                             if [ -f "/root/.ssh/authorized_keys" ]; then
                                 cat /root/.ssh/authorized_keys
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-                            echo -e "\n\n$BL══════════════════════════════════════════════════$NC"
+                            echo -e "\n\n$BL══════════════════════════════════════════════════════════════$NC"
                             pause
                             ;;
                         5)
-                            echo -e "\n$BL═════════════════ Known Hosts ════════════════════$NC\n"
+                            echo -e "\n$BL════════════════════════ Known Hosts ═════════════════════════$NC\n"
                             if [ -f "/jffs/.ssh/known_hosts" ]; then
                                 cat /jffs/.ssh/known_hosts
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-                            echo -e "\n$BL══════════════════════════════════════════════════$NC"
+                            echo -e "\n$BL══════════════════════════════════════════════════════════════$NC"
                             pause
                             ;;
                         6)
-                            echo -e "\n$BL═════════════════ SSH Error Log ══════════════════$NC\n"
+                            echo -e "\n$BL══════════════════════ SSH Error Log ═════════════════════════$NC\n"
                             if [ -f "$ERROR_LOG" ]; then
                                 cat "$ERROR_LOG"
-                                echo -e "\n\n$BL══════════════════════════════════════════════════$NC"
+                                echo -e "\n\n$BL══════════════════════════════════════════════════════════════$NC"
                                 while true; do
                                     printf "\nRemove error log? (y/n): "; read -r rm_log
                                     case "$rm_log" in
@@ -1507,7 +1507,7 @@ check_ssh() {
                                 done
                             else
                                 echo -e "$YL[!] File not found.$NC"
-                                echo -e "\n$BL══════════════════════════════════════════════════$NC"
+                                echo -e "\n$BL══════════════════════════════════════════════════════════════$NC"
                             fi
                             pause
                             ;;
