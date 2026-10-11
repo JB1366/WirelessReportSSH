@@ -1475,7 +1475,7 @@ check_ssh() {
                         4)
                             echo -e "\n$BL═════════════════════ Authorized Keys ════════════════════════$NC\n"
                             if [ -f "/root/.ssh/authorized_keys" ]; then
-                                cat /root/.ssh/authorized_keys
+                                tr '>' '\n' < /root/.ssh/authorized_keys
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
