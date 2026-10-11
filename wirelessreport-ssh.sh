@@ -192,6 +192,7 @@ version_compare() {
 }
 
 printm() {
+    local box_color text target esc plain len pad line i
     box_color="$BL"
     text="$1"
     target="${2:-60}"
@@ -700,7 +701,7 @@ set_device_nicknames() {
         printb "╠════════════════════════════════════════════════════════════╣"
         printm ""
         local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
-        local NODE_CLR OLD_NAME NEW_LOC NODE_LOC OLD_NICK manual_main input_node
+        local NODE_CLR OLD_NAME NEW_LOC NODE_LOC OLD_NICK manual_main input_node row_text
 
         MAIN_ROUTER=$(nvram get productid)
         MAIN_IP=$(nvram get lan_ipaddr)
@@ -960,8 +961,8 @@ set_device_colors() {
         main_display_color=$(hex_to_ansi "$m_color_hex")
         formatted_main_ip=$(printf "(%s)" "$main_ip")
 
-        formatted_inner=$(printf "  (0) %-14s %-16s (Main)" "$main_display_name" "($main_ip)")
-        row_text="${main_display_color}${formatted_inner}$NC"
+        formatted_main2=$(printf "  (0) %-14s %-16s (Main)" "$main_display_name" "($main_ip)")
+        local row_text="${main_display_color}${formatted_main2}$NC"
         printm "$row_text"
 
         idx=1
@@ -976,8 +977,8 @@ set_device_colors() {
             display_color=$(hex_to_ansi "$active_color")
             formatted_ip=$(printf "(%s)" "$IP")
 
-           formatted_inner=$(printf "  (%d) %-14s %-16s (Node)" "$idx" "$node_display_name" "($IP)")
-           row_text="${display_color}${formatted_inner}$NC"
+           formatted_node2=$(printf "  (%d) %-14s %-16s (Node)" "$idx" "$node_display_name" "($IP)")
+           row_text="${display_color}${formatted_node2}$NC"
            printm "$row_text"
 
             idx=$((idx + 1))
