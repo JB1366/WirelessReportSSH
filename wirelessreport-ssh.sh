@@ -134,7 +134,8 @@ check_version() {
             STATE="OUTDATED"
         elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
             STATE="HASH_DIFF"
-        else STATE="UP_TO_DATE"
+        else
+            STATE="UP_TO_DATE"
         fi
     fi
     case "$mode" in
