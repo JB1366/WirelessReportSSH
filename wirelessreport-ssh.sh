@@ -2140,8 +2140,10 @@ get_ip() {
     elif line=$(grep -ihm 1 "^$mac|" "$YAZ_CACHE" 2>/dev/null); then ip="${line#*|}"; ip="${ip%%|*}"
     elif line=$(grep -ihm 1 "^$mac|" "$DHCPSTATIC_CACHE" 2>/dev/null); then ip="${line#*|}"; fi
 
+    # No IP - Assign IP - Backhaul
     case "$ip" in ""|*[!0-9.]*) ip=$(printf "192.168.000.00%d" "${NUMBERED_NODE:-0}") ;; esac
 
+    # IP Padding
     case "$IPPAD" in
         1)
             last_octet="${ip##*.}"
@@ -2156,6 +2158,7 @@ get_ip() {
             ;;
     esac
 
+    # IP to Number
     local ip_val="$ip" o1 o2 o3 o4
     o1="${ip_val%%.*}"; local rest="${ip_val#*.}"
     o2="${rest%%.*}"; rest="${rest#*.}"
@@ -4295,7 +4298,7 @@ function triggerRefresh() {
     if ("$TABLE_HEADERS" === "1") {
     var totalCountEl = document.querySelector('.total-count');
     if (totalCountEl) {
-        totalCountEl.innerHTML = 'Total Wireless Devices: <span class="count-highlight" style="color: #888888;">0</span>';
+        totalCountEl.innerHTML = 'Total Wireless Devices: <span class="count-highlight" style="color: #000000;">0</span>';
     }
 
     var mainHeaderSpan = document.querySelector('#mainCol .section-header span');
