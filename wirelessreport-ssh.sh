@@ -165,13 +165,12 @@ check_version() {
             ;;
         *)
             case "$STATE" in
-                OFFLINE)       SL=" $STATUS $RD[Offline]                    [GitHub Unreachable]" ;;
-                NOT_INSTALLED) SL=" $STATUS $GR[Not Installed]$NC         Latest Available:$GR v$REMOTE_VERSION$NC";  N1="$BL(1)" ;;
-                OUTDATED)      SL=" $STATUS $GR[New Version ${WH}v$REMOTE_VERSION$GR Available]$NC   $CURRENT" ;;
-                HASH_DIFF)     SL=" $STATUS $GR[Hash Update Available]$NC          $CURRENT" ;;
-                UP_TO_DATE|*)  SL=" $STATUS $GR[Up to date]$NC                    $CURRENT" ;;
+                OFFLINE)       printm " $STATUS $RD[Offline]                    [GitHub Unreachable]" ;;
+                NOT_INSTALLED) printm " $STATUS $GR[Not Installed]$NC         Latest Available:$GR v$REMOTE_VERSION$NC";  N1="$BL(1)" ;;
+                OUTDATED)      printm " $STATUS $GR[New Version ${WH}v$REMOTE_VERSION$GR Available]$NC   $CURRENT" ;;
+                HASH_DIFF)     printm " $STATUS $GR[Hash Update Available]$NC          $CURRENT" ;;
+                UP_TO_DATE|*)  printm " $STATUS $GR[Up to date]$NC                    $CURRENT" ;;
             esac
-            printm "$SL"
             ;;
     esac
 }
