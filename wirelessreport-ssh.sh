@@ -2617,6 +2617,13 @@ get_main_radios() {
                 fi
             fi
         done
+        SORTED_BANDS=""
+        for band in 2.4G 5G 5G2 6G 6G2; do
+            case " $MAIN_ACTIVE_BANDS " in
+                *" $band "*) SORTED_BANDS="${SORTED_BANDS}${SORTED_BANDS:+ }$band" ;;
+            esac
+        done
+        [ -n "$SORTED_BANDS" ] && MAIN_ACTIVE_BANDS="$SORTED_BANDS"
     fi
 }
 
