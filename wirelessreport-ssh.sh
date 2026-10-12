@@ -131,7 +131,7 @@ check_version() {
         if [ "$version_cmp" -gt 0 ]; then
             STATE="UP_TO_DATE"
         elif [ "$version_cmp" -lt 0 ]; then
-            STATE="OUTDATED"
+            STATE="OUTDATED";  N1="$BL(1)"
         elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
             STATE="HASH_DIFF"
         else
@@ -166,10 +166,10 @@ check_version() {
         *)
             case "$STATE" in
                 OFFLINE)       printm " $STATUS $RD[Offline]                    [GitHub Unreachable]" ;;
-                NOT_INSTALLED) printm " $STATUS $GR[Not Installed]$NC         Latest Available:$GR v$REMOTE_VERSION$NC";  N1="$BL(1)" ;;
-                OUTDATED)      printm " $STATUS $GR[New Version ${WH}v$REMOTE_VERSION$GR Available]$NC   $CURRENT" ;;
-                HASH_DIFF)     printm " $STATUS $GR[Hash Update Available]$NC          $CURRENT" ;;
-                UP_TO_DATE|*)  printm " $STATUS $GR[Up to date]$NC                    $CURRENT" ;;
+                NOT_INSTALLED) printm " $STATUS $GR[Not Installed]$NC         Latest Available:$GR v$REMOTE_VERSION$NC" ;;
+                OUTDATED)      printm " $STATUS $GR[New Version ${WH}v$REMOTE_VERSION$GR Available]  $CURRENT" ;;
+                HASH_DIFF)     printm " $STATUS $GR[Hash Update Available]        $CURRENT" ;;
+                UP_TO_DATE|*)  printm " $STATUS $GR[Up to date]                   $CURRENT" ;;
             esac
             ;;
     esac
@@ -233,7 +233,7 @@ menu_vars() {
     MB=""; echo -e "$BL"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
     STATUS="$NC STATUS:"
-    CURRENT="CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
+    CURRENT="$NC CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
 
     SS_FILE="/jffs/scripts/services-start"
     SE_FILE="/jffs/scripts/service-event"
