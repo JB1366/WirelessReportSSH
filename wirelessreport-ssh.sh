@@ -121,7 +121,7 @@ check_version() {
     local mode="$1" version_cmp=""
     froze() { return 0; }
     if [ ! -f "$REPORT_SCRIPT" ]; then
-        STATE="NOT_INSTALLED"
+        STATE="NOT_INSTALLED";  N1="$BL(1)"
         froze() { freeze 2; return 1; }
     elif [ -z "$REMOTE_VERSION" ]; then
         STATE="OFFLINE"
@@ -131,7 +131,7 @@ check_version() {
         if [ "$version_cmp" -gt 0 ]; then
             STATE="UP_TO_DATE"
         elif [ "$version_cmp" -lt 0 ]; then
-            STATE="OUTDATED";  N1="$BL(1)"
+            STATE="OUTDATED"
         elif [ -n "$REMOTE_HASH" ] && [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
             STATE="HASH_DIFF"
         else
