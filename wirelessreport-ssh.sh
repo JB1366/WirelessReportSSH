@@ -22,7 +22,7 @@
 #        Copyright (c) 2026 JB_1366 - All Rights Reserved         #
 #          https://github.com/JB1366/WirelessReportSSH            #
 #                                                                 #
-#                        SSH Version                              #
+#                    Original SSH Version                         #
 #═════════════════════════════════════════════════════════════════#
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
