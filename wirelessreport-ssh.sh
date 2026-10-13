@@ -685,6 +685,14 @@ device_default_colors() {
     NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
 }
 
+get_ssh_nodes() {
+    AIMESH_NODES=$(nvram get asus_device_list |
+        sed 's/</\n/g' |
+        grep '>2$' |
+        awk -F '>' '{print $2 "|" $3}' |
+        sort -t . -k 4,4n)
+}
+
 set_device_nicknames() {
     while true; do
         show_header
@@ -841,12 +849,28 @@ set_device_nicknames() {
                         node_idx=$((node_idx + 1))
                     done
                     orig_count=$((node_idx - 1))
-
+                    printf "\n  [${BL}R$NC] Reset to default, sort by IP.\n"
+                    printf "  [${BL}E$NC] Exit with no changes.\n"
                     while true; do
-                        printf "\n Enter new order by index [${BL}E$NC]xit (e.g., ${BL}2 1 3$NC): "
+                        printf "\n Enter new order by index (e.g., ${BL}2 1 3$NC): "
                         read -r new_order_input
                         [ -z "$new_order_input" ] && { freeze 2; continue; }
-                        case "$new_order_input" in e|E) break 2 ;; esac
+                        case "$new_order_input" in
+                            e|E)
+                                break 2 ;;
+                            r|R)
+                                sed -i '/^SSH_NODES=/d' "$CONFIG"
+                                printf "\n$GR[+] Reset node order to default.$NC\n"
+                                get_ssh_nodes
+                                MESH_NODES=""
+                                for node in $AIMESH_NODES; do
+                                    MESH_NODES="$MESH_NODES $node"
+                                done
+                                echo "SSH_NODES=\"$MESH_NODES\"" >> "$CONFIG"
+                                pause
+                                break 2
+                                ;;
+                        esac
                         valid="true"
                         entered_count=0
                         for idx in $new_order_input; do
@@ -1660,12 +1684,7 @@ node_auth() {
     echo -e "$BL══════════════════════════════════════════════════════════════"
     echo -e "                                                                 "
 
-    AIMESH_NODES=$(nvram get asus_device_list |
-        sed 's/</\n/g' |
-        grep '>2$' |
-        awk -F '>' '{print $2 "|" $3}' |
-        sort -t . -k 4,4n)
-
+    get_ssh_nodes
     if [ -z "$AIMESH_NODES" ]; then
         echo -e "$RD[!] No AiMesh Nodes detected in NVRAM.$NC"
         TOTAL_NODES=0; any_success=0
