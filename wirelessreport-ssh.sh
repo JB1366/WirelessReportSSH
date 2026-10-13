@@ -833,8 +833,8 @@ set_device_nicknames() {
                     printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n"
                     ;;
                 4)
-                    echo -e "\n$BL[*] Manual Node Sorting$NC\n"
-                    echo -e "Current order:\n"
+                    echo -e "\n$BL[*] Manual Node Sorting$NC"
+                    echo -e "\nCurrent order:\n"
                     node_idx=1
                     for node in $SSH_NODES; do
                         MODEL="${node%%|*}"
@@ -849,13 +849,14 @@ set_device_nicknames() {
                         node_idx=$((node_idx + 1))
                     done
                     orig_count=$((node_idx - 1))
-                    printf "\n  [${BL}R$NC] Reset to default, sort by IP.\n"
-                    printf "  [${BL}E$NC] Exit with no changes.\n"
+                    echo -e "                                           "
+                    echo -e "  [${BL}R$NC] Reset to default, sort by IP."
+                    echo -e "  [${BL}E$NC] Exit with no changes.      \n"
                     while true; do
-                        printf "\n Enter new order by index (e.g., ${BL}2 1 3$NC): "
-                        read -r new_order_input
-                        [ -z "$new_order_input" ] && { freeze 2; continue; }
-                        case "$new_order_input" in
+                        printf " Enter new order by index (e.g., ${BL}2 1 3$NC): "
+                        read -r new_order
+                        [ -z "$new_order" ] && { freeze; continue; }
+                        case "$new_order" in
                             e|E)
                                 break 2 ;;
                             r|R)
@@ -873,7 +874,7 @@ set_device_nicknames() {
                         esac
                         valid="true"
                         entered_count=0
-                        for idx in $new_order_input; do
+                        for idx in $new_order; do
                             entered_count=$((entered_count + 1))
                             case "$idx" in
                                 *[!0-9]*|'')
@@ -891,13 +892,13 @@ set_device_nicknames() {
                             valid="false"
                         fi
                         if [ "$valid" = "true" ]; then
-                            unique_check=$(for idx in $new_order_input; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
+                            unique_check=$(for idx in $new_order; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
                             if [ "$unique_check" -ne "$orig_count" ]; then
-                                freeze 2
+                                freeze
                                 continue
                             fi
                             new_ssh_nodes=""
-                            for idx in $new_order_input; do
+                            for idx in $new_order; do
                                 current_idx=1
                                 for node in $SSH_NODES; do
                                     if [ "$current_idx" -eq "$idx" ]; then
@@ -909,7 +910,7 @@ set_device_nicknames() {
                             done
                             break
                         else
-                            freeze 2
+                            freeze
                             continue
                         fi
                     done
