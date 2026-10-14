@@ -226,13 +226,11 @@ menu_vars() {
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
-    # Menu Header & Border Color
-    BORDER=${BORDER:-$BL}
-    if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
+    BORDER=${BORDER:-$BL} # Menu Header & Border Color
     echo -e "$BORDER" # Set color for show_header()
 
-    for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
-	for i in B E R S; do eval "L${i}=\"\$BL(${i})\$NC\""; done
+    for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BORDER(${i})\$NC\""; done
+	for i in E R S; do eval "L${i}=\"\$BORDER(${i})\$NC\""; done
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
 
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
@@ -848,7 +846,7 @@ set_device_nicknames() {
                         HEX_CLR=$(get_node_color "$node_idx")
                         NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
-                        echo -e "  $BL($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+                        echo -e "  $BORDER($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
 
                         node_idx=$((node_idx + 1))
                     done
@@ -857,7 +855,7 @@ set_device_nicknames() {
                     echo -e "  $LR Reset to default, sort by IP."
                     echo -e "  $LE Exit with no changes.      \n"
                     while true; do
-                        printf " Enter new order by index (e.g., ${BL}2 1 3$NC): "
+                        printf " Enter new order by index (e.g., ${BORDER}2 1 3$NC): "
                         read -r new_order
                         [ -z "$new_order" ] && { freeze; continue; }
                         case "$new_order" in
@@ -948,7 +946,7 @@ get_hex_to_ansi() {
         "#ffffff") echo -e "$WT" ;;
         "#ff70a6") echo -e "$PK" ;;
         "#64ffda") echo -e "$MT" ;;
-        "#000000") echo -e "$BK" ;;
+        "#000000") echo -e "$BY" ;;
         *)         echo -e "$NC" ;;
     esac
 }
@@ -970,7 +968,7 @@ get_hex_ansi_selection() {
     echo -e "                                "
     #════════════════════════════════════════#
     while true; do
-        printf "$NC Choose option $BL(1-11): $NC"; read -r color_choice
+        printf "$NC Choose option $BORDER(1-11): $NC"; read -r color_choice
         case "$color_choice" in
             1)  selected_hex="#0096ff"; BORDER="$NB" ;;
             2)  selected_hex="#30d158"; BORDER="$LG" ;;
@@ -982,7 +980,7 @@ get_hex_ansi_selection() {
             8)  selected_hex="#ffffff"; BORDER="$WT" ;;
             9)  selected_hex="#ff70a6"; BORDER="$PK" ;;
             10) selected_hex="#64ffda"; BORDER="$MT" ;;
-            11) selected_hex="#000000"; BORDER="$BK" ;;
+            11) selected_hex="#000000"; BORDER="$BY" ;;
             *)  freeze; continue ;;
         esac
         break
@@ -1051,23 +1049,21 @@ set_device_colors() {
         done
         #═════════════════════════════════════════════════════════════════════#
         printm ""
-        printm "  $TEXT(B) Change Logo/Menu Border Color"
+        printm "  $BORDER(B) Change Logo/Menu Border Color"
         printm "  $LR Restore Default Colors"
         printm "  $LS Save Changes & Exit"
         printm ""
         printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
         while true; do
-            printf "\n$NC Select number to change color [${BL}E$NC]xit (${BL}0-$total_nodes$NC): "; read -r node_choice
+            printf "\n$NC Select number to change color [${BORDER}E$NC]xit (${BORDER}0-$total_nodes$NC): "; read -r node_choice
             case "$node_choice" in
                 b|B)
-                    if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
-                    echo -e "\n$TEXT Select Logo/Menu Border Color:"
+                    echo -e "\n$BORDER Select Logo/Menu Border Color:"
                     get_hex_ansi_selection
                     if [ -f "$CONFIG" ]; then sed -i '/^BORDER=/d' "$CONFIG"; fi
                     echo "BORDER=\"$BORDER\"" >> "$CONFIG"
-                    if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
-                    echo -e "\n$TEXT[+] Logo/Menu Border Color changed.$NC"
+                    echo -e "\n$BORDER[+] Logo/Menu Border Color changed.$NC"
                     pause
                     continue 2 ;;
                 r|R)
@@ -1817,11 +1813,11 @@ node_auth() {
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
-selection() { printf "\n$NC Selection [${BL}E$NC=Exit]: "; read -r choice; }
+selection() { printf "\n$NC Selection [${BORDER}E$NC=Exit]: "; read -r choice; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
-pause() { printf "\nPress $BL[Enter]$NC to return..."; read -r discard; }
+pause() { printf "\nPress $BORDER[Enter]$NC to return..."; read -r discard; }
 
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 
