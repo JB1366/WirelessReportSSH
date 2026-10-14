@@ -844,14 +844,14 @@ set_device_nicknames() {
                         HEX_CLR=$(get_node_color "$node_idx")
                         NODE_CLR=$(hex_to_ansi "$HEX_CLR")
 
-                        echo -e "  [$node_idx] ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+                        echo -e "  $BL($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
 
                         node_idx=$((node_idx + 1))
                     done
                     orig_count=$((node_idx - 1))
                     echo -e "                                           "
-                    echo -e "  [${BL}R$NC] Reset to default, sort by IP."
-                    echo -e "  [${BL}E$NC] Exit with no changes.      \n"
+                    echo -e "  $LR Reset to default, sort by IP."
+                    echo -e "  $LE Exit with no changes.      \n"
                     while true; do
                         printf " Enter new order by index (e.g., ${BL}2 1 3$NC): "
                         read -r new_order
