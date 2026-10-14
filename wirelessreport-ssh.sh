@@ -934,7 +934,7 @@ set_device_nicknames() {
 
 get_hex_to_ansi() {
     NB='\033[38;5;39m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'; RD='\033[38;5;196m'; PK='\033[38;5;211m'; BK='\033[30m'
-    YW='\033[38;5;226m'; SB='\033[38;5;75m'; OR='\033[38;5;208m'; WT='\033[38;5;231m'; MT='\033[38;5;86m'; BY='\033[0;90m'
+    YW='\033[38;5;226m'; SB='\033[38;5;75m'; OR='\033[38;5;208m'; WT='\033[38;5;231m'; MT='\033[38;5;86m'; DG='\033[0;90m'
     case "$1" in
         "#0096ff") echo -e "$NB" ;;
         "#30d158") echo -e "$LG" ;;
@@ -946,7 +946,7 @@ get_hex_to_ansi() {
         "#ffffff") echo -e "$WT" ;;
         "#ff70a6") echo -e "$PK" ;;
         "#64ffda") echo -e "$MT" ;;
-        "#555555") echo -e "$BY" ;;
+        "#555555") echo -e "$DG" ;;
         *)         echo -e "$NC" ;;
     esac
 }
@@ -964,11 +964,11 @@ get_hex_ansi_selection() {
     echo -e "$WT  (8) White (#ffffff)        "
     echo -e "$PK  (9) Light-Pink (#ff70a6)   "
     echo -e "$MT (10) Mint-Green (#64ffda)   "
-    echo -e "$BY (11) Black (##555555)        "
+    echo -e "$DG (11) Dark Gray (#555555)    "
     echo -e "                                "
     #════════════════════════════════════════#
     while true; do
-        printf "$NC Choose option $BORDER(1-11): $NC"; read -r color_choice
+        printf "$NC Choose option [${BORDER}E$NC=Exit] (${BORDER}1-11$NC): "; read -r color_choice
         case "$color_choice" in
             1)  selected_hex="#0096ff"; BORDER="$NB" ;;
             2)  selected_hex="#30d158"; BORDER="$LG" ;;
@@ -980,7 +980,8 @@ get_hex_ansi_selection() {
             8)  selected_hex="#ffffff"; BORDER="$WT" ;;
             9)  selected_hex="#ff70a6"; BORDER="$PK" ;;
             10) selected_hex="#64ffda"; BORDER="$MT" ;;
-            11) selected_hex="#555555"; BORDER="$BY" ;;
+            11) selected_hex="#555555"; BORDER="$DG" ;;
+            e|E) break 2 ;;
             *)  freeze; continue ;;
         esac
         break
