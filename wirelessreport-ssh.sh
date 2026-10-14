@@ -193,7 +193,7 @@ version_compare() {
 
 printm() {
     local box_color text target esc plain len pad line i
-    box_color="$BL"
+    box_color="$BORDER"
     text="$1"
     target="${2:-60}"
     esc=$(printf '\033')
@@ -212,7 +212,7 @@ printm() {
 }
 
 printb() {
-    MB="${MB}$BL$1$NC\n"
+    MB="${MB}$BORDER$1$NC\n"
 }
 
 menu_vars() {
@@ -226,11 +226,16 @@ menu_vars() {
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
+    # Script Name & Border Color
+    BORDER=${BORDER:-$BL}
+    if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
+    echo -e "$BORDER" # Set color for show_header()
+
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$BL(${i})\$NC\""; done
-	for i in E S R; do eval "L${i}=\"\$BL(${i})\$NC\""; done
+	for i in B E R S; do eval "L${i}=\"\$BL(${i})\$NC\""; done
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
 
-    MB=""; echo -e "$BL"
+    MB=""
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
     STATUS="$NC STATUS:"
     CURRENT="$NC CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
@@ -255,7 +260,7 @@ menu_vars() {
     DATE_ISO1="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
     DATE_ISO3="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
 
-    REPORT_UNIT="${REPORT_UNIT:-USA}"
+    REPORT_UNIT=${REPORT_UNIT:-USA}
 	case "$REPORT_UNIT" in
         USA)  DN="USA";  DU="$GR°F$NC"; CT="$DATE_USA" ;;
         INTL) DN="INTL"; DU="$GR°C$NC"; CT="$DATE_INTL" ;;
@@ -713,7 +718,7 @@ set_device_nicknames() {
 
         MAIN_ROUTER=$(nvram get productid)
         MAIN_IP=$(nvram get lan_ipaddr)
-        MAIN_CLR=$(hex_to_ansi "$MAIN_COLOR")
+        MAIN_CLR=$(get_hex_to_ansi "$MAIN_COLOR")
 
         formatted_main=$(printf "  Main %s -> %s" "$MAIN_IP" "${MAIN_NICK:-$MAIN_ROUTER}")
         row_text="${MAIN_CLR}${formatted_main}$NC"
@@ -727,7 +732,7 @@ set_device_nicknames() {
             CLEAN_IP="${IP//./_}"
             eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
             HEX_CLR=$(get_node_color "$node_idx")
-            NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
             formatted_node=$(printf "  Node %s -> %s" "$IP" "${SAVED_NICK:-$MODEL}")
             row_text="${NODE_CLR}${formatted_node}$NC"
@@ -758,7 +763,7 @@ set_device_nicknames() {
                         sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
                         eval "unset NODE_NICK_$CLEAN_IP"
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
-                        NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+                        NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
                         printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $MODEL$NC"; sleep 1
 
@@ -789,7 +794,7 @@ set_device_nicknames() {
 
                         sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
-                        NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+                        NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
                         if [ -n "$NODE_LOC" ]; then
                             echo "NODE_NICK_$CLEAN_IP=\"$NODE_LOC\"" >> "$CONFIG"
                             printf "\n    ${NODE_CLR}${OLD_NICK:-$MODEL} -> $NODE_LOC$NC"; sleep 1
@@ -819,7 +824,7 @@ set_device_nicknames() {
                         CLEAN_IP="${IP//./_}"
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
-                        NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+                        NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
                         printf "  ${NODE_CLR}Node $IP [${OLD_NICK:-$MODEL}]:$NC "; read -r input_node
 
@@ -842,7 +847,7 @@ set_device_nicknames() {
                         CLEAN_IP="${IP//./_}"
                         eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
                         HEX_CLR=$(get_node_color "$node_idx")
-                        NODE_CLR=$(hex_to_ansi "$HEX_CLR")
+                        NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
                         echo -e "  $BL($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
 
@@ -930,9 +935,9 @@ set_device_nicknames() {
     done
 }
 
-hex_to_ansi() {
-    NB='\033[38;5;39m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'; RD='\033[38;5;196m'; PK='\033[38;5;211m'
-    YW='\033[38;5;226m'; SB='\033[38;5;75m'; OR='\033[38;5;208m'; WT='\033[38;5;231m'; MT='\033[38;5;86m'
+get_hex_to_ansi() {
+    NB='\033[38;5;39m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'; RD='\033[38;5;196m'; PK='\033[38;5;211m'; BK='\033[30m'
+    YW='\033[38;5;226m'; SB='\033[38;5;75m'; OR='\033[38;5;208m'; WT='\033[38;5;231m'; MT='\033[38;5;86m'; BY='\033[0;90m'
     case "$1" in
         "#0096ff") echo -e "$NB" ;;
         "#30d158") echo -e "$LG" ;;
@@ -944,8 +949,45 @@ hex_to_ansi() {
         "#ffffff") echo -e "$WT" ;;
         "#ff70a6") echo -e "$PK" ;;
         "#64ffda") echo -e "$MT" ;;
+        "#000000") echo -e "$BK" ;;
         *)         echo -e "$NC" ;;
     esac
+}
+
+get_hex_ansi_selection() {
+    #════════════════════════════════════════#
+    echo -e "                                "
+    echo -e "$NB  (1) Neon-Blue (#0096ff)    "
+    echo -e "$LG  (2) Lime-Green (#30d158)   "
+    echo -e "$MP  (3) Medium-Purple (#bf40bf)"
+    echo -e "$YW  (4) Yellow (#ffd60a)       "
+    echo -e "$SB  (5) SkyBlue (#64d2ff)      "
+    echo -e "$OR  (6) Orange (#ff9500)       "
+    echo -e "$RD  (7) Red (#ff453a)          "
+    echo -e "$WT  (8) White (#ffffff)        "
+    echo -e "$PK  (9) Light-Pink (#ff70a6)   "
+    echo -e "$MT (10) Mint-Green (#64ffda)   "
+    echo -e "$BY (11) Black (#000000)        "
+    echo -e "                                "
+    #════════════════════════════════════════#
+    while true; do
+        printf "$NC Choose option $BL(1-11): $NC"; read -r color_choice
+        case "$color_choice" in
+            1)  selected_hex="#0096ff"; BORDER="$NB" ;;
+            2)  selected_hex="#30d158"; BORDER="$LG" ;;
+            3)  selected_hex="#bf40bf"; BORDER="$MP" ;;
+            4)  selected_hex="#ffd60a"; BORDER="$YW" ;;
+            5)  selected_hex="#64d2ff"; BORDER="$SB" ;;
+            6)  selected_hex="#ff9500"; BORDER="$OR" ;;
+            7)  selected_hex="#ff453a"; BORDER="$RD" ;;
+            8)  selected_hex="#ffffff"; BORDER="$WT" ;;
+            9)  selected_hex="#ff70a6"; BORDER="$PK" ;;
+            10) selected_hex="#64ffda"; BORDER="$MT" ;;
+            11) selected_hex="#000000"; BORDER="$BK" ;;
+            *)  freeze; continue ;;
+        esac
+        break
+    done
 }
 
 set_device_colors() {
@@ -976,14 +1018,14 @@ set_device_colors() {
     while true; do
         show_header
         printb "╔════════════════════════════════════════════════════════════╗"
-        printm "                      Set Device $COLORS"
+        printm "                     Set Device $COLORS"
         printb "╠════════════════════════════════════════════════════════════╣"
         printm ""
         printm "  Current Device Configuration:"
         printm ""
         #═════════════════════════════════════════════════════════════════════#
         main_display_name="${MAIN_NICK:-$main_name}"
-        main_display_color=$(hex_to_ansi "$m_color_hex")
+        main_display_color=$(get_hex_to_ansi "$m_color_hex")
         formatted_main_ip=$(printf "(%s)" "$main_ip")
 
         formatted_main2=$(printf "  (0) %-14s %-16s (Main)" "$main_display_name" "($main_ip)")
@@ -999,7 +1041,7 @@ set_device_colors() {
             nick_var_name="NODE_NICK_${CLEAN_IP}"
             node_display_name=$(eval echo \"\${$nick_var_name}\")
             node_display_name="${node_display_name:-$MODEL}"
-            display_color=$(hex_to_ansi "$active_color")
+            display_color=$(get_hex_to_ansi "$active_color")
             formatted_ip=$(printf "(%s)" "$IP")
 
            formatted_node2=$(printf "  (%d) %-14s %-16s (Node)" "$idx" "$node_display_name" "($IP)")
@@ -1010,6 +1052,7 @@ set_device_colors() {
         done
         #═════════════════════════════════════════════════════════════════════#
         printm ""
+        printm "  $TEXT(B) Change Logo/Menu Border Color"
         printm "  $LR Restore Default Colors"
         printm "  $LS Save Changes & Exit"
         printm ""
@@ -1018,6 +1061,16 @@ set_device_colors() {
         while true; do
             printf "\n$NC Select number to change color [${BL}E$NC]xit (${BL}0-$total_nodes$NC): "; read -r node_choice
             case "$node_choice" in
+                b|B)
+                    if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
+                    echo -e "\n$TEXT Select Logo/Menu Border Color:"
+                    get_hex_ansi_selection
+                    if [ -f "$CONFIG" ]; then sed -i '/^BORDER=/d' "$CONFIG"; fi
+                    echo "BORDER=\"$BORDER\"" >> "$CONFIG"
+                    if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
+                    echo -e "\n$TEXT[+] Logo/Menu Border Color changed.$NC"
+                    pause
+                    continue 2 ;;
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
                     device_default_colors
@@ -1051,40 +1104,12 @@ set_device_colors() {
                 target_name="${target_name:-$(echo "$target_node" | cut -d'|' -f1)}"
                 target_hex=$(echo "$working_colors" | awk -v col="$node_choice" '{print $col}')
             fi
-            hex_to_ansi; selected_hex=""
-            target_prompt_color=$(hex_to_ansi "$target_hex")
+            get_hex_to_ansi; selected_hex=""
+            target_prompt_color=$(get_hex_to_ansi "$target_hex")
             echo -e "$NC Select a new color for ${target_prompt_color}[${target_name}]:"
-            #════════════════════════════════════════#
-            echo -e "                                "
-            echo -e "$NB  (1) Neon-Blue (#0096ff)    "
-            echo -e "$LG  (2) Lime-Green (#30d158)   "
-            echo -e "$MP  (3) Medium-Purple (#bf40bf)"
-            echo -e "$YW  (4) Yellow (#ffd60a)       "
-            echo -e "$SB  (5) SkyBlue (#64d2ff)      "
-            echo -e "$OR  (6) Orange (#ff9500)       "
-            echo -e "$RD  (7) Red (#ff453a)          "
-            echo -e "$WT  (8) White (#ffffff)        "
-            echo -e "$PK  (9) Light-Pink (#ff70a6)   "
-            echo -e "$MT (10) Mint-Green (#64ffda)   "
-            echo -e "                                "
-            #════════════════════════════════════════#
-            while true; do
-                printf "$NC Choose option $BL(1-10): $NC"; read -r color_choice
-                case "$color_choice" in
-                    1)  selected_hex="#0096ff" ;;
-                    2)  selected_hex="#30d158" ;;
-                    3)  selected_hex="#bf40bf" ;;
-                    4)  selected_hex="#ffd60a" ;;
-                    5)  selected_hex="#64d2ff" ;;
-                    6)  selected_hex="#ff9500" ;;
-                    7)  selected_hex="#ff453a" ;;
-                    8)  selected_hex="#ffffff" ;;
-                    9)  selected_hex="#ff70a6" ;;
-                    10) selected_hex="#64ffda" ;;
-                    *)  freeze; continue ;;
-                esac
-                break
-            done
+
+            get_hex_ansi_selection
+
             if [ "$node_choice" -eq 0 ]; then
                 m_color_hex="$selected_hex"
             else
@@ -2757,7 +2782,7 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
-hex_to_ansi
+get_hex_to_ansi
 ssh_init
 get_usb
 check_github
