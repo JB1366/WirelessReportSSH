@@ -224,7 +224,7 @@ menu_vars() {
     COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s";  MB=""
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
-    JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
+    JB1366="$BORDER${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
     BORDER=${BORDER:-$BL} # Menu Header & Border Color
     echo -e "$BORDER" # Set color for show_header()
@@ -944,31 +944,33 @@ get_hex_to_ansi() {
         "#ff9500") echo -e "$OR" ;;
         "#ff453a") echo -e "$RD" ;;
         "#ffffff") echo -e "$WT" ;;
+        "#555555") echo -e "$DG" ;;
         "#ff70a6") echo -e "$PK" ;;
         "#64ffda") echo -e "$MT" ;;
-        "#555555") echo -e "$DG" ;;
+        "#000000") echo -e "$DG" ;;
         *)         echo -e "$NC" ;;
     esac
 }
 
 get_hex_ansi_selection() {
-    #════════════════════════════════════════#
-    echo -e "                                "
-    echo -e "$NB  (1) Neon-Blue (#0096ff)    "
-    echo -e "$LG  (2) Lime-Green (#30d158)   "
-    echo -e "$MP  (3) Medium-Purple (#bf40bf)"
-    echo -e "$YW  (4) Yellow (#ffd60a)       "
-    echo -e "$SB  (5) SkyBlue (#64d2ff)      "
-    echo -e "$OR  (6) Orange (#ff9500)       "
-    echo -e "$RD  (7) Red (#ff453a)          "
-    echo -e "$WT  (8) White (#ffffff)        "
-    echo -e "$PK  (9) Light-Pink (#ff70a6)   "
-    echo -e "$MT (10) Mint-Green (#64ffda)   "
-    echo -e "$DG (11) Dark Gray (#555555)    "
-    echo -e "                                "
-    #════════════════════════════════════════#
+    #══════════════════════════════════════#
+    echo -e "                              "
+    echo -e "$NB  (1) Neon-Blue (#0096ff)  "
+    echo -e "$LG  (2) Lime-Green (#30d158) "
+    echo -e "$MP  (3) Med-Purple (#bf40bf) "
+    echo -e "$YW  (4) Yellow (#ffd60a)     "
+    echo -e "$SB  (5) SkyBlue (#64d2ff)    "
+    echo -e "$OR  (6) Orange (#ff9500)     "
+    echo -e "$RD  (7) Red (#ff453a)        "
+    echo -e "$WT  (8) White (#ffffff)      "
+    echo -e "$DG  (9) Dark Gray (#555555)  "
+    echo -e "$PK (10) Light-Pink (#ff70a6) "
+    echo -e "$MT (11) Mint-Green (#64ffda) "
+    echo -e "$DG (12) Black (#000000)      "
+    echo -e "                              "
+    #══════════════════════════════════════#
     while true; do
-        printf "$NC Choose option [${BORDER}E$NC=Exit] (${BORDER}1-11$NC): "; read -r color_choice
+        printf "$NC Choose option [${BORDER}E$NC=Exit] (${BORDER}1-12$NC): "; read -r color_choice
         case "$color_choice" in
             1)  selected_hex="#0096ff"; BORDER="$NB" ;;
             2)  selected_hex="#30d158"; BORDER="$LG" ;;
@@ -978,9 +980,10 @@ get_hex_ansi_selection() {
             6)  selected_hex="#ff9500"; BORDER="$OR" ;;
             7)  selected_hex="#ff453a"; BORDER="$RD" ;;
             8)  selected_hex="#ffffff"; BORDER="$WT" ;;
-            9)  selected_hex="#ff70a6"; BORDER="$PK" ;;
-            10) selected_hex="#64ffda"; BORDER="$MT" ;;
-            11) selected_hex="#555555"; BORDER="$DG" ;;
+            9)  selected_hex="#555555"; BORDER="$DG" ;;
+            10) selected_hex="#ff70a6"; BORDER="$PK" ;;
+            11) selected_hex="#64ffda"; BORDER="$MT" ;;
+            12) selected_hex="#000000"; BORDER="$DG" ;;
             e|E) break 2 ;;
             *)  freeze; continue ;;
         esac
