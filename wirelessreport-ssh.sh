@@ -221,12 +221,12 @@ menu_vars() {
 
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
-    COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"
+    COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s";  MB=""
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$GR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
-    # Script Name & Border Color
+    # Menu Header & Border Color
     BORDER=${BORDER:-$BL}
     if [ "$BORDER" = "$BK" ]; then TEXT="$BY"; else TEXT="$BORDER"; fi
     echo -e "$BORDER" # Set color for show_header()
@@ -235,7 +235,6 @@ menu_vars() {
 	for i in B E R S; do eval "L${i}=\"\$BL(${i})\$NC\""; done
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
 
-    MB=""
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
     STATUS="$NC STATUS:"
     CURRENT="$NC CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
