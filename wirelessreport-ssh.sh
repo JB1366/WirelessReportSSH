@@ -946,7 +946,7 @@ get_hex_to_ansi() {
         "#ffffff") echo -e "$WT" ;;
         "#ff70a6") echo -e "$PK" ;;
         "#64ffda") echo -e "$MT" ;;
-        "#000000") echo -e "$BY" ;;
+        "#555555") echo -e "$BY" ;;
         *)         echo -e "$NC" ;;
     esac
 }
@@ -964,7 +964,7 @@ get_hex_ansi_selection() {
     echo -e "$WT  (8) White (#ffffff)        "
     echo -e "$PK  (9) Light-Pink (#ff70a6)   "
     echo -e "$MT (10) Mint-Green (#64ffda)   "
-    echo -e "$BY (11) Black (#000000)        "
+    echo -e "$BY (11) Black (##555555)        "
     echo -e "                                "
     #════════════════════════════════════════#
     while true; do
@@ -980,7 +980,7 @@ get_hex_ansi_selection() {
             8)  selected_hex="#ffffff"; BORDER="$WT" ;;
             9)  selected_hex="#ff70a6"; BORDER="$PK" ;;
             10) selected_hex="#64ffda"; BORDER="$MT" ;;
-            11) selected_hex="#000000"; BORDER="$BY" ;;
+            11) selected_hex="#555555"; BORDER="$BY" ;;
             *)  freeze; continue ;;
         esac
         break
