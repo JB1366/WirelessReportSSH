@@ -4423,7 +4423,7 @@ function triggerRefresh() {
 
     var rssiSpans = document.querySelectorAll('.rssi-quality-bar .rssi-font');
     rssiSpans.forEach(function(span) {
-        span.style.color = "#888888";
+        span.style.color = "#000000";
         span.innerText = "0";
     });
 }
