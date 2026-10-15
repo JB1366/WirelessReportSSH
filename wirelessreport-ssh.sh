@@ -1268,6 +1268,12 @@ set_options() {
                     set_github_branch ;;
                 e|E)
                     return 0 ;;
+                s|S)
+                    sort -u -o "$CONFIG" "$CONFIG"
+                    echo -e "\n$YL[!] CONFIG Sorted.$NC"
+                    pause
+                    continue 2
+                    ;;
                 *)
                     freeze 2
                     continue ;;
