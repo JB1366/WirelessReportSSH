@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.2.2-add color to install menus.
 v2.2.1-fix main radio sort for quad band.
 v2.2.0-menu upgrades cleanup.
 v2.1.9-menu upgrades.
