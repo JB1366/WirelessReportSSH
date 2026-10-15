@@ -245,6 +245,7 @@ menu_vars() {
         "") KEY="${RD}NO$NC" ;;
         *) KEY="${GR}YES$NC" ;;
     esac
+
     PORT="$GR$SSH_PORT$NC"
 
     DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"
