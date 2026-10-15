@@ -1052,7 +1052,6 @@ set_device_colors() {
         done
         #═════════════════════════════════════════════════════════════════════#
         printm ""
-        printm "  $BORDER(B) Change Logo/Menu Border Color"
         printm "  $LR Restore Default Colors"
         printm "  $LS Save Changes & Exit"
         printm ""
@@ -1061,14 +1060,6 @@ set_device_colors() {
         while true; do
             printf "\n$NC Select number to change color [${BORDER}E$NC]xit (${BORDER}0-$total_nodes$NC): "; read -r node_choice
             case "$node_choice" in
-                b|B)
-                    echo -e "\n$BORDER Select Logo/Menu Border Color:"
-                    get_hex_ansi_selection
-                    if [ -f "$CONFIG" ]; then sed -i '/^BORDER=/d' "$CONFIG"; fi
-                    echo "BORDER=\"$BORDER\"" >> "$CONFIG"
-                    echo -e "\n$BORDER[+] Logo/Menu Border Color changed.$NC"
-                    pause
-                    continue 2 ;;
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
                     device_default_colors
@@ -1182,6 +1173,7 @@ set_options() {
         printm "  $N5  Toggle Node Hostname Display: ($HN_STAT)"
         printm "  $N6  Toggle Loading Table Headers: ($TH_STAT)"
         printm "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
+        printm "  $N8  Change Logo/Menu Border Color"
         printm ""
         printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$MB"
@@ -1243,6 +1235,14 @@ set_options() {
                         echo 'RADIO_TEMPS="0"' >> "$CONFIG"
                     fi
                     ;;
+                8)
+                    echo -e "\n$BORDER Select Logo/Menu Border Color:"
+                    get_hex_ansi_selection
+                    if [ -f "$CONFIG" ]; then sed -i '/^BORDER=/d' "$CONFIG"; fi
+                    echo "BORDER=\"$BORDER\"" >> "$CONFIG"
+                    echo -e "\n$BORDER[+] Logo/Menu Border Color changed.$NC"
+                    pause
+                    continue 2 ;;
                 inject|inject2)
                     if [ "$choice" = "inject2" ]; then
                         if grep -q "INJECT=" "$CONFIG"; then
