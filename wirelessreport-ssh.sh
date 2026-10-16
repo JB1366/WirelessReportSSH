@@ -33,6 +33,7 @@ if [ "$0" != "/jffs/scripts/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
     chmod +x /jffs/scripts/wirelessreport-ssh.sh
     exec /jffs/scripts/wirelessreport-ssh.sh "$@"
 fi
+
 SCRIPT_VERSION="2.2.4"
 REPORT_SCRIPT="/jffs/scripts/wirelessreport-ssh.sh"
 CONFIG_DIR="/jffs/addons/wirelessreport-ssh.d"
@@ -49,6 +50,9 @@ LEASES_CACHE="/tmp/dnsmasq_leases.cache"
 DHCPSTATIC_CACHE="/tmp/dhcp_static.cache"
 DEVICE_LIST_CACHE="/tmp/asus_device_list.cache"
 CUSTOM_CLIENTS_CACHE="/tmp/custom_clients.cache"
+
+dir_upgrade
+
 if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 unset LD_LIBRARY_PATH
@@ -4808,7 +4812,6 @@ rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA" 2>/dev/null
 rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
-dir_upgrade
 case "$1" in
     install)
         install_menu
