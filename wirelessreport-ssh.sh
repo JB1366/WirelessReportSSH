@@ -417,18 +417,18 @@ dir_upgrade() {
     # Update profile.add (Alias)
     mkdir -p "$(dirname "$PROFILE_ADD")"
     [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
-    sed -i '/wirelessreport-ssh/d' "$PROFILE_ADD" 2>/dev/null
+    sed -i '/alias wrssh=/d' "$PROFILE_ADD"
     echo 'alias wrssh="/jffs/scripts/wirelessreport-ssh.sh install" # added by Wireless Report SSH' >> "$PROFILE_ADD"
 
     # Update services-start
     [ ! -f "$SS_FILE" ] && echo '#!/bin/sh' > "$SS_FILE"
-    sed -i '/wirelessreport-ssh/d' "$SS_FILE" 2>/dev/null
+    sed -i '/wirelessreport-ssh/d' "$SS_FILE"
     echo '/jffs/scripts/wirelessreport-ssh.sh inject & # Inject Wireless Report SSH' >> "$SS_FILE"
     chmod +x "$SS_FILE"
 
     # Update service-event
     [ ! -f "$SE_FILE" ] && echo '#!/bin/sh' > "$SE_FILE"
-    sed -i '/wirelessreport-ssh/d' "$SE_FILE" 2>/dev/null
+    sed -i '/wirelessreport-ssh/d' "$SE_FILE"
     echo 'case "$1:$2" in restart:wireless_report) /jffs/scripts/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 }
