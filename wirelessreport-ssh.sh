@@ -406,6 +406,10 @@ dir_upgrade() {
     # If the new .d directory already exists, migration is complete—skip everything
     [ -d "/jffs/addons/wirelessreport-ssh.d" ] && return
 
+    SS_FILE="/jffs/scripts/services-start"
+    SE_FILE="/jffs/scripts/service-event"
+    PROFILE_ADD="/jffs/configs/profile.add"
+
     is_update=1
 
     # Migrate legacy folder structure
