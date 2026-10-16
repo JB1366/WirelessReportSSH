@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.2.4-migrate to new dir structure.
 v2.2.3-moved change menu color to Set Options.
 v2.2.2-add color to install menus.
 v2.2.1-fix main radio sort for quad band.
