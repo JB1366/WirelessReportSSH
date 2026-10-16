@@ -325,13 +325,10 @@ do_install() {
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
         pause; return 1
     fi
-
     if [ ! -f "$CONFIG" ]; then touch "$CONFIG"; fi
 
     local is_update=0
 	if [ -f "$REPORT_SCRIPT" ]; then is_update=1; fi
-
-    dir_upgrade
 
     if [ "$is_update" = "1" ]; then
         while true; do
@@ -492,7 +489,7 @@ get_usb() {
         if [ -n "$ROOT_PATH" ]; then
             USB_PATH="$ROOT_PATH/wirelessreport-ssh"
         else
-            USB_PATH="$INSTALL_DIR/data"
+            USB_PATH="$CONFIG_DIR/data"
         fi
     fi
 
@@ -4801,6 +4798,7 @@ rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA" 2>/dev/null
 rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
+dir_upgrade
 case "$1" in
     install)
         install_menu
