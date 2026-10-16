@@ -339,7 +339,7 @@ do_install() {
         done
     fi
 
-    echo -e "\n$GR[+] Downloading latest version($NC v$REMOTE_VERSION$GR)$NC"
+    echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
 
     if [ "$is_update" = "1" ]; then
@@ -351,16 +351,16 @@ do_install() {
 	fi
 
     if [ "${USB_PATH#/tmp/mnt/}" != "$USB_PATH" ]; then
-        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC\n"
+        echo -e "\n$GR[+] USB Found: Using $WH$USB_PATH$GR for reports and history.$NC"
     else
-        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC\n"
+        echo -e "\n$YL[!] No USB detected: Using JFFS at $USB_PATH.$NC"
     fi
 
     if [ -f "$SSH_KEY" ]; then
         node_auth
 	else
 		install="1"
-		printf "$BL[+] Press $WH[Enter]$BL to proceed to SSH Environment Setup$NC\n"
+		printf "\n$BL[+] Press $WH[Enter]$BL to proceed to SSH Environment Setup$NC\n"
 		printf "$BL[+] (1) Generate RSA Keys or (2) Provision router-only$NC"; read -r discard
         check_ssh || return 1
 	fi
@@ -368,7 +368,7 @@ do_install() {
     echo -e "\n$GR[+] Mounting Tab Wireless Report SSH$NC"
     inject_menu
 
-    echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC\n"
+    echo -e "\n$GR[+] Processing Wireless Report SSH Files...$NC"
 
     mkdir -p "$(dirname "$PROFILE_ADD")"
     [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
