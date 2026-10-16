@@ -435,7 +435,6 @@ dir_upgrade() {
     sed -i '/wirelessreport-ssh/d' "$SE_FILE"
     echo 'case "$1:$2" in restart:wireless_report) /jffs/scripts/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
-    . /jffs/addons/wirelessreport-ssh.d/webui-ssh.conf
 }
 
 do_update() {
