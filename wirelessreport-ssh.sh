@@ -403,7 +403,6 @@ do_install() {
 }
 
 dir_upgrade() {
-    . /jffs/addons/wirelessreport-ssh.d/webui-ssh.conf
     # If the new .d directory already exists, migration is complete—skip everything
     [ -d "/jffs/addons/wirelessreport-ssh.d" ] && return
 
@@ -436,6 +435,7 @@ dir_upgrade() {
     sed -i '/wirelessreport-ssh/d' "$SE_FILE"
     echo 'case "$1:$2" in restart:wireless_report) /jffs/scripts/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
+    . /jffs/addons/wirelessreport-ssh.d/webui-ssh.conf
 }
 
 do_update() {
