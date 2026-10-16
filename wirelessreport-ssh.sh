@@ -403,7 +403,7 @@ do_install() {
 }
 
 dir_upgrade() {
-    if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
+    . /jffs/addons/wirelessreport-ssh.d/webui-ssh.conf
     # If the new .d directory already exists, migration is complete—skip everything
     [ -d "/jffs/addons/wirelessreport-ssh.d" ] && return
 
