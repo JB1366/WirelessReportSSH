@@ -628,9 +628,6 @@ inject_menu() {
     esac
 
     umount "$SYSTEM_MENU" && mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"
-	umount "/www/user/$am_webui_page" 2>/dev/null
-	mount -o bind "$WEB_PAGE" "/www/user/$am_webui_page"
-
     flock -u "$FD"
     restart_httpd
 
