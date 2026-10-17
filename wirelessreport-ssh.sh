@@ -34,7 +34,7 @@ if [ "$0" != "/jffs/scripts/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
     exec /jffs/scripts/wirelessreport-ssh.sh "$@"
 fi
 
-SCRIPT_VERSION="2.2.4"
+SCRIPT_VERSION="2.2.5"
 REPORT_SCRIPT="/jffs/scripts/wirelessreport-ssh.sh"
 CONFIG_DIR="/jffs/addons/wirelessreport-ssh.d"
 CONFIG="$CONFIG_DIR/webui-ssh.conf"
@@ -618,7 +618,7 @@ inject_menu() {
             \n{url: \"NULL\", tabName: \"__INHERIT__\"}\
             \n]\
             \n},"
-            sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"<#1558#>\",/ i $INSERT_DATA
+            sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"<#AiProtection_title#>\",/ i $INSERT_DATA
             }" "$TEMP_MENU"
             sys_log "Mounting Menu $TAB_LABEL as $am_webui_page"
             ;;
@@ -1286,6 +1286,10 @@ set_options() {
                     echo -e "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
                     pause
                     continue 2 ;;
+                dev)
+                    set_github_branch ;;
+                e|E)
+                    return 0 ;;
                 inject|inject2)
                     if [ "$choice" = "inject2" ]; then
                         if grep -q "INJECT=" "$CONFIG"; then
@@ -1306,11 +1310,7 @@ set_options() {
                     pause
                     continue 2
                     ;;
-                dev)
-                    set_github_branch ;;
-                e|E)
-                    return 0 ;;
-                s|S)
+                sort)
                     sort -u -o "$CONFIG" "$CONFIG"
                     echo -e "\n$YL[!] CONFIG Sorted.$NC"
                     pause
