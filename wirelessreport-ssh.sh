@@ -161,11 +161,11 @@ check_version() {
             case "$STATE" in
                 OFFLINE)       echo -e "\n$RD[!] Github Offline.$NC\n"
                                UP="try again later?" ;;
-                OUTDATED)      echo -e "\n$GR[i] A new version (${NC}v$REMOTE_VERSION$GR) is available!$NC\n"
+                OUTDATED)      echo -e "\n$GR[i] A new version (${WH}v$REMOTE_VERSION$GR) is available!$NC\n"
                                UP="update version?" ;;
-                HASH_DIFF)     echo -e "\n$GR[i] There is a Hash Update for (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
+                HASH_DIFF)     echo -e "\n$GR[i] There is a Hash Update for (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
                                UP="update Hash?" ;;
-                UP_TO_DATE|*)  echo -e "\n$GR[i] You are already on the latest version (${NC}v$SCRIPT_VERSION$DEV$GR).$NC\n"
+                UP_TO_DATE|*)  echo -e "\n$GR[i] You are already on the latest version (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
                                UP="reinstall/overwrite anyway?" ;;
             esac
             ;;
@@ -344,7 +344,7 @@ do_install() {
         done
     fi
 
-    echo -e "\n$GR[+] Downloading latest version (${NC}v$REMOTE_VERSION$GR)$NC"
+    echo -e "\n$GR[+] Downloading latest version (${WH}v$REMOTE_VERSION$GR)$NC"
     do_update || return 1
 
     if [ "$is_update" = "1" ]; then
