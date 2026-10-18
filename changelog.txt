@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.2.6-unmigrate dir structure.
 v2.2.5-fix change menu color.
 v2.2.4-migrate to new dir structure.
 v2.2.3-moved change menu color to Set Options.

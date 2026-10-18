@@ -33,6 +33,7 @@ if [ "$0" != "/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" ] && [ -f "
     chmod +x /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh
     exec /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh "$@"
 fi
+
 SCRIPT_VERSION="2.2.6"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
