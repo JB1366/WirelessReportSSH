@@ -617,7 +617,7 @@ inject_menu() {
             \n{url: \"NULL\", tabName: \"__INHERIT__\"}\
             \n]\
             \n},"
-            sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"<#AiProtection_title#>\",/ i $INSERT_DATA
+            sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"<#1558#>\",/ i $INSERT_DATA
             }" "$TEMP_MENU"
             sys_log "Mounting Menu $TAB_LABEL as $am_webui_page"
             ;;
@@ -628,6 +628,9 @@ inject_menu() {
     esac
 
     umount "$SYSTEM_MENU" && mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"
+    umount "/www/user/$am_webui_page" 2>/dev/null
+	mount -o bind "$WEB_PAGE" "/www/user/$am_webui_page"
+
     flock -u "$FD"
     restart_httpd
 
