@@ -996,7 +996,7 @@ get_hex_to_ansi() {
 
 get_hex_ansi_selection() {
     #══════════════════════════════════════#
-    echo -e "                              "
+    echo -e "                             "
     echo -e "$NB  (1) Neon-Blue (#0096ff)  "
     echo -e "$LG  (2) Lime-Green (#30d158) "
     echo -e "$MP  (3) Med-Purple (#bf40bf) "
@@ -1009,23 +1009,23 @@ get_hex_ansi_selection() {
     echo -e "$PK (10) Light-Pink (#ff70a6) "
     echo -e "$MT (11) Mint-Green (#64ffda) "
     echo -e "$DG (12) Black (#000000)      "
-    echo -e "                              "
+    echo -e "                             "
     #══════════════════════════════════════#
     while true; do
         printf "$NC Choose option [${B_COLOR}E$NC=Exit] (${B_COLOR}1-12$NC): "; read -r color_choice
         case "$color_choice" in
-            1)  selected_hex="#0096ff"; B_COLOR="$NB" ;;
-            2)  selected_hex="#30d158"; B_COLOR="$LG" ;;
-            3)  selected_hex="#bf40bf"; B_COLOR="$MP" ;;
-            4)  selected_hex="#ffd60a"; B_COLOR="$YW" ;;
-            5)  selected_hex="#64d2ff"; B_COLOR="$SB" ;;
-            6)  selected_hex="#ff9500"; B_COLOR="$OR" ;;
-            7)  selected_hex="#ff453a"; B_COLOR="$RD" ;;
-            8)  selected_hex="#ffffff"; B_COLOR="$WT" ;;
-            9)  selected_hex="#555555"; B_COLOR="$DG" ;;
-            10) selected_hex="#ff70a6"; B_COLOR="$PK" ;;
-            11) selected_hex="#64ffda"; B_COLOR="$MT" ;;
-            12) selected_hex="#000000"; B_COLOR="$DG" ;;
+            1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
+            2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
+            3)  selected_hex="#bf40bf"; selected_ansi="$MP" ;;
+            4)  selected_hex="#ffd60a"; selected_ansi="$YW" ;;
+            5)  selected_hex="#64d2ff"; selected_ansi="$SB" ;;
+            6)  selected_hex="#ff9500"; selected_ansi="$OR" ;;
+            7)  selected_hex="#ff453a"; selected_ansi="$RD" ;;
+            8)  selected_hex="#ffffff"; selected_ansi="$WT" ;;
+            9)  selected_hex="#555555"; selected_ansi="$DG" ;;
+            10) selected_hex="#ff70a6"; selected_ansi="$PK" ;;
+            11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
+            12) selected_hex="#000000"; selected_ansi="$DG" ;;
             e|E) break 2 ;;
             *)  freeze; continue ;;
         esac
@@ -1281,6 +1281,7 @@ set_options() {
                 8)
                     echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
                     get_hex_ansi_selection
+                    B_COLOR="$selected_ansi"
                     if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
                     echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
                     echo -e "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
@@ -2306,10 +2307,10 @@ get_rssi_trend() {
         local prev_rssi="${prev_entry%%|*}"
         local trend_icon="<span class='trend-box'>•</span>"
 
-        [ -n "$prev_rssi" ] && {
+        if [ -n "$prev_rssi" ] && [ "$current_rssi" != "--" ] && [ "$prev_rssi" != "--" ]; then
             [ "$current_rssi" -gt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
             [ "$current_rssi" -lt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
-        }
+        fi
 
         case "$RS_HIST_DATE" in
             1) local new_entry="$current_rssi|$rssi_name|$rband|$CUR_TIME" ;;
@@ -2340,15 +2341,22 @@ get_rssi_trend() {
                 *) rband_val="$rest"; time_val="" ;;
             esac
 
-            if [ "$rssi_val" -ge -50 ]; then
-                style="color: #30d158; font-weight: bold;"
-			elif [ "$rssi_val" -ge -60 ]; then
-                style="color: #64d2ff; font-weight: bold;"
-			elif [ "$rssi_val" -ge -70 ]; then
-                style="color: #ffd60a; font-weight: bold;"
-			else
-                style="color: #ff453a; font-weight: bold;"
-            fi
+            case "$rssi_val" in
+                ''|'--'|*[!0-9-]*)
+                    style="color: #8e8e93; font-weight: normal;"
+                    ;;
+                *)
+                    if [ "$rssi_val" -ge -50 ]; then
+                        style="color: #30d158; font-weight: bold;"
+                    elif [ "$rssi_val" -ge -60 ]; then
+                        style="color: #64d2ff; font-weight: bold;"
+                    elif [ "$rssi_val" -ge -70 ]; then
+                        style="color: #ffd60a; font-weight: bold;"
+                    else
+                        style="color: #ff453a; font-weight: bold;"
+                    fi
+                    ;;
+            esac
 
             rssi_history="${rssi_history}${rssi_history:+<br>}<span style='$style'>$rssi_val [$name_val] [$rband_val]${time_val:+ $time_val}</span>"
         done
@@ -2360,7 +2368,7 @@ get_rssi_trend() {
 
         RSSI_HIST_BUFFER="${RSSI_HIST_BUFFER}${mac}|${current_rssi}${NL}"
 
-        if [ -n "$old" ] && [ "$old" -ne 0 ]; then
+        if [ -n "$old" ] && [ "$old" != 0 ] && [ "$current_rssi" != "--" ] && [ "$old" != "--" ]; then
             [ "$current_rssi" -gt "$old" ] && trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
             [ "$current_rssi" -lt "$old" ] && trend="<span class='trend-box trend-down rssi-poor'>↓</span>"
         fi
