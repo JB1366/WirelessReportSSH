@@ -408,7 +408,8 @@ dir_upgrade() {
     # Migrate legacy folder structure
     if [ -d "/jffs/addons/wirelessreport-ssh.d" ]; then
         rm -f /jffs/scripts/wirelessreport-ssh.sh 2>/dev/null
-        mv /jffs/addons/wirelessreport-ssh.d /jffs/addons/wirelessreport-ssh 2>/dev/null
+        mv /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.d/* /jffs/addons/wirelessreport-ssh/ 2>/dev/null
+        rmdir /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.d 2>/dev/null
     fi
 
     # If the new directory already exists, migration is complete—skip everything
