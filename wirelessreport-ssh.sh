@@ -27,13 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-if [ "$0" != "/jffs/scripts/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
-    mkdir -p /jffs/scripts
-    cp -f "$0" /jffs/scripts/wirelessreport-ssh.sh
-    chmod +x /jffs/scripts/wirelessreport-ssh.sh
-    exec /jffs/scripts/wirelessreport-ssh.sh "$@"
-fi
-SCRIPT_VERSION="2.2.5"
+SCRIPT_VERSION="2.2.6"
 REPORT_SCRIPT="/jffs/scripts/wirelessreport-ssh.sh"
 CONFIG_DIR="/jffs/addons/wirelessreport-ssh.d"
 CONFIG="$CONFIG_DIR/webui-ssh.conf"
@@ -400,41 +394,6 @@ do_install() {
     echo -e "$BL[i] Tip: On router only install, you can add node(s) later."
     echo -e "$BL    Use option #7 in SSH menu to authenticate new node(s).$NC"
 	pause
-}
-
-dir_upgrade() {
-    # If the new .d directory already exists, migration is complete—skip everything
-    [ -d "/jffs/addons/wirelessreport-ssh.d" ] && return
-
-    SS_FILE="/jffs/scripts/services-start"
-    SE_FILE="/jffs/scripts/service-event"
-    PROFILE_ADD="/jffs/configs/profile.add"
-
-    is_update=1
-
-    # Migrate legacy folder structure
-    if [ -d "/jffs/addons/wirelessreport-ssh" ]; then
-        rm -f /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh 2>/dev/null
-        mv /jffs/addons/wirelessreport-ssh /jffs/addons/wirelessreport-ssh.d 2>/dev/null
-    fi
-
-    # Update profile.add (Alias)
-    mkdir -p "$(dirname "$PROFILE_ADD")"
-    [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
-    sed -i '/alias wrssh=/d' "$PROFILE_ADD"
-    echo 'alias wrssh="/jffs/scripts/wirelessreport-ssh.sh install" # added by Wireless Report SSH' >> "$PROFILE_ADD"
-
-    # Update services-start
-    [ ! -f "$SS_FILE" ] && echo '#!/bin/sh' > "$SS_FILE"
-    sed -i '/wirelessreport-ssh/d' "$SS_FILE"
-    echo '/jffs/scripts/wirelessreport-ssh.sh inject & # Inject Wireless Report SSH' >> "$SS_FILE"
-    chmod +x "$SS_FILE"
-
-    # Update service-event
-    [ ! -f "$SE_FILE" ] && echo '#!/bin/sh' > "$SE_FILE"
-    sed -i '/wirelessreport-ssh/d' "$SE_FILE"
-    echo 'case "$1:$2" in restart:wireless_report) /jffs/scripts/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
-    chmod +x "$SE_FILE"
 }
 
 do_update() {
@@ -996,7 +955,7 @@ get_hex_to_ansi() {
 
 get_hex_ansi_selection() {
     #══════════════════════════════════════#
-    echo -e "                             "
+    echo -e "                              "
     echo -e "$NB  (1) Neon-Blue (#0096ff)  "
     echo -e "$LG  (2) Lime-Green (#30d158) "
     echo -e "$MP  (3) Med-Purple (#bf40bf) "
@@ -1009,7 +968,7 @@ get_hex_ansi_selection() {
     echo -e "$PK (10) Light-Pink (#ff70a6) "
     echo -e "$MT (11) Mint-Green (#64ffda) "
     echo -e "$DG (12) Black (#000000)      "
-    echo -e "                             "
+    echo -e "                              "
     #══════════════════════════════════════#
     while true; do
         printf "$NC Choose option [${B_COLOR}E$NC=Exit] (${B_COLOR}1-12$NC): "; read -r color_choice
@@ -4817,7 +4776,6 @@ rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA" 2>/dev/null
 rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
-dir_upgrade
 case "$1" in
     install)
         install_menu
