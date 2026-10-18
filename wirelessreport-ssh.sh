@@ -405,23 +405,22 @@ do_install() {
 }
 
 dir_upgrade() {
-    # Migrate legacy folder structure
+    # 1. Fast exit if hook setup/migration has ALREADY completed
+    [ -f "/jffs/addons/wirelessreport-ssh/.installed" ] && return
+
+    # 2. Migrate legacy folder structure if present
     if [ -d "/jffs/addons/wirelessreport-ssh.d" ]; then
         rm -f /jffs/scripts/wirelessreport-ssh.sh 2>/dev/null
-        mv /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.d/* /jffs/addons/wirelessreport-ssh/ 2>/dev/null
-        rmdir /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.d 2>/dev/null
+        mkdir -p /jffs/addons/wirelessreport-ssh
+        mv /jffs/addons/wirelessreport-ssh.d/* /jffs/addons/wirelessreport-ssh/ 2>/dev/null
+        rmdir /jffs/addons/wirelessreport-ssh.d 2>/dev/null
     fi
-
-    # If the new directory already exists, migration is complete—skip everything
-    [ -d "/jffs/addons/wirelessreport-ssh" ] && return
 
     SS_FILE="/jffs/scripts/services-start"
     SE_FILE="/jffs/scripts/service-event"
     PROFILE_ADD="/jffs/configs/profile.add"
 
     is_update=1
-
-
 
     # Update profile.add (Alias)
     mkdir -p "$(dirname "$PROFILE_ADD")"
@@ -440,6 +439,9 @@ dir_upgrade() {
     sed -i '/wirelessreport-ssh/d' "$SE_FILE"
     echo 'case "$1:$2" in restart:wireless_report) /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
+
+    # Mark setup complete so future executions exit instantly
+    touch "/jffs/addons/wirelessreport-ssh/.installed"
 }
 
 do_update() {
