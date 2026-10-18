@@ -27,16 +27,16 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-if [ "$0" != "/jffs/scripts/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
-    mkdir -p /jffs/scripts
-    cp -f "$0" /jffs/scripts/wirelessreport-ssh.sh
-    chmod +x /jffs/scripts/wirelessreport-ssh.sh
-    exec /jffs/scripts/wirelessreport-ssh.sh "$@"
+if [ "$0" != "/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
+    mkdir -p /jffs/addons/wirelessreport-ssh
+    cp -f "$0" /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh
+    chmod +x /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh
+    exec /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh "$@"
 fi
 SCRIPT_VERSION="2.2.6"
-REPORT_SCRIPT="/jffs/scripts/wirelessreport-ssh.sh"
-CONFIG_DIR="/jffs/addons/wirelessreport-ssh.d"
-CONFIG="$CONFIG_DIR/webui-ssh.conf"
+INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
+REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
+CONFIG="$INSTALL_DIR/webui-ssh.conf"
 WEB_PAGE="/tmp/wireless-ssh.asp"
 SYSTEM_MENU="/www/require/modules/menuTree.js"
 TEMP_MENU="/tmp/menuTree.js"
@@ -331,6 +331,8 @@ do_install() {
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
         pause; return 1
     fi
+
+    mkdir -p "$INSTALL_DIR" 2>/dev/null
     if [ ! -f "$CONFIG" ]; then touch "$CONFIG"; fi
 
     local is_update=0
@@ -403,8 +405,8 @@ do_install() {
 }
 
 dir_upgrade() {
-    # If the new .d directory already exists, migration is complete—skip everything
-    [ -d "/jffs/addons/wirelessreport-ssh.d" ] && return
+    # If the new directory already exists, migration is complete—skip everything
+    [ -d "/jffs/addons/wirelessreport-ssh" ] && return
 
     SS_FILE="/jffs/scripts/services-start"
     SE_FILE="/jffs/scripts/service-event"
@@ -413,27 +415,27 @@ dir_upgrade() {
     is_update=1
 
     # Migrate legacy folder structure
-    if [ -d "/jffs/addons/wirelessreport-ssh" ]; then
-        rm -f /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh 2>/dev/null
-        mv /jffs/addons/wirelessreport-ssh /jffs/addons/wirelessreport-ssh.d 2>/dev/null
+    if [ -d "/jffs/scripts/wirelessreport-ssh" ]; then
+        rm -f /jffs/scripts/wirelessreport-ssh.sh 2>/dev/null
+        mv /jffs/addons/wirelessreport-ssh.d /jffs/addons/wirelessreport-ssh 2>/dev/null
     fi
 
     # Update profile.add (Alias)
     mkdir -p "$(dirname "$PROFILE_ADD")"
     [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
     sed -i '/alias wrssh=/d' "$PROFILE_ADD"
-    echo 'alias wrssh="/jffs/scripts/wirelessreport-ssh.sh install" # added by Wireless Report SSH' >> "$PROFILE_ADD"
+    echo 'alias wrssh="/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh install" # added by Wireless Report SSH' >> "$PROFILE_ADD"
 
     # Update services-start
     [ ! -f "$SS_FILE" ] && echo '#!/bin/sh' > "$SS_FILE"
     sed -i '/wirelessreport-ssh/d' "$SS_FILE"
-    echo '/jffs/scripts/wirelessreport-ssh.sh inject & # Inject Wireless Report SSH' >> "$SS_FILE"
+    echo '/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh inject & # Inject Wireless Report SSH' >> "$SS_FILE"
     chmod +x "$SS_FILE"
 
     # Update service-event
     [ ! -f "$SE_FILE" ] && echo '#!/bin/sh' > "$SE_FILE"
     sed -i '/wirelessreport-ssh/d' "$SE_FILE"
-    echo 'case "$1:$2" in restart:wireless_report) /jffs/scripts/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in restart:wireless_report) /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 }
 
@@ -660,8 +662,7 @@ do_uninstall() {
 	fi
 
     sed -i "\|$REPORT_SCRIPT|d" "$PROFILE_ADD" "$SS_FILE" "$SE_FILE" 2>/dev/null
-    rm -f "$REPORT_SCRIPT" "$WEB_PAGE" 2>/dev/null
-    rm -rf "$CONFIG_DIR" 2>/dev/null
+    rm -rf "$INSTALL_DIR" "$WEB_PAGE" 2>/dev/null
     case "$USB_PATH" in *wirelessreport-ssh*) rm -rf "$USB_PATH" 2>/dev/null ;; esac
 
     uninstall_script="1"
