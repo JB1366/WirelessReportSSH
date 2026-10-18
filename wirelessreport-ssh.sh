@@ -2075,7 +2075,7 @@ do_numbered_node() {
 }
 
 hasta_la_vista() {
-echo -e "\n\n\n$B_COLOR" #════════════════════════════════════════════════════════════════════════════════════════════════════════════#
+echo -e "\n\n\n$B_COLOR" #═══════════════════════════════════════════════════════════════════════════════════════════════════════#
 echo -e "                                                                                                                        "
 echo -e "                                                                                                                        "
 echo -e "             ██╗  ██╗ █████╗ ███████╗████████╗ █████╗      ██╗      █████╗      ██╗   ██╗██╗███████╗████████╗ █████╗    "
@@ -2375,7 +2375,7 @@ get_band() {
     case "$device" in
 		# Quad-Band Mapping
 		# Models: GT-BE98_PRO, BQ16
-        *BE98*|*BQ16*)
+        *BE98_PRO*|*BQ16*)
             case "$iface" in
                 wl0*) Label="5G" ;;
                 wl1*) Label="6G" ;;
@@ -2385,8 +2385,8 @@ get_band() {
             ;;
 
         # Quad-Band Mapping
-		# Models: GT-AXE16000, GT-BE25000
-        *AXE16000*|*BE25000*)
+		# Models: GT-AXE16000, GT-BE25000, GT-BE98
+        *AXE16000*|*BE25000*|*BE98)
             case "$iface" in
                 wl0*) Label="5G" ;;
                 wl1*) Label="5G2" ;;
