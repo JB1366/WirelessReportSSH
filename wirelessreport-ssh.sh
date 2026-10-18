@@ -33,7 +33,7 @@ if [ "$0" != "/jffs/scripts/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
     chmod +x /jffs/scripts/wirelessreport-ssh.sh
     exec /jffs/scripts/wirelessreport-ssh.sh "$@"
 fi
-SCRIPT_VERSION="2.2.5"
+SCRIPT_VERSION="2.2.6"
 REPORT_SCRIPT="/jffs/scripts/wirelessreport-ssh.sh"
 CONFIG_DIR="/jffs/addons/wirelessreport-ssh.d"
 CONFIG="$CONFIG_DIR/webui-ssh.conf"
@@ -127,7 +127,7 @@ check_version() {
     local mode="$1" version_cmp=""
     froze() { return 0; }
     if [ ! -f "$REPORT_SCRIPT" ]; then
-        STATE="NOT_INSTALLED";  N1="$BL(1)"
+        STATE="NOT_INSTALLED"; N1="$BL(1)"
         froze() { freeze 2; return 1; }
     elif [ -z "$REMOTE_VERSION" ]; then
         STATE="OFFLINE"
@@ -227,13 +227,13 @@ menu_vars() {
 
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
-    COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s";  menu_buffer=""
-
-    JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
-    JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
+    COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"; menu_buffer=""
 
     B_COLOR=${B_COLOR:-$BL} # Menu Header & Border Color
     echo -e "$B_COLOR" # Set color for show_header()
+
+    JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
+    JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
 	for i in E R S; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
