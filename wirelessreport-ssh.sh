@@ -405,6 +405,12 @@ do_install() {
 }
 
 dir_upgrade() {
+    # Migrate legacy folder structure
+    if [ -d "/jffs/addons/wirelessreport-ssh.d" ]; then
+        rm -f /jffs/scripts/wirelessreport-ssh.sh 2>/dev/null
+        mv /jffs/addons/wirelessreport-ssh.d /jffs/addons/wirelessreport-ssh 2>/dev/null
+    fi
+
     # If the new directory already exists, migration is complete—skip everything
     [ -d "/jffs/addons/wirelessreport-ssh" ] && return
 
@@ -414,11 +420,7 @@ dir_upgrade() {
 
     is_update=1
 
-    # Migrate legacy folder structure
-    if [ -d "/jffs/addons/wirelessreport-ssh.d" ]; then
-        rm -f /jffs/scripts/wirelessreport-ssh.sh 2>/dev/null
-        mv /jffs/addons/wirelessreport-ssh.d /jffs/addons/wirelessreport-ssh 2>/dev/null
-    fi
+
 
     # Update profile.add (Alias)
     mkdir -p "$(dirname "$PROFILE_ADD")"
