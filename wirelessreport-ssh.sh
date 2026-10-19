@@ -34,7 +34,7 @@ if [ "$0" != "/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" ] && [ -f "
     exec /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh "$@"
 fi
 
-SCRIPT_VERSION="2.2.6"
+SCRIPT_VERSION="2.2.7"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -292,11 +292,12 @@ menu_vars() {
     PULSE_MINS=${PULSE_MINS:-15}
     case "$PULSE_MINS" in 0) UP_STAT="$OFF" ;; *) UP_STAT="$GR${PULSE_MINS} Mins$NC" ;; esac
 
-    IPPAD=${IPPAD:-1}
+    IPPAD=${IPPAD:-1}; PD1="${GR}Last 2 Octets$NC"
+    PD2="${BL}Last Octet$NC"; PD3="${RD}Disabled$NC"
     case "$IPPAD" in
-        2) PD_STAT="${GR}Last 2 Octets$NC" ;;
-        1) PD_STAT="${BL}Last Octet$NC" ;;
-        *) PD_STAT="${RD}Disabled$NC" ;;
+        2) PD_STAT="$PD1" ;;
+        1) PD_STAT="$PD2" ;;
+        *) PD_STAT="$PD3" ;;
     esac
 
     HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
@@ -1402,9 +1403,9 @@ set_ip_padding() {
         printm "    IP Column Padding              Current: ($PD_STAT)"
         printb "╠════════════════════════════════════════════════════════════╣"
         printm ""
-        printm "  $N1 192.168.50.3                         (${RD}Disabled$NC)"
-        printm "  $N2 192.168.50.003                      (${BL}Last Octet$NC)"
-        printm "  $N3 192.168.050.003                   (${GR}Last 2 Octets$NC)"
+        printm "  $N1 192.168.50.3                         ($PD3)"
+        printm "  $N2 192.168.50.003                      ($PD2)"
+        printm "  $N3 192.168.050.003                   ($PD1)"
         printm ""
         printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
