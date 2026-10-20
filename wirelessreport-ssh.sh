@@ -1697,7 +1697,7 @@ check_ssh() {
                                 while true; do
                                     printf "\nRemove error log? (y/n): "; read -r rm_log
                                     case "$rm_log" in
-                                        y|Y) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC"; break 2 ;;
+                                        y|Y) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC"; pause; break 2 ;;
                                         n|N) break 2 ;;
                                         *) freeze 2 ;;
                                     esac
