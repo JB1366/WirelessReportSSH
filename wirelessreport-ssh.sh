@@ -1457,25 +1457,25 @@ go_developer() {
                     continue 2
                     ;;
                 4)
-                    echo -e "\n$B_COLOR═══════════════════════ menuTree.js ══════════════════════════$NC\n"
-                        if [ -f "$TEMP_MENU" ]; then
-                            cat "$TEMP_MENU"
-                        else
-                            echo -e "$YL[!] File not found.$NC"
-                        fi
-                        echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
-                        pause
-                        ;;
+                    echo -e "\n$B_COLOR═══════════════════════$NC menuTree.js $B_COLOR══════════════════════════$NC"
+                    if [ -f "$TEMP_MENU" ]; then
+                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "$TEMP_MENU" | more
+                    else
+                        echo -e "$YL[!] File not found.$NC"
+                    fi
+                    echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                    pause
+                    ;;
                 5)
-                    echo -e "\n$B_COLOR═══════════════════════════ CONFIG ═══════════════════════════$NC\n"
-                        if [ -f "$CONFIG" ]; then
-                            cat "$CONFIG"
-                        else
-                            echo -e "$YL[!] File not found.$NC"
-                        fi
-                        echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
-                        pause
-                        ;;
+                    echo -e "\n$B_COLOR═══════════════════════════$NC CONFIG $B_COLOR═══════════════════════════$NC\n"
+                    if [ -f "$CONFIG" ]; then
+                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$CONFIG" | more
+                    else
+                        echo -e "$YL[!] File not found.$NC"
+                    fi
+                    echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                    pause
+                    ;;
                 6)
                     sort -u -o "$CONFIG" "$CONFIG"
                     echo -e "\n$YL[!] CONFIG Sorted.$NC"
@@ -1483,15 +1483,15 @@ go_developer() {
                     continue 2
                     ;;
                 7)
-                    echo -e "\n$B_COLOR═══════════════════════ profile.add ══════════════════════════$NC\n"
-                        if [ -f "$PROFILE_ADD" ]; then
-                            cat "$PROFILE_ADD"
-                        else
-                            echo -e "$YL[!] File not found.$NC"
-                        fi
-                        echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
-                        pause
-                        ;;
+                    echo -e "\n$B_COLOR═══════════════════════$NC profile.add $B_COLOR══════════════════════════$NC\n"
+                    if [ -f "$PROFILE_ADD" ]; then
+                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$PROFILE_ADD" | more
+                    else
+                        echo -e "$YL[!] File not found.$NC"
+                    fi
+                    echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                    pause
+                    ;;
                 e|E)
                     return 0 ;;
                 z|Z)
