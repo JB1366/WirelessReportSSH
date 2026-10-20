@@ -1007,7 +1007,7 @@ get_hex_to_ansi() {
 
 get_hex_ansi_selection() {
     #══════════════════════════════════════#
-    echo -e "                             "
+    echo -e "                              "
     echo -e "$NB  (1) Neon-Blue (#0096ff)  "
     echo -e "$LG  (2) Lime-Green (#30d158) "
     echo -e "$MP  (3) Med-Purple (#bf40bf) "
@@ -1020,7 +1020,7 @@ get_hex_ansi_selection() {
     echo -e "$PK (10) Light-Pink (#ff70a6) "
     echo -e "$MT (11) Mint-Green (#64ffda) "
     echo -e "$DG (12) Black (#000000)      "
-    echo -e "                             "
+    echo -e "                              "
     #══════════════════════════════════════#
     while true; do
         printf "$NC Choose option [${B_COLOR}E$NC=Exit] (${B_COLOR}1-12$NC): "; read -r color_choice
@@ -1426,6 +1426,7 @@ go_developer() {
         printm "  $N5 View CONGIG"
         printm "  $N6 Sort CONFIG"
         printm "  $N7 View ALIAS'S"
+        printm "  $N8 View SYSLOG"
         printm ""
         printm "  $LZ Power Exit from any Menu"
         printm ""
@@ -1486,6 +1487,16 @@ go_developer() {
                     echo -e "\n$B_COLOR═══════════════════════$NC profile.add $B_COLOR══════════════════════════$NC\n"
                     if [ -f "$PROFILE_ADD" ]; then
                         awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$PROFILE_ADD" | more
+                    else
+                        echo -e "$YL[!] File not found.$NC"
+                    fi
+                    echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                    pause
+                    ;;
+                8)
+                    echo -e "\n$B_COLOR═══════════════════════$NC syslog.log $B_COLOR═══════════════════════════$NC\n"
+                    if [ -f "/jffs/syslog.log" ]; then
+                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "/jffs/syslog.log" | more
                     else
                         echo -e "$YL[!] File not found.$NC"
                     fi
