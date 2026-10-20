@@ -1659,7 +1659,7 @@ check_ssh() {
                         3)
                             del_ssh_keys ;;
                         4)
-                            echo -e "\n$B_COLOR═════════════════════ Authorized Keys ════════════════════════$NC\n"
+                            echo -e "\n$B_COLOR═════════════════════$NC Authorized Keys $B_COLOR════════════════════════$NC\n"
                             if [ -f "/root/.ssh/authorized_keys" ]; then
                                 tr '>' '\n' < /root/.ssh/authorized_keys
                             else
@@ -1669,7 +1669,7 @@ check_ssh() {
                             pause
                             ;;
                         5)
-                            echo -e "\n$B_COLOR════════════════════════ Known Hosts ═════════════════════════$NC\n"
+                            echo -e "\n$B_COLOR════════════════════════$NC Known Hosts $B_COLOR═════════════════════════$NC\n"
                             if [ -f "/jffs/.ssh/known_hosts" ]; then
                                 cat /jffs/.ssh/known_hosts
                             else
@@ -1679,7 +1679,7 @@ check_ssh() {
                             pause
                             ;;
                         6)
-                            echo -e "\n$B_COLOR══════════════════════ SSH Error Log ═════════════════════════$NC\n"
+                            echo -e "\n$B_COLOR══════════════════════$NC SSH Error Log $B_COLOR═════════════════════════$NC\n"
                             if [ -f "$ERROR_LOG" ]; then
                                 cat "$ERROR_LOG"
                                 echo -e "\n\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
