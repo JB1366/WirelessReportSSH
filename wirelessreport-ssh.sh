@@ -1422,8 +1422,10 @@ go_developer() {
         printm "  $N1 Change Github Branch"
         printm "  $N2 Inject WR TAB  --> menuTree.js"
         printm "  $N3 Inject WR Menu --> menuTree.js"
-        printm "  $N4 Show CONGIG"
-        printm "  $N5 Sort CONFIG"
+        printm "  $N4 View menuTree.js"
+        printm "  $N5 View CONGIG"
+        printm "  $N6 Sort CONFIG"
+        printm "  $N7 View ALIAS'S"
         printm ""
         printm "  $LZ Power Exit from any Menu"
         printm ""
@@ -1455,6 +1457,16 @@ go_developer() {
                     continue 2
                     ;;
                 4)
+                    echo -e "\n$B_COLOR═══════════════════════ menuTree.js ══════════════════════════$NC\n"
+                        if [ -f "$TEMP_MENU" ]; then
+                            cat "$TEMP_MENU"
+                        else
+                            echo -e "$YL[!] File not found.$NC"
+                        fi
+                        echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                        pause
+                        ;;
+                5)
                     echo -e "\n$B_COLOR═══════════════════════════ CONFIG ═══════════════════════════$NC\n"
                         if [ -f "$CONFIG" ]; then
                             cat "$CONFIG"
@@ -1464,12 +1476,22 @@ go_developer() {
                         echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                         pause
                         ;;
-                5)
+                6)
                     sort -u -o "$CONFIG" "$CONFIG"
                     echo -e "\n$YL[!] CONFIG Sorted.$NC"
                     pause
                     continue 2
                     ;;
+                7)
+                    echo -e "\n$B_COLOR═══════════════════════ profile.add ══════════════════════════$NC\n"
+                        if [ -f "$PROFILE_ADD" ]; then
+                            cat "$PROFILE_ADD"
+                        else
+                            echo -e "$YL[!] File not found.$NC"
+                        fi
+                        echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                        pause
+                        ;;
                 e|E)
                     return 0 ;;
                 z|Z)
