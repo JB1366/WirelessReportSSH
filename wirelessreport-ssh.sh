@@ -1424,7 +1424,7 @@ go_developer() {
         printm "  $N3 Inject WR Menu --> menuTree.js"
         printm "  $N4 Show CONGIG"
         printm "  $N5 Sort CONFIG"
-         printm ""
+        printm ""
         printm "  $LZ Power Exit from any Menu"
         printm ""
         printb "╚════════════════════════════════════════════════════════════╝"
