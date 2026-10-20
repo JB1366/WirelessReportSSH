@@ -237,7 +237,7 @@ menu_vars() {
     JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
-	for i in E R S; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
+	for i in E R S Z; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
 
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
@@ -1424,6 +1424,8 @@ go_developer() {
         printm "  $N3 Inject WR Menu --> menuTree.js"
         printm "  $N4 Show CONGIG"
         printm "  $N5 Sort CONFIG"
+         printm ""
+        printm "  $LZ Power Exit from any Menu"
         printm ""
         printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
