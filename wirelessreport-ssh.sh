@@ -117,7 +117,7 @@ install_menu() {
                         9) check_ssh ;;
                     esac
                     break ;;
-                e|E) clear; hasta_la_vista; exit 0 ;;
+                e|E) goodbye ;;
                 *) freeze 2; continue ;;
             esac
         done
@@ -722,6 +722,7 @@ set_temp_date() {
                 7) NEW_UNIT="ISO1" ;;
                 8) NEW_UNIT="ISO3" ;;
                 e|E) return ;;
+                z|Z) goodbye ;;
                 *) freeze 2; continue ;;
             esac
             sed -i '/REPORT_UNIT=/d' "$CONFIG"
@@ -973,6 +974,8 @@ set_device_nicknames() {
                     ;;
                 e|E)
                     return ;;
+                z|Z)
+                    goodbye ;;
                 *)
                     freeze 2; continue ;;
             esac
@@ -1128,6 +1131,7 @@ set_device_colors() {
                     continue 2 ;;
                 s|S) break 2 ;;
                 e|E) return 0 ;;
+                z|Z) goodbye ;;
             esac
             case "$node_choice" in ""|*[!0-9]*) freeze 2; continue ;; esac
             if [ "$node_choice" -gt "$total_nodes" ]; then freeze 2; continue; fi
@@ -1198,6 +1202,7 @@ set_theme() {
                 2) TM="DARKMODE" ;;
                 3) TM="ASUS_WEBUI" ;;
                 e|E) break 2 ;;
+                z|Z) goodbye ;;
                 *) freeze 2; continue ;;
             esac
             if grep -q "^THEME=" "$CONFIG"; then
@@ -1296,35 +1301,11 @@ set_options() {
                     pause
                     continue 2 ;;
                 dev)
-                    set_github_branch ;;
+                    go_developer ;;
                 e|E)
                     return 0 ;;
-                inject|inject2)
-                    if [ "$choice" = "inject2" ]; then
-                        if grep -q "INJECT=" "$CONFIG"; then
-                            sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
-                        else
-                            echo 'INJECT="2"' >> "$CONFIG"
-                        fi
-                        INJECT="2"
-                        echo -e "\n$YL[!] Menu injection applied.$NC"
-                    else
-                        if grep -q 'INJECT="2"' "$CONFIG"; then
-                            sed -i '/^INJECT="2"/d' "$CONFIG"
-                            INJECT=""
-                        fi
-                        echo -e "\n$YL[!] TAB injection applied.$NC"
-                    fi
-                    inject_menu
-                    pause
-                    continue 2
-                    ;;
-                sort)
-                    sort -u -o "$CONFIG" "$CONFIG"
-                    echo -e "\n$YL[!] CONFIG Sorted.$NC"
-                    pause
-                    continue 2
-                    ;;
+                z|Z)
+                    goodbye ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1387,6 +1368,8 @@ set_runtime_tracking() {
                     ;;
                 e|E)
                     break 2 ;;
+                z|Z)
+                    goodbye ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1416,6 +1399,7 @@ set_ip_padding() {
                 2) NEW_PAD="1" ;;
                 3) NEW_PAD="2" ;;
                 e|E) break 2 ;;
+                z|Z) goodbye ;;
                 *) freeze 2; continue ;;
             esac
             break
@@ -1425,6 +1409,75 @@ set_ip_padding() {
         else
             echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
         fi
+    done
+}
+
+go_developer() {
+     while true; do
+        show_header
+        printb "╔════════════════════════════════════════════════════════════╗"
+        printm "                      Developers Menu"
+        printb "╠════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1 Change Github Branch"
+        printm "  $N2 Inject WR TAB  --> menuTree.js"
+        printm "  $N3 Inject WR Menu --> menuTree.js"
+        printm "  $N4 Show CONGIG"
+        printm "  $N5 Sort CONFIG"
+        printm ""
+        printb "╚════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            selection
+            case "$choice" in
+                1)
+                    set_github_branch ;;
+                2|3)
+                    if [ "$choice" = "3" ]; then
+                        if grep -q "INJECT=" "$CONFIG"; then
+                            sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
+                        else
+                            echo 'INJECT="2"' >> "$CONFIG"
+                        fi
+                        INJECT="2"
+                        echo -e "\n$YL[!] Menu injection applied.$NC"
+                    else
+                        if grep -q 'INJECT="2"' "$CONFIG"; then
+                            sed -i '/^INJECT="2"/d' "$CONFIG"
+                            INJECT=""
+                        fi
+                        echo -e "\n$YL[!] TAB injection applied.$NC"
+                    fi
+                    pause
+                    inject_menu
+                    continue 2
+                    ;;
+                4)
+                    echo -e "\n$B_COLOR═══════════════════════════ CONFIG ═══════════════════════════$NC\n"
+                        if [ -f "/jffs/addons/wirelessreport-ssh/webui-ssh.conf" ]; then
+                            cat /jffs/addons/wirelessreport-ssh/webui-ssh.conf
+                        else
+                            echo -e "$YL[!] File not found.$NC"
+                        fi
+                        echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
+                        pause
+                        ;;
+                5)
+                    sort -u -o "$CONFIG" "$CONFIG"
+                    echo -e "\n$YL[!] CONFIG Sorted.$NC"
+                    pause
+                    continue 2
+                    ;;
+                e|E)
+                    return 0 ;;
+                z|Z)
+                    goodbye ;;
+                *)
+                    freeze 2
+                    continue ;;
+            esac
+            break
+        done
     done
 }
 
@@ -1448,6 +1501,7 @@ set_github_branch() {
                 1) BRANCH="0" ;;
                 2) BRANCH="1" ;;
                 e|E) break 2 ;;
+                z|Z) goodbye ;;
                 *) freeze 2; continue ;;
             esac
             break
@@ -1530,6 +1584,8 @@ set_rssi_tooltip() {
                     unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     return 0
                     ;;
+                z|Z)
+                    goodbye ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1579,30 +1635,30 @@ check_ssh() {
                         3)
                             del_ssh_keys ;;
                         4)
-                            echo -e "\n$BL═════════════════════ Authorized Keys ════════════════════════$NC\n"
+                            echo -e "\n$B_COLOR═════════════════════ Authorized Keys ════════════════════════$NC\n"
                             if [ -f "/root/.ssh/authorized_keys" ]; then
                                 tr '>' '\n' < /root/.ssh/authorized_keys
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-                            echo -e "\n\n$BL══════════════════════════════════════════════════════════════$NC"
+                            echo -e "\n\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                             pause
                             ;;
                         5)
-                            echo -e "\n$BL════════════════════════ Known Hosts ═════════════════════════$NC\n"
+                            echo -e "\n$B_COLOR════════════════════════ Known Hosts ═════════════════════════$NC\n"
                             if [ -f "/jffs/.ssh/known_hosts" ]; then
                                 cat /jffs/.ssh/known_hosts
                             else
                                 echo -e "$YL[!] File not found.$NC"
                             fi
-                            echo -e "\n$BL══════════════════════════════════════════════════════════════$NC"
+                            echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                             pause
                             ;;
                         6)
-                            echo -e "\n$BL══════════════════════ SSH Error Log ═════════════════════════$NC\n"
+                            echo -e "\n$B_COLOR══════════════════════ SSH Error Log ═════════════════════════$NC\n"
                             if [ -f "$ERROR_LOG" ]; then
                                 cat "$ERROR_LOG"
-                                echo -e "\n\n$BL══════════════════════════════════════════════════════════════$NC"
+                                echo -e "\n\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                                 while true; do
                                     printf "\nRemove error log? (y/n): "; read -r rm_log
                                     case "$rm_log" in
@@ -1613,7 +1669,7 @@ check_ssh() {
                                 done
                             else
                                 echo -e "$YL[!] File not found.$NC"
-                                echo -e "\n$BL══════════════════════════════════════════════════════════════$NC"
+                                echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                             fi
                             pause
                             ;;
@@ -1623,6 +1679,8 @@ check_ssh() {
                     break ;;
                 e|E)
                     return 0 ;;
+                z|Z)
+                    goodbye ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1680,15 +1738,15 @@ get_ssh_keys() {
         echo "cp /jffs/.ssh/known_hosts /tmp/home/root/.ssh/known_hosts # sshpairs persistence" >> "$SS_FILE"
     fi
 
-    echo -e "$BL══════════════════════════════════════════════════════════════"
-	echo -e "$NC                     ACTION REQUIRED NOW                      "
-    echo -e "$BL══════════════════════════════════════════════════════════════"
-    echo -e "                                                                 "
-	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management              "
-	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n                  "
-	echo -e "$YL[!] Do not press [Enter] until Nodes are confirmed to be back online.\n"
-	echo -e "$BL[*] TIP: If a node is missing after authentication,                    "
-	echo -e "$BL[*]      use option #7 to reauthenticate.                           $NC"
+    echo -e "$B_COLOR══════════════════════════════════════════════════════════════"
+	echo -e "$NC                     ACTION REQUIRED NOW                           "
+    echo -e "$B_COLOR══════════════════════════════════════════════════════════════"
+    echo -e "                                                                      "
+	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management                   "
+	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n                       "
+	echo -e "$YL[!] Dont press [Enter] until Nodes are confirmed back online.    \n"
+	echo -e "$BL[*] TIP: If a node is missing after authentication,                "
+	echo -e "$BL[*]      use option #7 to reauthenticate.                       $NC"
 	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check..."; read -r discard
 	node_auth
 }
@@ -1761,10 +1819,10 @@ node_auth() {
     fi
 
     echo -e "\n$GR[✓] RSA Key found at: $WH$SSH_KEY$NC\n"
-    echo -e "$BL══════════════════════════════════════════════════════════════"
-    echo -e "$NC               Verifying Node Authentication                  "
-    echo -e "$BL══════════════════════════════════════════════════════════════"
-    echo -e "                                                                 "
+    echo -e "$B_COLOR══════════════════════════════════════════════════════════════"
+    echo -e "$NC               Verifying Node Authentication                       "
+    echo -e "$B_COLOR══════════════════════════════════════════════════════════════"
+    echo -e "                                                                      "
 
     get_ssh_nodes
     if [ -z "$AIMESH_NODES" ]; then
@@ -1881,6 +1939,8 @@ restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/de
 pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
 
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
+
+goodbye() { clear; hasta_la_vista; exit 0; }
 
 runtime_tracking() {
 	RTIME=${RTIME:-1}
