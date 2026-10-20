@@ -1454,8 +1454,8 @@ go_developer() {
                     ;;
                 4)
                     echo -e "\n$B_COLOR═══════════════════════════ CONFIG ═══════════════════════════$NC\n"
-                        if [ -f "/jffs/addons/wirelessreport-ssh/webui-ssh.conf" ]; then
-                            cat /jffs/addons/wirelessreport-ssh/webui-ssh.conf
+                        if [ -f "$CONFIG" ]; then
+                            cat "$CONFIG"
                         else
                             echo -e "$YL[!] File not found.$NC"
                         fi
