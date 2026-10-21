@@ -70,8 +70,8 @@ show_header() {
 	echo -e "                                                               "
     echo -e "       $JB_1366                                                "
     echo -e "           $JB1366                                             "
-    echo -e "                 $FRMW                                         "
     echo -e "                                                               "
+    echo -e "$MODELID"
     #═══════════════════════════════════════════════════════════════════════#
 }
 
@@ -332,7 +332,16 @@ menu_vars() {
     else
         INSERT_BEFORE="${INSERT_BEFORE:-<#1558#>}"
     fi
-    FRMW="$prodid   $B_COLOR FW:$NC $fwVersion"
+
+    PID="$prodid   FW: $fwVersion"
+    len=${#PID}; target_width=62
+    pad1=$(((target_width - len) / 2))
+    pad2=""; i=0
+    while [ $i -lt $pad1 ]; do
+        pad2="$pad2 "
+        i=$((i + 1))
+    done
+    MODELID="${pad2}$prodid$B_COLOR   FW:$NC $fwVersion"
 
     BN="$GR$BRANCH_NAME$NC"
 }
