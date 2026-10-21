@@ -325,6 +325,13 @@ menu_vars() {
     CUR_DATE=${CUR_DATE:-$RS_HIST_DATE}
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
 
+    BUILD_NO="$(nvram get buildno)"
+    if [ "$BUILD_NO" = "102.10" ]; then
+        INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
+    else
+        INSERT_BEFORE="${INSERT_BEFORE:-<#1558#>}"
+    fi
+
     BN="$GR$BRANCH_NAME$NC"
 }
 
@@ -626,7 +633,7 @@ inject_menu() {
             \n{url: \"NULL\", tabName: \"__INHERIT__\"}\
             \n]\
             \n},"
-            sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"<#1558#>\",/ i $INSERT_DATA
+            sed -i "/^.*{[[:space:]]*$/ { N; /menuName: \"$INSERT_BEFORE\",/ i $INSERT_DATA
             }" "$TEMP_MENU"
             sys_log "Mounting Menu $TAB_LABEL as $am_webui_page"
             ;;
@@ -636,7 +643,6 @@ inject_menu() {
             ;;
     esac
 
-    # v10 <#AiProtection_title#>
     umount "$SYSTEM_MENU" && mount -o bind "$TEMP_MENU" "$SYSTEM_MENU"
     umount "/www/user/$am_webui_page" 2>/dev/null
 	mount -o bind "$WEB_PAGE" "/www/user/$am_webui_page"
@@ -1301,6 +1307,8 @@ set_options() {
                     pause
                     continue 2 ;;
                 dev)
+                    set_github_branch ;;
+                sec)
                     go_developer ;;
                 e|E)
                     return 0 ;;
@@ -1419,9 +1427,9 @@ go_developer() {
         printm "                      Developers Menu"
         printb "╠════════════════════════════════════════════════════════════╣"
         printm ""
-        printm "  $N1 Change Github Branch"
-        printm "  $N2 Inject WR TAB  --> menuTree.js"
-        printm "  $N3 Inject WR Menu --> menuTree.js"
+        printm "  $N1 Inject WR TAB  --> menuTree.js"
+        printm "  $N2 Inject WR Menu --> menuTree.js"
+        printm "  $N3 Insert WR Menu in front of menuName: --> menuTree.js"
         printm "  $N4 View menuTree.js"
         printm "  $N5 View CONGIG"
         printm "  $N6 Sort CONFIG"
@@ -1435,34 +1443,50 @@ go_developer() {
         while true; do
             selection
             case "$choice" in
-                1)
-                    set_github_branch ;;
-                2|3)
-                    if [ "$choice" = "3" ]; then
+                1|2)
+                    if [ "$choice" = "2" ]; then
                         if grep -q "INJECT=" "$CONFIG"; then
                             sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
                         else
                             echo 'INJECT="2"' >> "$CONFIG"
                         fi
                         INJECT="2"
-                        echo -e "\n$YL[!] Menu injection applied.$NC"
+                        echo -e "\nB_COLOR[!] Menu injection applied.$NC"
                     else
                         if grep -q 'INJECT="2"' "$CONFIG"; then
                             sed -i '/^INJECT="2"/d' "$CONFIG"
                             INJECT=""
                         fi
-                        echo -e "\n$YL[!] TAB injection applied.$NC"
+                        echo -e "\n$B_COLOR[!] TAB injection applied.$NC"
                     fi
                     pause
                     inject_menu
                     continue 2
+                    ;;
+                3)
+                    echo -e "$B_COLOR\nCurrent Insert Before menuName:$NC $INSERT_BEFORE"
+                    printf "\nEnter menuName <#TAG#> to insert before [Enter=Keep Current]: "; read -r CHOICE
+                    if [ -n "$CHOICE" ]; then
+                        INSERT_BEFORE="$CHOICE"
+                        echo -e "$B_COLOR\nUpdated to:$NC $INSERT_BEFORE"
+                    else
+                        echo -e "$B_COLOR\nKept current value:$NC $INSERT_BEFORE"
+                    fi
+                    if [ -f "$CONFIG" ]; then
+                        if grep -q "^INSERT_BEFORE=" "$CONFIG"; then
+                            sed -i "s|^INSERT_BEFORE=.*|INSERT_BEFORE=\"$INSERT_BEFORE\"|" "$CONFIG"
+                        else
+                            echo "INSERT_BEFORE=\"$INSERT_BEFORE\"" >> "$CONFIG"
+                        fi
+                    fi
+                    pause
                     ;;
                 4)
                     echo -e "\n$B_COLOR═══════════════════════$NC menuTree.js $B_COLOR══════════════════════════$NC"
                     if [ -f "$TEMP_MENU" ]; then
                         awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "$TEMP_MENU" | more
                     else
-                        echo -e "$YL[!] File not found.$NC"
+                        not_found
                     fi
                     echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                     pause
@@ -1472,7 +1496,7 @@ go_developer() {
                     if [ -f "$CONFIG" ]; then
                         awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$CONFIG" | more
                     else
-                        echo -e "$YL[!] File not found.$NC"
+                        not_found
                     fi
                     echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                     pause
@@ -1488,7 +1512,7 @@ go_developer() {
                     if [ -f "$PROFILE_ADD" ]; then
                         awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$PROFILE_ADD" | more
                     else
-                        echo -e "$YL[!] File not found.$NC"
+                        not_found
                     fi
                     echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                     pause
@@ -1498,7 +1522,7 @@ go_developer() {
                     if [ -f "/jffs/syslog.log" ]; then
                         awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "/jffs/syslog.log" | more
                     else
-                        echo -e "$YL[!] File not found.$NC"
+                        not_found
                     fi
                     echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                     pause
@@ -1632,7 +1656,7 @@ set_rssi_tooltip() {
 
 check_ssh() {
 	while true; do
-		show_header
+        show_header
         printb "╔════════════════════════════════════════════════════════════╗"
 		printm "                       SSH Environment"
 		printb "╠════════════════════════════════════════════════════════════╣"
@@ -1674,7 +1698,7 @@ check_ssh() {
                             if [ -f "/root/.ssh/authorized_keys" ]; then
                                 tr '>' '\n' < /root/.ssh/authorized_keys
                             else
-                                echo -e "$YL[!] File not found.$NC"
+                                not_found
                             fi
                             echo -e "\n\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                             pause
@@ -1684,7 +1708,7 @@ check_ssh() {
                             if [ -f "/jffs/.ssh/known_hosts" ]; then
                                 cat /jffs/.ssh/known_hosts
                             else
-                                echo -e "$YL[!] File not found.$NC"
+                                not_found
                             fi
                             echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                             pause
@@ -1703,7 +1727,7 @@ check_ssh() {
                                     esac
                                 done
                             else
-                                echo -e "$YL[!] File not found.$NC"
+                                not_found
                                 echo -e "\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                             fi
                             pause
@@ -1976,6 +2000,8 @@ pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 
 goodbye() { clear; hasta_la_vista; exit 0; }
+
+not_found() { echo -e "$YL[!] File not found.$NC"; }
 
 runtime_tracking() {
 	RTIME=${RTIME:-1}
