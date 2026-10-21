@@ -27,13 +27,6 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-if [ "$0" != "/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh" ] && [ -f "$0" ]; then
-    mkdir -p /jffs/addons/wirelessreport-ssh
-    cp -f "$0" /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh
-    chmod +x /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh
-    exec /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh "$@"
-fi
-
 SCRIPT_VERSION="2.2.7"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
@@ -411,46 +404,6 @@ do_install() {
     echo -e "$BL[i] Tip: On router only install, you can add node(s) later."
     echo -e "$BL    Use option #7 in SSH menu to authenticate new node(s).$NC"
 	pause
-}
-
-dir_upgrade() {
-    # 1. Fast exit if hook setup/migration has ALREADY completed
-    [ -f "/jffs/addons/wirelessreport-ssh/.installed" ] && return
-
-    # 2. Migrate legacy folder structure if present
-    if [ -d "/jffs/addons/wirelessreport-ssh.d" ]; then
-        rm -f /jffs/scripts/wirelessreport-ssh.sh 2>/dev/null
-        mkdir -p /jffs/addons/wirelessreport-ssh
-        mv /jffs/addons/wirelessreport-ssh.d/* /jffs/addons/wirelessreport-ssh/ 2>/dev/null
-        rmdir /jffs/addons/wirelessreport-ssh.d 2>/dev/null
-    fi
-
-    SS_FILE="/jffs/scripts/services-start"
-    SE_FILE="/jffs/scripts/service-event"
-    PROFILE_ADD="/jffs/configs/profile.add"
-
-    is_update=1
-
-    # Update profile.add (Alias)
-    mkdir -p "$(dirname "$PROFILE_ADD")"
-    [ ! -f "$PROFILE_ADD" ] && touch "$PROFILE_ADD"
-    sed -i '/alias wrssh=/d' "$PROFILE_ADD"
-    echo 'alias wrssh="/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh install" # added by Wireless Report SSH' >> "$PROFILE_ADD"
-
-    # Update services-start
-    [ ! -f "$SS_FILE" ] && echo '#!/bin/sh' > "$SS_FILE"
-    sed -i '/wirelessreport-ssh/d' "$SS_FILE"
-    echo '/jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh inject & # Inject Wireless Report SSH' >> "$SS_FILE"
-    chmod +x "$SS_FILE"
-
-    # Update service-event
-    [ ! -f "$SE_FILE" ] && echo '#!/bin/sh' > "$SE_FILE"
-    sed -i '/wirelessreport-ssh/d' "$SE_FILE"
-    echo 'case "$1:$2" in restart:wireless_report) /jffs/addons/wirelessreport-ssh/wirelessreport-ssh.sh & ;; esac # WR SSH' >> "$SE_FILE"
-    chmod +x "$SE_FILE"
-
-    # Mark setup complete so future executions exit instantly
-    touch "/jffs/addons/wirelessreport-ssh/.installed"
 }
 
 do_update() {
@@ -4946,7 +4899,6 @@ rm -rf "$YAZ_CACHE" "$CUSTOM_CLIENTS_CACHE" "$NODE_DATA" 2>/dev/null
 rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
-dir_upgrade
 case "$1" in
     install)
         install_menu
