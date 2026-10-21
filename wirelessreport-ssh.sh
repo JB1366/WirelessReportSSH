@@ -223,8 +223,7 @@ menu_vars() {
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
     COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"; menu_buffer=""
 
-    B_COLOR=${B_COLOR:-$BL} # Menu Header & Border Color
-    echo -e "$B_COLOR" # Set color for show_header()
+    B_COLOR=${B_COLOR:-$BL}; echo -e "$B_COLOR"
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
