@@ -244,15 +244,15 @@ menu_vars() {
         INSERT_BEFORE="${INSERT_BEFORE:-<#1558#>}"
     fi
 
-    PID="$prodid   FW: $fwVersion"
-    len=${#PID}; target_width=62
+    PID="Router: $prodid   FW: $fwVersion"
+    len=${#PID}; target_width=61
     pad1=$(((target_width - len) / 2))
     pad2=""; i=0
     while [ $i -lt $pad1 ]; do
         pad2="$pad2 "
         i=$((i + 1))
     done
-    MODELID="${pad2}$prodid$B_COLOR   FW:$NC $fwVersion"
+    MODELID="${pad2}$B_COLOR Router: $NC$prodid$B_COLOR   FW:$NC $fwVersion"
 
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
 	for i in E R S Z; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
