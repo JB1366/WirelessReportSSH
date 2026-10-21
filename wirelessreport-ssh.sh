@@ -1308,7 +1308,7 @@ set_options() {
                     continue 2 ;;
                 dev)
                     set_github_branch ;;
-                sec)
+                secret)
                     go_developer ;;
                 e|E)
                     return 0 ;;
@@ -1427,14 +1427,14 @@ go_developer() {
         printm "                      Developers Menu"
         printb "╠════════════════════════════════════════════════════════════╣"
         printm ""
-        printm "  $N1 Inject WR TAB  --> menuTree.js"
-        printm "  $N2 Inject WR Menu --> menuTree.js"
-        printm "  $N3 Insert WR Menu in front of menuName: --> menuTree.js"
-        printm "  $N4 View menuTree.js"
-        printm "  $N5 View CONGIG"
+        printm "  $N1 Inject WR TAB  --> menuTree"
+        printm "  $N2 Inject WR Menu --> menuTree"
+        printm "  $N3 Insert WR Menu <#TAG#> --> menuTree"
+        printm "  $N4 View menuTree - /tmp/menuTree.js"
+        printm "  $N5 View CONGIG - webui-ssh.conf"
         printm "  $N6 Sort CONFIG"
-        printm "  $N7 View ALIAS'S"
-        printm "  $N8 View SYSLOG"
+        printm "  $N7 View ALIAS'S - /jffs/configs/profile.add"
+        printm "  $N8 View SYSLOG - /jffs/syslog.log"
         printm ""
         printm "  $LZ Power Exit from any Menu"
         printm ""
