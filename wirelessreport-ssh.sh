@@ -1451,7 +1451,7 @@ go_developer() {
                             echo 'INJECT="2"' >> "$CONFIG"
                         fi
                         INJECT="2"
-                        echo -e "\nB_COLOR[!] Menu injection applied.$NC"
+                        echo -e "\n$B_COLOR[!] Menu injection applied.$NC"
                     else
                         if grep -q 'INJECT="2"' "$CONFIG"; then
                             sed -i '/^INJECT="2"/d' "$CONFIG"
