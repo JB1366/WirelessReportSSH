@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.2.8-add modelid-fw to install menus.
 v2.2.7-remove unmigrate dir structure.
 v2.2.6-unmigrate dir structure.
 v2.2.5-fix change menu color.

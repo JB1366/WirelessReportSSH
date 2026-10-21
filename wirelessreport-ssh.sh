@@ -229,6 +229,31 @@ menu_vars() {
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
+    prodid=$(nvram get productid)
+    firmver="$(nvram get firmver | tr -d '.')"
+    buildno="$(nvram get buildno)"
+    extendno="$(nvram get extendno)"
+
+    fwVersion="${firmver}.${buildno}"
+    if [ "${extendno:-0}" -gt 0 ]; then
+        fwVersion="${fwVersion}.${extendno}"
+    fi
+    if [ "$buildno" = "102.10" ]; then
+        INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
+    else
+        INSERT_BEFORE="${INSERT_BEFORE:-<#1558#>}"
+    fi
+
+    PID="$prodid   FW: $fwVersion"
+    len=${#PID}; target_width=62
+    pad1=$(((target_width - len) / 2))
+    pad2=""; i=0
+    while [ $i -lt $pad1 ]; do
+        pad2="$pad2 "
+        i=$((i + 1))
+    done
+    MODELID="${pad2}$prodid$B_COLOR   FW:$NC $fwVersion"
+
     for i in 0 1 2 3 4 5 6 7 8 9; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
 	for i in E R S Z; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
     case "$install" in 1) N1="$BL(1)"; N2="$BL(2)" ;; esac
@@ -317,31 +342,6 @@ menu_vars() {
 
     CUR_DATE=${CUR_DATE:-$RS_HIST_DATE}
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
-
-    prodid=$(nvram get productid)
-    firmver="$(nvram get firmver | tr -d '.')"
-    buildno="$(nvram get buildno)"
-    extendno="$(nvram get extendno)"
-
-    fwVersion="${firmver}.${buildno}"
-    if [ "${extendno:-0}" -gt 0 ]; then
-        fwVersion="${fwVersion}.${extendno}"
-    fi
-    if [ "$buildno" = "102.10" ]; then
-        INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
-    else
-        INSERT_BEFORE="${INSERT_BEFORE:-<#1558#>}"
-    fi
-
-    PID="$prodid   FW: $fwVersion"
-    len=${#PID}; target_width=62
-    pad1=$(((target_width - len) / 2))
-    pad2=""; i=0
-    while [ $i -lt $pad1 ]; do
-        pad2="$pad2 "
-        i=$((i + 1))
-    done
-    MODELID="${pad2}$prodid$B_COLOR   FW:$NC $fwVersion"
 
     BN="$GR$BRANCH_NAME$NC"
 }
@@ -1015,6 +1015,7 @@ get_hex_ansi_selection() {
             11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
             12) selected_hex="#000000"; selected_ansi="$DG" ;;
             e|E) break 2 ;;
+            z|Z) goodbye ;;
             *)  freeze; continue ;;
         esac
         break
@@ -1960,19 +1961,19 @@ node_auth() {
     fi
 }
 
-sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
-
-selection() { printf "\n$NC Selection [${B_COLOR}E$NC=Exit]: "; read -r choice; }
-
-restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
-
-pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
-
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 
 goodbye() { clear; hasta_la_vista; exit 0; }
 
 not_found() { echo -e "$YL[!] File not found.$NC"; }
+
+pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
+
+restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
+
+selection() { printf "\n$NC Selection [${B_COLOR}E$NC=Exit]: "; read -r choice; }
+
+sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
 runtime_tracking() {
 	RTIME=${RTIME:-1}
@@ -3305,10 +3306,13 @@ EOF
         NODE_UPTIMES="${NODE_UPTIMES}${NODE_UPTIMES:+$BULLET}<span style='color:$NODE_COLOR;'>$N_UPTIME</span>"
 		NODE_BOOTTIMES="${NODE_BOOTTIMES}${NODE_BOOTTIMES:+$BULLET}<span style='color:$NODE_COLOR;'>$N_BOOT</span>"
         NODE_TOTALS="${NODE_TOTALS}${NODE_TOTALS:+$BULLET}<span style='color:$NODE_COLOR;'>$NODE_DEVICES</span>"
+        get_node_radio_row
     fi
 done
 
-get_node_radio_row
+#════════════════════════#
+#  All Devices Assembly  #
+#════════════════════════#
 ALL_ROWS="${MAIN_ROWS}${NODE_ROWS}"
 ALL_TEMP="$MAIN_TEMP$BULLET$NODE_TEMPS"
 ALL_LOAD="$MAIN_LOAD$BULLET$NODE_LOADS"
