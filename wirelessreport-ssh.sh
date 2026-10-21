@@ -70,6 +70,7 @@ show_header() {
 	echo -e "                                                               "
     echo -e "       $JB_1366                                                "
     echo -e "           $JB1366                                             "
+    echo -e "                 $FRMW                                         "
     echo -e "                                                               "
     #═══════════════════════════════════════════════════════════════════════#
 }
@@ -317,12 +318,21 @@ menu_vars() {
     CUR_DATE=${CUR_DATE:-$RS_HIST_DATE}
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
 
-    BUILD_NO="$(nvram get buildno)"
-    if [ "$BUILD_NO" = "102.10" ]; then
+    prodid=$(nvram get productid)
+    firmver="$(nvram get firmver | tr -d '.')"
+    buildno="$(nvram get buildno)"
+    extendno="$(nvram get extendno)"
+
+    fwVersion="${firmver}.${buildno}"
+    if [ "${extendno:-0}" -gt 0 ]; then
+        fwVersion="${fwVersion}.${extendno}"
+    fi
+    if [ "$buildno" = "102.10" ]; then
         INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
     else
         INSERT_BEFORE="${INSERT_BEFORE:-<#1558#>}"
     fi
+    FRMW="$prodid   $B_COLOR FW:$NC $fwVersion"
 
     BN="$GR$BRANCH_NAME$NC"
 }
