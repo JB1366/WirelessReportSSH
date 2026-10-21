@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.2.8"
+SCRIPT_VERSION="2.2.9"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -284,14 +284,14 @@ menu_vars() {
 
     REPORT_UNIT=${REPORT_UNIT:-USA}
 	case "$REPORT_UNIT" in
-        USA)  DN="USA";  DU="$GR°F$NC"; CT="$DATE_USA" ;;
+        USA) DN="USA"; DU="$GR°F$NC"; CT="$DATE_USA" ;;
         INTL) DN="INTL"; DU="$GR°C$NC"; CT="$DATE_INTL" ;;
-        ISO)  DN="ISO";  DU="$GR°C$NC"; CT="$DATE_ISO" ;;
-        ISO2) DN="ISO";  DU="$GR°F$NC"; CT="$DATE_ISO" ;;
-        USA1) DN="USA";  DU="$BL°F$NC"; CT="$DATE_USA1" ;;
-        INTL1)DN="INTL"; DU="$BL°C$NC"; CT="$DATE_INTL1" ;;
-        ISO1) DN="ISO";  DU="$BL°C$NC"; CT="$DATE_ISO1" ;;
-        ISO3) DN="ISO";  DU="$BL°F$NC"; CT="$DATE_ISO1" ;;
+        ISO) DN="ISO"; DU="$GR°C$NC"; CT="$DATE_ISO" ;;
+        ISO2) DN="ISO"; DU="$GR°F$NC"; CT="$DATE_ISO" ;;
+        USA1) DN="USA"; DU="$BL°F$NC"; CT="$DATE_USA1" ;;
+        INTL1) DN="INTL"; DU="$BL°C$NC"; CT="$DATE_INTL1" ;;
+        ISO1) DN="ISO"; DU="$BL°C$NC"; CT="$DATE_ISO1" ;;
+        ISO3) DN="ISO"; DU="$BL°F$NC"; CT="$DATE_ISO1" ;;
     esac
 
     THEME=${THEME:-ORIGINAL}
@@ -361,7 +361,8 @@ do_install() {
     if [ "$is_update" = "1" ]; then
         while true; do
             check_version do_install
-            printf "Do you want to $UP (y/n): "; read -r update
+            printf "Do you want to $UP (y/n): "
+            read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 4 ;; esac
         done
     fi
@@ -372,7 +373,8 @@ do_install() {
     if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
 		sys_log "(v$REMOTE_VERSION) successfully installed."
-        printf "\nPress $BL[Enter]$NC to apply changes & restart script..."; read -r discard
+        printf "\nPress $BL[Enter]$NC to apply changes & restart script..."
+        read -r discard
 		exec "$REPORT_SCRIPT" install "$@"
 		echo -e "$RD[!]Error: Failed to restart script!$NC" >&2; exit 1
 	fi
@@ -388,7 +390,8 @@ do_install() {
 	else
 		install="1"
 		printf "\n$BL[+] Press $WH[Enter]$BL to proceed to SSH Environment Setup$NC\n"
-		printf "$BL[+] (1) Generate RSA Keys or (2) Provision router-only$NC"; read -r discard
+		printf "$BL[+] (1) Generate RSA Keys or (2) Provision router-only$NC"
+        read -r discard
         check_ssh || return 1
 	fi
 
@@ -514,12 +517,8 @@ do_hash_check() {
 }
 
 check_github() {
-    case "$BRANCH" in
-        1) GIT="JB1366"; BRANCH_NAME="Development"; DEV="D" ;;
-        *) GIT="JB1366"; BRANCH_NAME="main"; DEV="" ;;
-    esac
-
-    GITHUB="https://raw.githubusercontent.com/$GIT/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
+    case "$BRANCH" in 1) BRANCH_NAME="Development"; DEV="D" ;; *) BRANCH_NAME="main"; DEV="" ;; esac
+    GITHUB="https://raw.githubusercontent.com/JB1366/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
 
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
@@ -627,7 +626,8 @@ inject_menu() {
 do_uninstall() {
     echo -e "\n$RD[!] WARNING: Removing Wireless Report SSH...$NC\n"
     while true; do
-        printf "Are you sure? (y/n): "; read -r confirm
+        printf "Are you sure? (y/n): "
+        read -r confirm
         case "$confirm" in y|Y) break ;; n|N) return ;; *) freeze ;; esac
     done
 
@@ -835,7 +835,8 @@ set_device_nicknames() {
                     echo -e "\n$BL[*] Manual Entry Mode$NC"
                     OLD_MAIN="${MAIN_NICK:-$MAIN_ROUTER}"
 
-                    printf "\n  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "; read -r manual_main
+                    printf "\n  ${MAIN_CLR}Main $MAIN_IP [$OLD_MAIN]:$NC "
+                    read -r manual_main
 
                     if [ -n "$manual_main" ]; then
                         manual_main="${manual_main:0:25}"
@@ -851,7 +852,8 @@ set_device_nicknames() {
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
                         NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
-                        printf "  ${NODE_CLR}Node $IP [${OLD_NICK:-$MODEL}]:$NC "; read -r input_node
+                        printf "  ${NODE_CLR}Node $IP [${OLD_NICK:-$MODEL}]:$NC "
+                        read -r input_node
 
                         if [ -n "$input_node" ]; then
                             input_node="${input_node:0:25}"
@@ -879,7 +881,7 @@ set_device_nicknames() {
                         node_idx=$((node_idx + 1))
                     done
                     orig_count=$((node_idx - 1))
-                    echo -e "                                           "
+                    echo -e "                                   "
                     echo -e "  $LR Reset to default, sort by IP."
                     echo -e "  $LE Exit with no changes.      \n"
                     while true; do
@@ -963,8 +965,10 @@ set_device_nicknames() {
 }
 
 get_hex_to_ansi() {
-    NB='\033[38;5;39m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'; RD='\033[38;5;196m'; PK='\033[38;5;211m'; BK='\033[30m'
-    YW='\033[38;5;226m'; SB='\033[38;5;75m'; OR='\033[38;5;208m'; WT='\033[38;5;231m'; MT='\033[38;5;86m'; DG='\033[0;90m'
+    PK='\033[38;5;211m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'
+    RD='\033[38;5;196m'; NB='\033[38;5;39m'; OR='\033[38;5;208m'
+    YW='\033[38;5;226m'; SB='\033[38;5;75m'; BK='\033[30m'
+    WT='\033[38;5;231m'; MT='\033[38;5;86m'; DG='\033[0;90m'
     case "$1" in
         "#0096ff") echo -e "$NB" ;;
         "#30d158") echo -e "$LG" ;;
@@ -1000,7 +1004,8 @@ get_hex_ansi_selection() {
     echo -e "                              "
     #══════════════════════════════════════#
     while true; do
-        printf "$NC Choose option [${B_COLOR}E$NC=Exit] (${B_COLOR}1-12$NC): "; read -r color_choice
+        printf "$NC Choose option [${B_COLOR}E=Exit$NC] (${B_COLOR}1-12$NC): "
+        read -r color_choice
         case "$color_choice" in
             1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
             2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
@@ -1090,7 +1095,8 @@ set_device_colors() {
         printb "╚════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            printf "\n$NC Select number to change color [${B_COLOR}E$NC]xit (${B_COLOR}0-$total_nodes$NC): "; read -r node_choice
+            printf "\n$NC Select number to change color [${B_COLOR}E=Exit$NC] (${B_COLOR}0-$total_nodes$NC): "
+            read -r node_choice
             case "$node_choice" in
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
@@ -1227,7 +1233,8 @@ set_options() {
                 3)
                     while true; do
                         echo -e "\n (${GR}0$NC) disable      (${GR}15$NC)def      (${GR}1440$NC) max "
-                        printf "$BL Enter alert interval in mins $NC[${BL}E$NC=exit]:$GR "; read -r user_mins
+                        printf " Enter alert interval in mins [${B_COLOR}E=exit$NC]: "
+                        read -r user_mins
                         case "$user_mins" in e|E) break 2 ;; ""|*[!0-9]*) freeze 3; continue ;; esac
                         if [ "$user_mins" -le 1440 ]; then NEW_MINS="$user_mins"
                             if grep -q "PULSE_MINS=" "$CONFIG"; then
@@ -1437,7 +1444,8 @@ go_developer() {
                     ;;
                 3)
                     echo -e "$B_COLOR\nCurrent Insert Before menuName:$NC $INSERT_BEFORE"
-                    printf "\nEnter menuName <#TAG#> to insert before [Enter=Keep Current]: "; read -r CHOICE
+                    printf "\nEnter menuName $B_COLOR<#TAG#>$NC to insert before [${B_COLOR}Enter=Keep Current$NC]: "
+                    read -r CHOICE
                     if [ -n "$CHOICE" ]; then
                         INSERT_BEFORE="$CHOICE"
                         echo -e "$B_COLOR\nUpdated to:$NC $INSERT_BEFORE"
@@ -1544,7 +1552,8 @@ set_github_branch() {
         fi
         check_github
         BN="$GR$BRANCH_NAME$NC"
-        printf "$NC\nPress $BL[Enter]$NC to switch to [$BN] branch & restart script..."; read -r restart
+        printf "$NC\nPress $B_COLOR[Enter]$NC to switch to [$BN] branch & restart script..."
+        read -r restart
         if do_update; then
             exec "$REPORT_SCRIPT" install "$@"
         else
@@ -1577,7 +1586,8 @@ set_rssi_tooltip() {
                     ;;
                 2)
                     while true; do
-                        printf "\n$NC Enter new depth (${BL}5-20$NC) [Current: $CE]: "; read -r new_depth
+                        printf "\n$NC Enter new depth (${B_COLOR}5-20$NC) [Current: $CE]: "
+                        read -r new_depth
                         case "$new_depth" in *[!0-9]*|"") freeze 2; continue ;; esac
                         if [ "$new_depth" -ge 5 ] && [ "$new_depth" -le 20 ]; then
                             CUR_ENTRIES="$new_depth"
@@ -1691,7 +1701,8 @@ check_ssh() {
                                 cat "$ERROR_LOG"
                                 echo -e "\n\n$B_COLOR══════════════════════════════════════════════════════════════$NC"
                                 while true; do
-                                    printf "\nRemove error log? (y/n): "; read -r rm_log
+                                    printf "\nRemove error log? (y/n): "
+                                    read -r rm_log
                                     case "$rm_log" in
                                         y|Y) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC"; pause; break 2 ;;
                                         n|N) break 2 ;;
@@ -1729,7 +1740,8 @@ get_ssh_keys() {
 
     if [ -f "/jffs/.ssh/id_dropbear" ] && [ ! -f "/root/.ssh/id_dropbear" ]; then
 		while true; do
-            printf "$BL\n[i]$NC Stored RSA key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "; read -r update
+            printf "$BL\n[i]$NC Stored RSA key detected in $BL/jffs/.ssh/$NC Proceed? (y/n): "
+            read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
         done
         echo -e "\n$GR[!]  Linking and configuring...$NC"
@@ -1737,7 +1749,8 @@ get_ssh_keys() {
 
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
         while true; do
-            printf "$NC\nDo you want to create RSA Keys (y/n): "; read -r update
+            printf "$NC\nDo you want to create RSA Keys (y/n): "
+            read -r update
             case "$update" in y|Y) break ;; n|N) return ;; *) freeze 2 ;; esac
         done
         echo -e "\n$GR[i] Creating RSA Key in /jffs/.ssh/$NC\n"
@@ -1788,9 +1801,11 @@ del_ssh_keys() {
         KEY_NO=false
         while true; do
             if [ "$uninstall_script" = "1" ]; then
-                printf "Uninstalling Wireless Report SSH, Do you want to delete RSA Keys? (y/n): "; read -r delete
+                printf "Uninstalling Wireless Report SSH, Do you want to delete RSA Keys? (y/n): "
+                read -r delete
             else
-                printf "Do you want to delete Keys? (y/n): "; read -r delete
+                printf "Do you want to delete Keys? (y/n): "
+                read -r delete
             fi
             case "$delete" in
                 y|Y)
@@ -1971,7 +1986,7 @@ pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
-selection() { printf "\n$NC Selection [${B_COLOR}E$NC=Exit]: "; read -r choice; }
+selection() { printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "; read -r choice; }
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
@@ -2196,15 +2211,15 @@ echo -e "$NC\n\n\n" #═══════════════════�
 #════════════════════#
 update_time() {
     case "$REPORT_UNIT" in
-        USA)  T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
+        USA) T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
         INTL) T_FMT="+%-d-%b %-H:%M:%S"; D_FMT="+%-d-%b %-H:%M"; TEMP_UNIT="C" ;;
-        ISO)  T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C" ;;
+        ISO) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C" ;;
         ISO2) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="F" ;;
         USA1) T_FMT="+%b-%-d %-I:%M:%S %p"; D_FMT="+%b-%-d %-I:%M %p"; TEMP_UNIT="F" ;;
-        INTL1)T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
+        INTL1) T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
         ISO1) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C" ;;
         ISO3) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F" ;;
-        *)    T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
+        *) T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
 }
