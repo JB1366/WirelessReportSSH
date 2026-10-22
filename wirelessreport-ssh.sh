@@ -51,7 +51,7 @@ unset LD_LIBRARY_PATH
 #  Script Install  #
 #══════════════════#
 show_header() {
-	clear; menu_vars
+	clear; menu_vars; get_modelid_fw
 	#═══════════════════════════════════════════════════════════════════════#
 	echo -e "                                                               "
 	echo -e " ██╗    ██╗██╗██████╗ ███████╗██╗     ███████╗███████╗███████╗ "
@@ -89,8 +89,7 @@ install_menu() {
         printm "  $N5  Set Device $COLORS"
         printm "  $N6  Set Theme ($TM_STAT)"
         printm "  $N7  Set Options"
-        printm "  $N8  Config RSSI Tooltip History ($CH)"
-        printm "  $N9  SSH Config/Options  Key:($KEY)"
+        printm "  $N8  SSH Config/Options  Key:($KEY)"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -98,7 +97,7 @@ install_menu() {
             selection
             case "$choice" in
                 1) do_install; break ;;
-                2|3|4|5|6|7|8|9)
+                2|3|4|5|6|7|8)
                     froze || continue
                     case "$choice" in
                         2) do_uninstall ;;
@@ -107,8 +106,7 @@ install_menu() {
                         5) set_device_colors ;;
                         6) set_theme ;;
                         7) set_options ;;
-                        8) set_rssi_tooltip ;;
-                        9) check_ssh ;;
+                        8) check_ssh ;;
                     esac
                     break ;;
                 e|E|z|Z) goodbye ;;
@@ -223,6 +221,7 @@ menu_vars() {
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
     COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"; menu_buffer=""
+
     B_COLOR=${B_COLOR:-$BL}; echo -e "$B_COLOR"
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
@@ -1220,7 +1219,8 @@ set_options() {
         printm "  $N5  Toggle Node Hostname Display: ($HN_STAT)"
         printm "  $N6  Toggle Loading Table Headers: ($TH_STAT)"
         printm "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
-        printm "  $N8  Change Logo/Menu Border Color"
+        printm "  $N8  Config RSSI Tooltip History ($CH)"
+        printm "  $N9  Change Logo/Menu Border Color"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -1284,6 +1284,8 @@ set_options() {
                     fi
                     ;;
                 8)
+                    set_rssi_tooltip ;;
+                9)
                     echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
                     get_hex_ansi_selection
                     B_COLOR="$selected_ansi"
@@ -1404,6 +1406,79 @@ set_ip_padding() {
         else
             echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
         fi
+    done
+}
+
+set_rssi_tooltip() {
+	while true; do
+		show_header
+        printb "╔═════════════════════════════════════════════════════════════╗"
+        printm "                Config RSSI Tooltip History"
+		printb "╠═════════════════════════════════════════════════════════════╣"
+		printm ""
+		printm "  $N1 Toggle RSSI History: [$CH]"
+		printm "  $N2 Set History Depth:   [$CE] entries"
+		printm "  $N3 Toggle Timestamps:   [$TS]"
+		printm ""
+		printm "  $LS Save Changes & Exit"
+		printm ""
+        printb "╚═════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            selection
+            case "$choice" in
+                1)
+                    case "$CUR_RS_HIST" in 1) CUR_RS_HIST="0" ;; *) CUR_RS_HIST="1" ;; esac
+                    ;;
+                2)
+                    while true; do
+                        printf "\n$NC Enter new depth (${B_COLOR}5-20$NC) [Current: $CE]: "
+                        read -r new_depth
+                        case "$new_depth" in *[!0-9]*|"") freeze 2; continue ;; esac
+                        if [ "$new_depth" -ge 5 ] && [ "$new_depth" -le 20 ]; then
+                            CUR_ENTRIES="$new_depth"
+                            break 2
+                        else
+                            freeze 2
+                            continue
+                        fi
+                    done
+                    ;;
+                3)
+                    case "$CUR_DATE" in 1) CUR_DATE="0" ;; *) CUR_DATE="1" ;; esac
+                    ;;
+                s|S)
+                    RS_HIST="$CUR_RS_HIST"
+                    RS_HIST_ENTRIES="$CUR_ENTRIES"
+                    RS_HIST_DATE="$CUR_DATE"
+
+                    for var in RS_HIST RS_HIST_ENTRIES RS_HIST_DATE; do
+                        eval "val=\$${var}"
+                        if grep -q "^$var=" "$CONFIG"; then
+                            sed -i "s|^$var=.*|$var=\"$val\"|" "$CONFIG"
+                        else
+                            echo "$var=\"$val\"" >> "$CONFIG"
+                        fi
+                    done
+
+                    rm -f "$HISTORY_DB"
+                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
+                    echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
+                    pause
+                    return 0
+                    ;;
+                e|E)
+                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
+                    return 0
+                    ;;
+                z|Z)
+                    goodbye ;;
+                *)
+                    freeze 2
+                    continue ;;
+            esac
+            break
+        done
     done
 }
 
@@ -1576,79 +1651,6 @@ go_developer() {
                     ;;
                 e|E)
                     return 0 ;;
-                z|Z)
-                    goodbye ;;
-                *)
-                    freeze 2
-                    continue ;;
-            esac
-            break
-        done
-    done
-}
-
-set_rssi_tooltip() {
-	while true; do
-		show_header
-        printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                Config RSSI Tooltip History"
-		printb "╠═════════════════════════════════════════════════════════════╣"
-		printm ""
-		printm "  $N1 Toggle RSSI History: [$CH]"
-		printm "  $N2 Set History Depth:   [$CE] entries"
-		printm "  $N3 Toggle Timestamps:   [$TS]"
-		printm ""
-		printm "  $LS Save Changes & Exit"
-		printm ""
-        printb "╚═════════════════════════════════════════════════════════════╝"
-        printf "%b" "$menu_buffer"
-        while true; do
-            selection
-            case "$choice" in
-                1)
-                    case "$CUR_RS_HIST" in 1) CUR_RS_HIST="0" ;; *) CUR_RS_HIST="1" ;; esac
-                    ;;
-                2)
-                    while true; do
-                        printf "\n$NC Enter new depth (${B_COLOR}5-20$NC) [Current: $CE]: "
-                        read -r new_depth
-                        case "$new_depth" in *[!0-9]*|"") freeze 2; continue ;; esac
-                        if [ "$new_depth" -ge 5 ] && [ "$new_depth" -le 20 ]; then
-                            CUR_ENTRIES="$new_depth"
-                            break 2
-                        else
-                            freeze 2
-                            continue
-                        fi
-                    done
-                    ;;
-                3)
-                    case "$CUR_DATE" in 1) CUR_DATE="0" ;; *) CUR_DATE="1" ;; esac
-                    ;;
-                s|S)
-                    RS_HIST="$CUR_RS_HIST"
-                    RS_HIST_ENTRIES="$CUR_ENTRIES"
-                    RS_HIST_DATE="$CUR_DATE"
-
-                    for var in RS_HIST RS_HIST_ENTRIES RS_HIST_DATE; do
-                        eval "val=\$${var}"
-                        if grep -q "^$var=" "$CONFIG"; then
-                            sed -i "s|^$var=.*|$var=\"$val\"|" "$CONFIG"
-                        else
-                            echo "$var=\"$val\"" >> "$CONFIG"
-                        fi
-                    done
-
-                    rm -f "$HISTORY_DB"
-                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
-                    echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
-                    pause
-                    return 0
-                    ;;
-                e|E)
-                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
-                    return 0
-                    ;;
                 z|Z)
                     goodbye ;;
                 *)
@@ -2453,10 +2455,18 @@ get_rssi_trend() {
         local prev_rssi="${prev_entry%%|*}"
         local trend_icon="<span class='trend-box'>•</span>"
 
-        if [ -n "$prev_rssi" ] && [ "$current_rssi" != "--" ] && [ "$prev_rssi" != "--" ]; then
-            [ "$current_rssi" -gt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
-            [ "$current_rssi" -lt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
-        fi
+        case "$prev_rssi" in
+            ""|"--") ;;
+            *)
+                case "$current_rssi" in
+                    "--") ;;
+                    *)
+                        [ "$current_rssi" -gt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-up rssi-excl'>↑</span>"
+                        [ "$current_rssi" -lt "$prev_rssi" ] && trend_icon="<span class='trend-box trend-down rssi-poor'>↓</span>"
+                        ;;
+                esac
+                ;;
+        esac
 
         case "$RS_HIST_DATE" in
             1) local new_entry="$current_rssi|$rssi_name|$rband|$CUR_TIME" ;;
@@ -2514,10 +2524,18 @@ get_rssi_trend() {
 
         RSSI_HIST_BUFFER="${RSSI_HIST_BUFFER}${mac}|${current_rssi}${NL}"
 
-        if [ -n "$old" ] && [ "$old" != 0 ] && [ "$current_rssi" != "--" ] && [ "$old" != "--" ]; then
-            [ "$current_rssi" -gt "$old" ] && trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
-            [ "$current_rssi" -lt "$old" ] && trend="<span class='trend-box trend-down rssi-poor'>↓</span>"
-        fi
+        case "$old" in
+            ""|0|"--") ;;
+            *)
+                case "$current_rssi" in
+                    "--") ;;
+                    *)
+                        [ "$current_rssi" -gt "$old" ] && trend="<span class='trend-box trend-up rssi-excl'>↑</span>"
+                        [ "$current_rssi" -lt "$old" ] && trend="<span class='trend-box trend-down rssi-poor'>↓</span>"
+                        ;;
+                esac
+                ;;
+        esac
     fi
 }
 
@@ -2983,14 +3001,12 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
-menu_vars
 get_hex_to_ansi
 ssh_init
 get_usb
 check_github
 update_time
 device_default_colors
-get_modelid_fw
 
 run_report() {
 #═════════════════#
