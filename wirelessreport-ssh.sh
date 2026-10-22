@@ -2981,7 +2981,6 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
-get_hex_to_ansi
 ssh_init
 get_usb
 check_github
