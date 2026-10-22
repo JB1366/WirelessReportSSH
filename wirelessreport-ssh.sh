@@ -679,7 +679,7 @@ set_temp_date() {
         printm "  $N1  USA   ($GR°F$NC)                      ($DATE_USA)"
         printm "  $N2  INTL  ($GR°C$NC)                      ($DATE_INTL)"
         printm "  $N3  ISO   ($GR°C$NC)                    ($DATE_ISO)"
-        printm "  $N4  ISO   ($GR°F$NC)                   ($DATE_ISO2)"
+        printm "  $N4  ISO   ($GR°F$NC)                    ($DATE_ISO2)"
         printm ""
         printm "                                         [12-HR AM/PM]"
         printm "  $N5  USA   ($BL°F$NC)                     ($DATE_USA1)"
@@ -719,10 +719,10 @@ device_default_colors() {
 
 get_ssh_nodes() {
     AIMESH_NODES=$(nvram get asus_device_list |
-        sed 's/</\n/g' |
-        grep '>2$' |
-        awk -F '>' '{print $2 "|" $3}' |
-        sort -t . -k 4,4n)
+    sed 's/</\n/g' |
+    grep '>2$' |
+    awk -F '>' '{print $2 "|" $3}' |
+    sort -t . -k 4,4n)
 }
 
 set_device_nicknames() {
@@ -817,7 +817,10 @@ set_device_nicknames() {
                         CLEAN_IP="${IP//./_}"
                         eval OLD_NICK=\$NODE_NICK_$CLEAN_IP
 
-                        NODE_LOC=$(cat /jffs/.sys/cfg_mnt/re.info 2>/dev/null | sed 's/},/}\n/g' | grep "$IP" | sed -n 's/.*"alias":"\([^"]*\)".*/\1/p')
+                        NODE_LOC=$(cat /jffs/.sys/cfg_mnt/re.info 2>/dev/null |
+                        sed 's/},/}\n/g' |
+                        grep "$IP" |
+                        sed -n 's/.*"alias":"\([^"]*\)".*/\1/p')
 
                         sed -i "/^NODE_NICK_$CLEAN_IP=/d" "$CONFIG"
                         HEX_CLR=$(echo "$NODE_COLORS" | awk -v i="$node_idx" '{print $i}')
@@ -1402,6 +1405,49 @@ set_ip_padding() {
     done
 }
 
+set_github_branch() {
+    while true; do
+        show_header
+        printb "╔═════════════════════════════════════════════════════════════╗"
+        printm "                      Set Github Branch"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm "  Branch: [$BN]                  $CURRENT"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  $N1 main (JB1366)"
+        printm "  $N2 Development (JB1366)"
+        printm ""
+        printb "╚═════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            selection
+            case "$choice" in
+                1) BRANCH="0" ;;
+                2) BRANCH="1" ;;
+                e|E) break 2 ;;
+                z|Z) goodbye ;;
+                *) freeze 2; continue ;;
+            esac
+            break
+        done
+        if grep -q "^BRANCH=" "$CONFIG"; then
+            sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
+        else
+            echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"
+        fi
+        check_github
+        BN="$GR$BRANCH_NAME$NC"
+        printf "$NC\nPress $B_COLOR[Enter]$NC to switch to [$BN] branch & restart script..."
+        read -r restart
+        if do_update; then
+            exec "$REPORT_SCRIPT" install "$@"
+        else
+            echo -e "\n$RD[!]Error: Branch update failed!$NC" >&2
+            pause
+        fi
+    done
+}
+
 go_developer() {
      while true; do
         show_header
@@ -1414,7 +1460,7 @@ go_developer() {
         printm "  $N3 Insert WR Menu <#TAG#> --> menuTree"
         printm "  $N4 View menuTree - /tmp/menuTree.js"
         printm "  $N5 View CONGIG - webui-ssh.conf"
-        printm "  $N6 Sort CONFIG"
+        printm "  $N6 Sort CONFIG - webui-ssh.conf "
         printm "  $N7 View ALIAS'S - /jffs/configs/profile.add"
         printm "  $N8 View SYSLOG - /jffs/syslog.log"
         printm ""
@@ -1520,49 +1566,6 @@ go_developer() {
             esac
             break
         done
-    done
-}
-
-set_github_branch() {
-    while true; do
-        show_header
-        printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                      Set Github Branch"
-        printb "╠═════════════════════════════════════════════════════════════╣"
-        printm "  Branch: [$BN]                  $CURRENT"
-        printb "╠═════════════════════════════════════════════════════════════╣"
-        printm ""
-        printm "  $N1 main (JB1366)"
-        printm "  $N2 Development (JB1366)"
-        printm ""
-        printb "╚═════════════════════════════════════════════════════════════╝"
-        printf "%b" "$menu_buffer"
-        while true; do
-            selection
-            case "$choice" in
-                1) BRANCH="0" ;;
-                2) BRANCH="1" ;;
-                e|E) break 2 ;;
-                z|Z) goodbye ;;
-                *) freeze 2; continue ;;
-            esac
-            break
-        done
-        if grep -q "^BRANCH=" "$CONFIG"; then
-            sed -i "s/^BRANCH=.*/BRANCH=\"$BRANCH\"/" "$CONFIG"
-        else
-            echo "BRANCH=\"$BRANCH\"" >> "$CONFIG"
-        fi
-        check_github
-        BN="$GR$BRANCH_NAME$NC"
-        printf "$NC\nPress $B_COLOR[Enter]$NC to switch to [$BN] branch & restart script..."
-        read -r restart
-        if do_update; then
-            exec "$REPORT_SCRIPT" install "$@"
-        else
-            echo -e "\n$RD[!]Error: Branch update failed!$NC" >&2
-            pause
-        fi
     done
 }
 
@@ -1707,9 +1710,14 @@ check_ssh() {
                                     printf "\nRemove error log? (y/n): "
                                     read -r rm_log
                                     case "$rm_log" in
-                                        y|Y) rm -f "$ERROR_LOG"; echo -e "\n$GR[✓] Error log removed.$NC"; pause; break 2 ;;
-                                        n|N) break 2 ;;
-                                        *) freeze 2 ;;
+                                        y|Y)
+                                            rm -f "$ERROR_LOG"
+                                            echo -e "\n$GR[✓] Error log removed.$NC"
+                                            pause; break 2 ;;
+                                        n|N)
+                                            break 2 ;;
+                                        *)
+                                            freeze 2 ;;
                                     esac
                                 done
                             else
@@ -1788,13 +1796,14 @@ get_ssh_keys() {
     echo -e "$B_COLOR═══════════════════════════════════════════════════════════════"
 	echo -e "$NC                     ACTION REQUIRED NOW                            "
     echo -e "$B_COLOR═══════════════════════════════════════════════════════════════"
-    echo -e "                                                                      "
-	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management                   "
-	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n                       "
-	echo -e "$YL[!] Dont press [Enter] until Nodes are confirmed back online.    \n"
-	echo -e "$BL[*] TIP: If a node is missing after authentication,                "
-	echo -e "$BL[*]      use option #7 to reauthenticate.                       $NC"
-	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check..."; read -r discard
+    echo -e "                                                                       "
+	echo -e "[*] STEP 1: Go to Asus WebGUI > AiMesh > Management                    "
+	echo -e "[*] STEP 2: Click 'Reboot Node' for each node\n                        "
+	echo -e "$YL[!] Dont press [Enter] until Nodes are confirmed back online.\n     "
+	echo -e "$BL[*] TIP: If a node is missing after authentication,                 "
+	echo -e "$BL[*]      use option #7 to reauthenticate. $NC                       "
+	printf "\n[*] Press $BL[ENTER]$NC to begin authentication check...              "
+    read -r discard
 	node_auth
 }
 
