@@ -51,7 +51,7 @@ unset LD_LIBRARY_PATH
 #  Script Install  #
 #══════════════════#
 show_header() {
-	clear; menu_vars; get_modelid_fw
+	clear; menu_vars
 	#═══════════════════════════════════════════════════════════════════════#
 	echo -e "                                                               "
 	echo -e " ██╗    ██╗██╗██████╗ ███████╗██╗     ███████╗███████╗███████╗ "
@@ -317,6 +317,8 @@ menu_vars() {
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
 
     BN="$GR$BRANCH_NAME$NC"
+
+    MODELID="${MODEL_PAD}${B_COLOR}Router: ${NC}${CACHED_PRODID}${B_COLOR}   FW:${NC} ${CACHED_FW}"
 }
 
 get_modelid_fw() {
@@ -329,6 +331,7 @@ get_modelid_fw() {
     if [ "${extendno:-0}" -gt 0 ]; then
         fwVersion="${fwVersion}.${extendno}"
     fi
+
     if [ "$buildno" = "102.10" ]; then
         INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
     else
@@ -336,14 +339,17 @@ get_modelid_fw() {
     fi
 
     PID="Router: $prodid   FW: $fwVersion"
-    len=${#PID}; target_width=61
+    len=${#PID} target_width=62
     pad1=$(((target_width - len) / 2))
-    pad2=""; i=0
+    MODEL_PAD=""
+    i=0
     while [ $i -lt $pad1 ]; do
-        pad2="$pad2 "
+        MODEL_PAD="$MODEL_PAD "
         i=$((i + 1))
     done
-    MODELID="${pad2}$B_COLOR Router: $NC$prodid$B_COLOR   FW:$NC $fwVersion"
+
+    CACHED_PRODID="$prodid"
+    CACHED_FW="$fwVersion"
 }
 
 do_install() {
@@ -1289,7 +1295,6 @@ set_options() {
                     echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
                     get_hex_ansi_selection
                     B_COLOR="$selected_ansi"
-                    get_modelid_fw
                     if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
                     echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
                     echo -e "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
@@ -1567,7 +1572,7 @@ go_developer() {
                     fi
                     pause
                     inject_menu
-                    continue 2
+                    break
                     ;;
                 3)
                     echo -e "$B_COLOR\nCurrent Insert Before menuName:$NC $INSERT_BEFORE"
@@ -1586,68 +1591,40 @@ go_developer() {
                             echo "INSERT_BEFORE=\"$INSERT_BEFORE\"" >> "$CONFIG"
                         fi
                     fi
-                    pause
                     ;;
                 4)
                     echo -e "\n$B_COLOR═══════════════════════$NC menuTree.js $B_COLOR═══════════════════════════$NC"
                     LOG="$TEMP_MENU"
-                    if [ -f "$LOG" ]; then
-                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "$LOG" | more
-                    else
-                        not_found
-                    fi
+                    if [ -f "$LOG" ]; then log2; else not_found; fi
                     echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    pause
                     ;;
                 5)
                     echo -e "\n$B_COLOR═══════════════════════════$NC CONFIG $B_COLOR════════════════════════════$NC\n"
                     LOG="$CONFIG"
-                    if [ -f "$LOG" ]; then
-                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$LOG" | more
-                    else
-                        not_found
-                    fi
+                    if [ -f "$LOG" ]; then log2; else not_found; fi
                     echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    pause
                     ;;
                 6)
                     sort -u -o "$CONFIG" "$CONFIG"
                     echo -e "\n$YL[!] CONFIG Sorted.$NC"
-                    pause
-                    continue 2
                     ;;
                 7)
                     echo -e "\n$B_COLOR═══════════════════════$NC profile.add $B_COLOR═══════════════════════════$NC\n"
                     LOG="$PROFILE_ADD"
-                    if [ -f "$LOG" ]; then
-                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$LOG" | more
-                    else
-                        not_found
-                    fi
+                    if [ -f "$LOG" ]; then log2; else not_found; fi
                     echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    pause
                     ;;
                 8)
                     echo -e "\n$B_COLOR═══════════════════════$NC syslog.log $B_COLOR════════════════════════════$NC\n"
                     LOG="/jffs/syslog.log"
-                    if [ -f "$LOG" ]; then
-                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "$LOG" | more
-                    else
-                        not_found
-                    fi
+                    if [ -f "$LOG" ]; then log2; else not_found; fi
                     echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    pause
                     ;;
                 9)
                     echo -e "\n$B_COLOR═══════════════════════$NC iocmon.log $B_COLOR════════════════════════════$NC\n"
                     LOG="$ROOT_PATH/iocmon.d/state/iocmon.log"
-                    if [ -f "$LOG" ]; then
-                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "$LOG" | more
-                    else
-                        not_found
-                    fi
+                    if [ -f "$LOG" ]; then log2; else not_found; fi
                     echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    pause
                     ;;
                 e|E)
                     return 0 ;;
@@ -1657,6 +1634,7 @@ go_developer() {
                     freeze 2
                     continue ;;
             esac
+            pause
             break
         done
     done
@@ -2011,6 +1989,8 @@ node_auth() {
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 
 goodbye() { clear; hasta_la_vista; exit 0; }
+
+log2() { awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%02d]%s  %s\n", bc, NR, nc, $0}' "$LOG" | more; }
 
 not_found() { echo -e "$YL[!] File not found.$NC"; }
 
@@ -4987,6 +4967,7 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 
 case "$1" in
     install)
+        get_modelid_fw
         install_menu
         ;;
     inject)
