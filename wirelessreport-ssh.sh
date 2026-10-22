@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.2.9"
+SCRIPT_VERSION="2.3.0"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -1462,6 +1462,7 @@ go_developer() {
         printm "  $N6 Sort CONFIG - webui-ssh.conf "
         printm "  $N7 View ALIAS'S - /jffs/configs/profile.add"
         printm "  $N8 View SYSLOG - /jffs/syslog.log"
+        printm "  $N9 View IOCMON - /mnt/Asus/iocmon.d/state/iocmon.log"
         printm ""
         printm "  $LZ Power Exit from any Menu"
         printm ""
@@ -1549,6 +1550,16 @@ go_developer() {
                     echo -e "\n$B_COLOR═══════════════════════$NC syslog.log $B_COLOR════════════════════════════$NC\n"
                     if [ -f "/jffs/syslog.log" ]; then
                         awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "/jffs/syslog.log" | more
+                    else
+                        not_found
+                    fi
+                    echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
+                    pause
+                    ;;
+                9)
+                    echo -e "\n$B_COLOR═══════════════════════$NC iocmon.log $B_COLOR════════════════════════════$NC\n"
+                    if [ -f "$USB_PATH/iocmon.d/state/iocmon.log" ]; then
+                        awk -v bc="$B_COLOR" -v nc="$NC" '{printf "%s[%03d]%s  %s\n", bc, NR, nc, $0}' "$USB_PATH/iocmon.d/state/iocmon.log" | more
                     else
                         not_found
                     fi
