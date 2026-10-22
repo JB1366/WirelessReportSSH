@@ -1465,7 +1465,7 @@ go_developer() {
         printm "  $N6 Sort CONFIG - webui-ssh.conf "
         printm "  $N7 View ALIAS'S - /jffs/configs/profile.add"
         printm "  $N8 View SYSLOG - /jffs/syslog.log"
-        printm "  $N9 View IOCMON - /mnt/Asus/iocmon.d/state/iocmon.log"
+        printm "  $N9 View IOCMON - $ROOT_PATH/iocmon.d/state/iocmon.log"
         printm ""
         printm "  $LZ Power Exit from any Menu"
         printm ""
@@ -1572,7 +1572,6 @@ go_developer() {
                         not_found
                     fi
                     echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    echo "$ROOT_PATH"
                     pause
                     ;;
                 e|E)
