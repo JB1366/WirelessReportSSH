@@ -223,7 +223,6 @@ menu_vars() {
     UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
     COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"; menu_buffer=""
-
     B_COLOR=${B_COLOR:-$BL}; echo -e "$B_COLOR"
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
