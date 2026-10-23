@@ -913,6 +913,7 @@ set_device_nicknames() {
                                 pause
                                 break 2
                                 ;;
+                            z|Z) goodbye ;;
                         esac
                         valid="true"
                         entered_count=0
@@ -1027,7 +1028,8 @@ get_hex_ansi_selection() {
             10) selected_hex="#ff70a6"; selected_ansi="$PK" ;;
             11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
             12) selected_hex="#000000"; selected_ansi="$DG" ;;
-            e|E) break 2 ;;
+            e|E) return 0 ;;
+            z|Z) goodbye ;;
             *)  freeze; continue ;;
         esac
         break
