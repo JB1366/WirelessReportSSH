@@ -326,11 +326,9 @@ get_modelid_fw() {
     firmver="$(nvram get firmver | tr -d '.')"
     buildno="$(nvram get buildno)"
     extendno="$(nvram get extendno)"
+    extendno="${extendno%%-*}"
 
-    fwVersion="${firmver}.${buildno}"
-    if [ "${extendno:-0}" -gt 0 ]; then
-        fwVersion="${fwVersion}.${extendno}"
-    fi
+    fwVersion="${firmver}.${buildno}_${extendno}"
 
     if [ "$buildno" = "102.10" ]; then
         INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
