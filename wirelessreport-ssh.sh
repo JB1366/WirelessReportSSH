@@ -194,22 +194,21 @@ version_compare() {
 }
 
 printm() {
-    local box_color text target esc plain len pad line i
-    box_color="$B_COLOR"
-    text="$1"
-    target="${2:-61}"
-    esc=$(printf '\033')
-    plain=$(printf "%b" "$text" | sed "s/${esc}\[[0-9;]*m//g")
-    len=${#plain}
-    pad=$((target - len))
+    local box_color="$B_COLOR"
+    local text="$1"
+    local target="${2:-61}"
+    local esc=$(printf '\033')
+    local plain=$(printf "%b" "$text" | sed "s/${esc}\[[0-9;]*m//g")
+    local len=${#plain}
+    local pad=$((target - len))
     [ "$pad" -lt 0 ] && pad=0
-    line="${box_color}║$NC${text}"
-    i=0
+    local line="${box_color}║$NC${text}"
+    local i=0
     while [ "$i" -lt "$pad" ]; do
         line="${line} "
         i=$((i + 1))
     done
-    line="${line}${box_color}║$NC\n"
+    local line="${line}${box_color}║$NC\n"
     menu_buffer="${menu_buffer}${line}"
 }
 
@@ -473,9 +472,7 @@ ScriptUpdateFromAMTM() {
 get_usb() {
     [ -n "$USB_PATH" ] && return 0
     local mount mountpoint
-
     mountpoint="$(awk '$1 ~ /^\/dev\/sd/ && $2 ~ /^\/tmp\/mnt\// {print $2}' /proc/mounts | sort -u)"
-
     ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
 
     for mount in $mountpoint; do
@@ -484,7 +481,6 @@ get_usb() {
             break
         fi
     done
-
     if [ -z "$USB_PATH" ]; then
         ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
         if [ -n "$ROOT_PATH" ]; then
@@ -520,7 +516,6 @@ do_hash_check() {
 check_github() {
     case "$BRANCH" in 1) BRANCH_NAME="Development"; DEV="D" ;; *) BRANCH_NAME="main"; DEV="" ;; esac
     GITHUB="https://raw.githubusercontent.com/JB1366/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
-
     REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
     if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
         REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
@@ -2213,7 +2208,6 @@ update_time() {
         INTL1) T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C"; DN="INTL"; TC="$BL" ;;
         ISO1)  T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C"; DN="ISO"; TC="$BL" ;;
         ISO3)  T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F"; DN="ISO"; TC="$BL" ;;
-        *)     T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F"; DN="USA"; TC="$GR" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
 }
