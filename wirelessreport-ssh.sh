@@ -2502,8 +2502,8 @@ get_band() {
     device=$(echo "$model" | tr '[:lower:]' '[:upper:]')
     case "$device" in
 		# Quad-Band Mapping
-		# Models: GT-BE98_PRO, BQ16
-        *BE98_PRO*|*BQ16*)
+		# Models: GT-BE98_PRO, BQ16, GT-BN98_PRO
+        *BE98_PRO|*BQ16*|*BN98_PRO)
             case "$iface" in
                 wl0*) Label="5G" ;;
                 wl1*) Label="6G" ;;
@@ -2513,8 +2513,8 @@ get_band() {
             ;;
 
         # Quad-Band Mapping
-		# Models: GT-AXE16000, GT-BE25000, GT-BE98
-        *AXE16000*|*BE25000*|*BE98)
+		# Models: GT-AXE16000, GT-BE25000, GT-BE98, GT-BN98
+        *AXE16000*|*BE25000*|*BE98|*BN98)
             case "$iface" in
                 wl0*) Label="5G" ;;
                 wl1*) Label="5G2" ;;
