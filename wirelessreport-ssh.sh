@@ -71,7 +71,7 @@ show_header() {
     echo -e "       $JB_1366                                                "
     echo -e "           $JB1366                                             "
     echo -e "                                                               "
-    echo -e "$MODELID"
+    echo -e "$MODELID"                                                      #
     #═══════════════════════════════════════════════════════════════════════#
 }
 
@@ -218,10 +218,7 @@ menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
 
-    UL='\033[4m'; WH='\e[1;37m'; YL='\033[0;33m'; NC='\033[0m'
-    BL='\033[38;5;39m'; GR='\033[0;32m'; RD='\033[0;31m'
     COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"; menu_buffer=""
-
     B_COLOR=${B_COLOR:-$BL}; echo -e "$B_COLOR"
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
@@ -245,27 +242,6 @@ menu_vars() {
     esac
 
     PORT="$GR$SSH_PORT$NC"
-
-    DATE_USA="$GR$(date +"%b-%-d %-H:%M:%S")$NC"
-    DATE_INTL="$GR$(date +"%-d-%b %-H:%M:%S")$NC"
-    DATE_ISO="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"
-    DATE_ISO2="$GR$(date +"%Y-%m-%d %H:%M:%S")$NC"
-    DATE_USA1="$BL$(date +"%b-%d %-I:%M:%S %p")$NC"
-    DATE_INTL1="$BL$(date +"%d-%b %-I:%M:%S %p")$NC"
-    DATE_ISO1="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
-    DATE_ISO3="$BL$(date +"%Y-%m-%d %-I:%M:%S %p")$NC"
-
-    REPORT_UNIT=${REPORT_UNIT:-USA}
-	case "$REPORT_UNIT" in
-        USA) DN="USA"; DU="$GR°F$NC"; CT="$DATE_USA" ;;
-        INTL) DN="INTL"; DU="$GR°C$NC"; CT="$DATE_INTL" ;;
-        ISO) DN="ISO"; DU="$GR°C$NC"; CT="$DATE_ISO" ;;
-        ISO2) DN="ISO"; DU="$GR°F$NC"; CT="$DATE_ISO" ;;
-        USA1) DN="USA"; DU="$BL°F$NC"; CT="$DATE_USA1" ;;
-        INTL1) DN="INTL"; DU="$BL°C$NC"; CT="$DATE_INTL1" ;;
-        ISO1) DN="ISO"; DU="$BL°C$NC"; CT="$DATE_ISO1" ;;
-        ISO3) DN="ISO"; DU="$BL°F$NC"; CT="$DATE_ISO1" ;;
-    esac
 
     THEME=${THEME:-ORIGINAL}
     TM1_STAT="$GR$THEME$NC"
@@ -319,6 +295,25 @@ menu_vars() {
     BN="$GR$BRANCH_NAME$NC"
 
     MODELID="${MODEL_PAD}${B_COLOR}Router: ${NC}${CACHED_PRODID}${B_COLOR}   FW:${NC} ${CACHED_FW}"
+}
+
+menu_time_color() {
+    WH='\033[1;37m'; YL='\033[0;33m'; RD='\033[0;31m'
+    BL='\033[38;5;39m'; GR='\033[0;32m'; NC='\033[0m'
+
+    update_time
+
+    DU="$TC°$TEMP_UNIT$NC"
+    CT="$TC$CUR_TIME$NC"
+
+    DATE_USA="$GR$(date +'%b-%-d %-H:%M:%S')$NC"
+    DATE_INTL="$GR$(date +'%d-%b %-H:%M:%S')$NC"
+    DATE_ISO="$GR$(date +'%Y-%m-%d %H:%M:%S')$NC"
+    DATE_ISO2="$DATE_ISO"
+    DATE_USA1="$BL$(date +'%b-%-d %-I:%M:%S %p')$NC"
+    DATE_INTL1="$BL$(date +'%d-%b %-I:%M:%S %p')$NC"
+    DATE_ISO1="$BL$(date +'%Y-%m-%d %-I:%M:%S %p')$NC"
+    DATE_ISO3="$DATE_ISO1"
 }
 
 get_modelid_fw() {
@@ -712,6 +707,7 @@ set_temp_date() {
             sed -i '/REPORT_UNIT=/d' "$CONFIG"
             echo "REPORT_UNIT=\"$NEW_UNIT\"" >> "$CONFIG"
             REPORT_UNIT="$NEW_UNIT"
+            menu_time_color
             break
         done
     done
@@ -1297,7 +1293,7 @@ set_options() {
                     echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
                     echo -e "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
                     pause
-                    continue 2 ;;
+                    ;;
                 e|E)
                     return 0 ;;
                 *)
@@ -2206,16 +2202,17 @@ echo -e "$NC\n\n\n" #═══════════════════�
 #  Report Functions  #
 #════════════════════#
 update_time() {
+    REPORT_UNIT=${REPORT_UNIT:-USA}
     case "$REPORT_UNIT" in
-        USA) T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
-        INTL) T_FMT="+%-d-%b %-H:%M:%S"; D_FMT="+%-d-%b %-H:%M"; TEMP_UNIT="C" ;;
-        ISO) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C" ;;
-        ISO2) T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="F" ;;
-        USA1) T_FMT="+%b-%-d %-I:%M:%S %p"; D_FMT="+%b-%-d %-I:%M %p"; TEMP_UNIT="F" ;;
-        INTL1) T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C" ;;
-        ISO1) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C" ;;
-        ISO3) T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F" ;;
-        *) T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F" ;;
+        USA)   T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F"; DN="USA"; TC="$GR" ;;
+        INTL)  T_FMT="+%-d-%b %-H:%M:%S"; D_FMT="+%-d-%b %-H:%M"; TEMP_UNIT="C"; DN="INTL"; TC="$GR" ;;
+        ISO)   T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="C"; DN="ISO"; TC="$GR" ;;
+        ISO2)  T_FMT="+%Y-%m-%d %H:%M:%S"; D_FMT="+%Y-%m-%d %H:%M"; TEMP_UNIT="F"; DN="ISO"; TC="$GR" ;;
+        USA1)  T_FMT="+%b-%-d %-I:%M:%S %p"; D_FMT="+%b-%-d %-I:%M %p"; TEMP_UNIT="F"; DN="USA"; TC="$BL" ;;
+        INTL1) T_FMT="+%-d-%b %-I:%M:%S %p"; D_FMT="+%-d-%b %-I:%M %p"; TEMP_UNIT="C"; DN="INTL"; TC="$BL" ;;
+        ISO1)  T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="C"; DN="ISO"; TC="$BL" ;;
+        ISO3)  T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F"; DN="ISO"; TC="$BL" ;;
+        *)     T_FMT="+%b-%-d %-H:%M:%S"; D_FMT="+%b-%-d %-H:%M"; TEMP_UNIT="F"; DN="USA"; TC="$GR" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
 }
@@ -2968,8 +2965,8 @@ get_all_radio_row() {
 ssh_init
 get_usb
 check_github
-update_time
 device_default_colors
+
 
 run_report() {
 #═════════════════#
@@ -3131,6 +3128,7 @@ done
 #═════════════════════════════#
 #  Main Scan/Device Assembly  #
 #═════════════════════════════#
+update_time
 MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
 SEEN_MACS=""; SEEN_BANDS=""; RSSI_HIST_BUFFER=""
 NL=$'\n'; MAIN_DEVICE_TOTAL=0
@@ -4950,6 +4948,7 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 
 case "$1" in
     install)
+        menu_time_color
         get_modelid_fw
         install_menu
         ;;
