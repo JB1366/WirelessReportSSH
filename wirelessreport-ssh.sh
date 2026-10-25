@@ -1703,30 +1703,15 @@ check_ssh() {
                         3)
                             del_ssh_keys ;;
                         4)
-                            echo -e "\n$B_COLOR═════════════════════$NC Authorized Keys $B_COLOR═════════════════════════$NC\n"
-                            if [ -f "/root/.ssh/authorized_keys" ]; then
-                                tr '>' '\n' < /root/.ssh/authorized_keys
-                            else
-                                not_found
-                            fi
-                            echo -e "\n\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                            pause
-                            ;;
+                            custom_auth_keys() { tr '>' '\n' < "/root/.ssh/authorized_keys"; echo ""; }
+                            file_viewer "Authorized Keys" "/root/.ssh/authorized_keys" custom_auth_keys
+                            pause ;;
                         5)
-                            echo -e "\n$B_COLOR════════════════════════$NC Known Hosts $B_COLOR══════════════════════════$NC\n"
-                            if [ -f "/jffs/.ssh/known_hosts" ]; then
-                                cat /jffs/.ssh/known_hosts
-                            else
-                                not_found
-                            fi
-                            echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                            pause
-                            ;;
+                            file_viewer "Known Hosts" "/jffs/.ssh/known_hosts"
+                            pause ;;
                         6)
-                            echo -e "\n$B_COLOR══════════════════════$NC SSH Error Log $B_COLOR══════════════════════════$NC\n"
+                            file_viewer "SSH Error Log" "$ERROR_LOG"
                             if [ -f "$ERROR_LOG" ]; then
-                                cat "$ERROR_LOG"
-                                echo -e "\n\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
                                 while true; do
                                     printf "\nRemove error log? (y/n): "
                                     read -r rm_log
@@ -1734,19 +1719,16 @@ check_ssh() {
                                         y|Y)
                                             rm -f "$ERROR_LOG"
                                             echo -e "\n$GR[✓] Error log removed.$NC"
-                                            pause; break 2 ;;
+                                            pause
+                                            break 2 ;;
                                         n|N)
                                             break 2 ;;
                                         *)
                                             freeze 2 ;;
                                     esac
                                 done
-                            else
-                                not_found
-                                echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
                             fi
-                            pause
-                            ;;
+                            pause ;;
                         7)
                             node_auth ;;
                     esac
