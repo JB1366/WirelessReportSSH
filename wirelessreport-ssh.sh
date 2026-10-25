@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.1"
+SCRIPT_VERSION="2.3.2"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -196,7 +196,7 @@ version_compare() {
 printm() {
     local box_color="$B_COLOR"
     local text="$1"
-    local target="${2:-61}"
+    local target="${2:-$MB}"
     local esc=$(printf '\033')
     local plain=$(printf "%b" "$text" | sed "s/${esc}\[[0-9;]*m//g")
     local len=${#plain}
@@ -220,7 +220,7 @@ menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
 
-    menu_buffer=""; echo -e "$B_COLOR"
+    menu_buffer=""; MB="61"; echo -e "$B_COLOR"
     PORT="$GR$SSH_PORT$NC"
 
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
@@ -986,26 +986,29 @@ get_hex_to_ansi() {
 }
 
 get_hex_ansi_selection() {
-    #══════════════════════════════════════#
-    echo -e "                              "
-    echo -e "$NB  (1) Neon-Blue (#0096ff)  "
-    echo -e "$LG  (2) Lime-Green (#30d158) "
-    echo -e "$MP  (3) Med-Purple (#bf40bf) "
-    echo -e "$YW  (4) Yellow (#ffd60a)     "
-    echo -e "$SB  (5) SkyBlue (#64d2ff)    "
-    echo -e "$OR  (6) Orange (#ff9500)     "
-    echo -e "$RD  (7) Red (#ff453a)        "
-    echo -e "$WT  (8) White (#ffffff)      "
-    echo -e "$DG  (9) Dark Gray (#555555)  "
-    echo -e "$PK (10) Light-Pink (#ff70a6) "
-    echo -e "$MT (11) Mint-Green (#64ffda) "
-    echo -e "$DG (12) Black (#000000)      "
-    echo -e "                              "
-    #══════════════════════════════════════#
+    menu_buffer=""; MB=30
+    printb "╔══════════════════════════════╗"
+    printm "      Hex Color Pallete"
+    printb "╠══════════════════════════════╣"
+    printm ""
+    printm " $NB (1)  Neon-Blue (#0096ff)"
+    printm " $LG (2)  Lime-Green (#30d158)"
+    printm " $MP (3)  Med-Purple (#bf40bf)"
+    printm " $YW (4)  Yellow (#ffd60a)"
+    printm " $SB (5)  SkyBlue (#64d2ff)"
+    printm " $OR (6)  Orange (#ff9500)"
+    printm " $RD (7)  Red (#ff453a)"
+    printm " $WT (8)  White (#ffffff)"
+    printm " $DG (9)  Dark Gray (#555555)"
+    printm " $PK (10) Light-Pink (#ff70a6)"
+    printm " $MT (11) Mint-Green (#64ffda)"
+    printm " $DG (12) Black (#000000)"
+    printm ""
+    printb "╚══════════════════════════════╝"
+    printf "%b" "$menu_buffer"
     while true; do
-        printf "$NC Choose option [${B_COLOR}E=Exit$NC] (${B_COLOR}1-12$NC): "
-        read -r color_choice
-        case "$color_choice" in
+        selection
+        case "$choice" in
             1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
             2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
             3)  selected_hex="#bf40bf"; selected_ansi="$MP" ;;
@@ -1019,8 +1022,7 @@ get_hex_ansi_selection() {
             11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
             12) selected_hex="#000000"; selected_ansi="$DG" ;;
             e|E) break 2 ;;
-            z|Z) goodbye ;;
-            *)  freeze; continue ;;
+            *) freeze 2; continue ;;
         esac
         break
     done
@@ -1131,9 +1133,9 @@ set_device_colors() {
                 target_name="${target_name:-$(echo "$target_node" | cut -d'|' -f1)}"
                 target_hex=$(echo "$working_colors" | awk -v col="$node_choice" '{print $col}')
             fi
-          selected_hex=""
+            selected_hex=""
             target_prompt_color=$(get_hex_to_ansi "$target_hex")
-            echo -e "$NC Select a new color for ${target_prompt_color}[${target_name}]:"
+            echo -e "\n$NC Select a new color for ${target_prompt_color}[${target_name}]:"
 
             get_hex_to_ansi
             get_hex_ansi_selection
@@ -1149,6 +1151,8 @@ set_device_colors() {
                 done
                 working_colors="$new_string"
             fi
+            echo -e "\n$selected_ansi[+] Device Color changed.$NC"
+            pause
             break
         done
     done
