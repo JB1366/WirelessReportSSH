@@ -1543,33 +1543,24 @@ go_developer() {
                 1|2|3)
                     case "$choice" in
                         3)
-                            if grep -q "INJECT=" "$CONFIG"; then
-                                sed -i 's/INJECT=.*/INJECT="2"/' "$CONFIG"
-                            else
-                                echo 'INJECT="2"' >> "$CONFIG"
-                            fi
                             INJECT="2"
-                            echo -e "\n[!] Menu injection before $B_COLOR$INSERT_BEFORE$NC applied."
+                            MESSAGE="Menu injection before $B_COLOR$INSERT_BEFORE$NC applied."
                             ;;
                         2)
-                            if grep -q "INJECT=" "$CONFIG"; then
-                                sed -i 's/INJECT=.*/INJECT="1"/' "$CONFIG"
-                            else
-                                echo 'INJECT="1"' >> "$CONFIG"
-                            fi
                             INJECT="1"
-                            echo -e "\n[!] TAB injection into $B_COLOR'menu_addons'$NC applied."
+                            MESSAGE="TAB injection into $B_COLOR'menu_addons'$NC applied."
                             ;;
                         1)
-                            if grep -q "INJECT=" "$CONFIG"; then
-                                sed -i 's/INJECT=.*/INJECT=""/' "$CONFIG"
-                            else
-                                echo 'INJECT=""' >> "$CONFIG"
-                            fi
                             INJECT=""
-                            echo -e "\n[!] TAB injection into $B_COLOR'menu_Wireless'$NC applied."
+                            MESSAGE="TAB injection into $B_COLOR'menu_Wireless'$NC applied."
                             ;;
                     esac
+                    if grep -q "INJECT=" "$CONFIG"; then
+                        sed -i "s/INJECT=.*/INJECT=\"$INJECT\"/" "$CONFIG"
+                    else
+                        echo "INJECT=\"$INJECT\"" >> "$CONFIG"
+                    fi
+                    echo -e "\n$B_COLOR[!]$NC $MESSAGE"
                     pause
                     inject_menu
                     break
