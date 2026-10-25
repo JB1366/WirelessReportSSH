@@ -1151,7 +1151,7 @@ set_device_colors() {
                 done
                 working_colors="$new_string"
             fi
-            echo -e "\n$selected_ansi[+] Device Color changed.$NC"
+            echo -e "\n$selected_ansi[+] [${target_name}] Color changed.$NC"
             pause
             break
         done
