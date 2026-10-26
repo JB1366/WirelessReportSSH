@@ -93,6 +93,7 @@ install_menu() {
         printm "  $N6  Set Theme ($TM_STAT)"
         printm "  $N7  Set Options"
         printm "  $N8  SSH Config/Options  Key:($KEY)"
+        printm "  $N9  View Device Firmware"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -100,7 +101,7 @@ install_menu() {
             selection
             case "$choice" in
                 1) do_install; break ;;
-                2|3|4|5|6|7|8)
+                2|3|4|5|6|7|8|9)
                     froze || continue
                     case "$choice" in
                         2) do_uninstall ;;
@@ -110,6 +111,7 @@ install_menu() {
                         6) set_theme ;;
                         7) set_options ;;
                         8) check_ssh ;;
+                        9) show_device_firmware ;;
                     esac
                     break ;;
                 e|E) goodbye ;;
@@ -286,6 +288,8 @@ menu_vars() {
 
     SHOW_FW=${SHOW_FW:-1}
     case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
+
+    FW_TO_CONFIG=${FW_TO_CONFIG:-0}
 }
 
 get_main_fw() {
@@ -1071,7 +1075,7 @@ set_device_colors() {
         printm ""
         printm "  Current Device Configuration:"
         printm ""
-        #═════════════════════════════════════════════════════════════════════#
+
         main_display_name="${MAIN_NICK:-$main_name}"
         main_display_color=$(get_hex_to_ansi "$m_color_hex")
         formatted_main_ip=$(printf "(%s)" "$main_ip")
@@ -1098,7 +1102,7 @@ set_device_colors() {
 
             idx=$((idx + 1))
         done
-        #═════════════════════════════════════════════════════════════════════#
+
         printm ""
         printm "  $LR Restore Default Colors"
         printm "  $LS Save Changes & Exit"
@@ -1530,6 +1534,80 @@ set_github_branch() {
             echo -e "\n$RD[!]Error: Branch update failed!$NC" >&2
             pause
         fi
+    done
+}
+
+show_device_firmware() {
+    while true; do
+        show_header
+        printb "╔═════════════════════════════════════════════════════════════╗"
+        printm "                   Device Firmware Version"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm ""
+
+        local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
+        local NODE_CLR row_text formatted_main formatted_node m_ip m_fw n_name n_ip n_fw
+
+        MAIN_ROUTER=$(nvram get productid)
+        MAIN_IP=$(nvram get lan_ipaddr)
+        MAIN_CLR=$(get_hex_to_ansi "$MAIN_COLOR")
+
+        if [ -n "$CONFIG_MAIN_DATA" ]; then
+            m_fw=$(echo "$CONFIG_MAIN_DATA" | cut -d'|' -f3)
+        fi
+
+        formatted_main=$(printf "  %-16s  %-15s  FW: %s" "${MAIN_NICK:-$MAIN_ROUTER}" "$MAIN_IP" "${m_fw:-Unknown}")
+        row_text="${MAIN_CLR}${formatted_main}$NC"
+        printm "$row_text"
+
+        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
+        node_idx=1
+
+        if [ -n "$CONFIG_NODES_DATA" ]; then
+            for node_fw in $CONFIG_NODES_DATA; do
+                n_name="${node_fw%%|*}"
+                n_rest="${node_fw#*|}"
+                n_ip="${n_rest%%|*}"
+                n_fw="${n_rest#*|}"
+
+                HEX_CLR=$(get_node_color "$node_idx")
+                NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
+
+                formatted_node=$(printf "  %-16s  %-15s  FW: %s" "$n_name" "$n_ip" "$n_fw")
+                row_text="${NODE_CLR}${formatted_node}$NC"
+                printm "$row_text"
+
+                node_idx=$((node_idx + 1))
+            done
+        else
+            printm ""
+            printm "$B_COLOR  [No Cached Nodes Data]$NC"
+        fi
+
+        printm ""
+        printm "  $LS Scan Devices - Update Config"
+        printm ""
+        printb "╚═════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            selection
+            case "$choice" in
+                s|S)
+                    echo -e "\n$B_COLOR[+] Running device scan and updating config...$NC"
+                    FW_TO_CONFIG=1; CONFIG_NODES_CACHE=""
+                    run_report
+                    echo -e "\n$YL[✓] Scan complete!$NC"
+                    FW_TO_CONFIG=0
+                    pause
+                    break
+                    ;;
+                e|E)
+                    return 0 ;;
+                *)
+                    freeze 2
+                    continue ;;
+            esac
+        done
     done
 }
 
@@ -3009,6 +3087,39 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
+check_main_fw() {
+    if [ "${FW_TO_CONFIG:-0}" -eq 1 ]; then
+        main_entry="Main|${MAIN_IP:-$(nvram get lan_ipaddr)}|$M_FWVERSION"
+        if grep -q "^CONFIG_MAIN_DATA=" "$CONFIG"; then
+            grep -v "^CONFIG_MAIN_DATA=" "$CONFIG" > "${CONFIG}.tmp"
+            echo "CONFIG_MAIN_DATA=\"$main_entry\"" >> "${CONFIG}.tmp"
+            mv "${CONFIG}.tmp" "$CONFIG"
+        else
+            echo "CONFIG_MAIN_DATA=\"$main_entry\"" >> "$CONFIG"
+        fi
+    fi
+}
+
+check_node_fw1() {
+    if [ "${FW_TO_CONFIG:-0}" -eq 1 ]; then
+        NODE_DATA_ENTRY="${NODE_NAME}|${IP}|${N_FWVERSION}"
+        CONFIG_NODES_CACHE="${CONFIG_NODES_CACHE} ${NODE_DATA_ENTRY}"
+    fi
+}
+
+check_node_fw2() {
+    if [ "${FW_TO_CONFIG:-0}" -eq 1 ] && [ -n "$CONFIG_NODES_CACHE" ]; then
+        CONFIG_NODES_CACHE=$(echo "$CONFIG_NODES_CACHE" | sed 's/^[[:space:]]*//')
+        if grep -q "^CONFIG_NODES_DATA=" "$CONFIG"; then
+            grep -v "^CONFIG_NODES_DATA=" "$CONFIG" > "${CONFIG}.tmp"
+            echo "CONFIG_NODES_DATA=\"$CONFIG_NODES_CACHE\"" >> "${CONFIG}.tmp"
+            mv "${CONFIG}.tmp" "$CONFIG"
+        else
+            echo "CONFIG_NODES_DATA=\"$CONFIG_NODES_CACHE\"" >> "$CONFIG"
+        fi
+    fi
+}
+
 main_init() {
     get_main_fw
     get_main_modelid
@@ -3031,6 +3142,7 @@ HOSTNAME_COLOR=${HOSTNAME_COLOR:-0};
 TABLE_HEADERS=${TABLE_HEADERS:-1}
 SHOW_FW=${SHOW_FW:-1}
 case "$SHOW_FW" in 1) FW_ON="" ;; *) FW_ON='style="display:none !important;"' ;; esac
+
 read -r START_RUNTIME _ < /proc/uptime
 
 NODE_DATA="/tmp/node_data"
@@ -3252,6 +3364,7 @@ MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
 M_FWVERSION="$fwVersion"
 
+check_main_fw
 get_main_radios
 
 WL_IFNAMES=$(printf "%s\n" $(nvram get wl_ifnames) $(ifconfig -a |
@@ -3362,6 +3475,7 @@ for line in $SSH_NODES; do
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW} )) "$D_FMT")
         N_FWVERSION="${N_FIRMVER}.${N_BUILDNO}_${N_EXTENDNO}"
 
+        check_node_fw1
         get_node_radios
 
         NODE_DEVICES=0
@@ -3396,6 +3510,8 @@ EOF
         get_node_radio_row
     fi
 done
+
+check_node_fw2
 
 #════════════════════════#
 #  All Devices Assembly  #
