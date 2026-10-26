@@ -285,15 +285,16 @@ menu_vars() {
     BN="$GR$BRANCH_NAME$NC"
 }
 
-get_modelid_fw() {
-    prodid=$(nvram get productid)
+get_main_fw() {
     firmver="$(nvram get firmver | tr -d '.')"
     buildno="$(nvram get buildno)"
     extendno="$(nvram get extendno)"
     extendno="${extendno%%-*}"
-
     fwVersion="${firmver}.${buildno}_${extendno}"
+}
 
+get_main_modelid() {
+    prodid=$(nvram get productid)
     if [ "$buildno" = "102.10" ]; then
         INSERT_BEFORE="${INSERT_BEFORE:-<#AiProtection_title#>}"
     else
@@ -2792,6 +2793,7 @@ EOF
 
 parse_node_out() {
     N_TEMP_RAW="" N_LOAD="" N_UPTIME_RAW="" N_UPTIME=""
+    N_FIRMVER="" N_BUILDNO="" N_EXTENDNO=""
     while IFS='|' read -r key f2 f3 f4 rest; do
         case "$key" in
             "TEMP")
@@ -2800,6 +2802,12 @@ parse_node_out() {
                 N_LOAD="$f2" ;;
             "UPTIME")
                 N_UPTIME_RAW="$f2" ;;
+            "firmver")
+                N_FIRMVER="$f2" ;;
+            "buildno")
+                N_BUILDNO="$f2" ;;
+            "extendno")
+                N_EXTENDNO="$f2" ;;
             "RADIOTEMP")
                 N_ROUTER="$f2"
                 N_IFACE="$f3"
@@ -2823,6 +2831,7 @@ parse_node_out() {
 $1
 EOF
     if [ "${#N_TEMP_RAW}" -gt 3 ]; then N_TEMP_RAW=$((N_TEMP_RAW / 1000)); fi
+    N_EXTENDNO="${N_EXTENDNO%%-*}"
 }
 
 parse_node_data() {
@@ -2989,11 +2998,16 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
+main_init() {
+    get_main_fw
+    get_main_modelid
+    menu_time_color
+}
+
 ssh_init
 get_usb
 check_github
 device_default_colors
-
 
 run_report() {
 #═════════════════#
@@ -3129,6 +3143,9 @@ for line in $SSH_NODES; do
             echo \"TEMP|\$(cut -c1-2 /sys/class/thermal/thermal_zone0/temp 2>/dev/null)\"
             echo \"LOAD|\$(cut -d' ' -f1 /proc/loadavg)\"
             echo \"UPTIME|\$(cut -d. -f1 /proc/uptime)\"
+            echo \"firmver|\$(nvram get firmver | tr -d '.')\"
+            echo \"buildno|\$(nvram get buildno)\"
+            echo \"extendno|\$(nvram get extendno)\"
             if [ "$RADIO_TEMPS" = "1" ]; then
                 NODE_ROUTER=\$(nvram get productid 2>/dev/null)
                 for iface in \$ALL_IFACES; do
@@ -3156,6 +3173,7 @@ done
 #  Main Scan/Device Assembly  #
 #═════════════════════════════#
 update_time
+get_main_fw
 MAIN_ROWS=""; NODE_ROWS=""; ALL_ROWS=""
 SEEN_MACS=""; SEEN_BANDS=""; RSSI_HIST_BUFFER=""
 NL=$'\n'; MAIN_DEVICE_TOTAL=0
@@ -3218,6 +3236,7 @@ MC_LOAD=$(get_load_class "$M_LOAD")
 M_UPTIME=$(get_router_uptime "$M_UP")
 MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
+M_FWVERSION="$fwVersion"
 
 get_main_radios
 
@@ -3279,6 +3298,7 @@ MAIN_TEMP="<span class='${MC_TEMP}'>${M_TEMP}</span>"
 MAIN_LOAD="<span class='${MC_LOAD}'>${M_LOAD}</span>"
 MAIN_UPTIME="<span class='main-color'>${M_UPTIME}</span>"
 MAIN_BOOTTIME="<span class='main-color'>${M_BOOT}</span>"
+MAIN_FWVERSION="<span class='main-color'>${M_FWVERSION}</span>"
 wait
 
 #════════════════════════#
@@ -3326,6 +3346,7 @@ for line in $SSH_NODES; do
         NC_LOAD=$(get_load_class "$N_LOAD")
         N_UPTIME=$(get_router_uptime "$N_UPTIME_RAW")
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW} )) "$D_FMT")
+        N_FWVERSION="${N_FIRMVER}.${N_BUILDNO}_${N_EXTENDNO}"
 
         get_node_radios
 
@@ -3357,6 +3378,7 @@ EOF
         NODE_UPTIMES="${NODE_UPTIMES}${NODE_UPTIMES:+$BULLET}<span style='color:$NODE_COLOR;'>$N_UPTIME</span>"
 		NODE_BOOTTIMES="${NODE_BOOTTIMES}${NODE_BOOTTIMES:+$BULLET}<span style='color:$NODE_COLOR;'>$N_BOOT</span>"
         NODE_TOTALS="${NODE_TOTALS}${NODE_TOTALS:+$BULLET}<span style='color:$NODE_COLOR;'>$NODE_DEVICES</span>"
+        NODE_FWVERSIONS="${NODE_FWVERSIONS}${NODE_FWVERSIONS:+$BULLET}<span style='color:$NODE_COLOR;'>$N_FWVERSION</span>"
         get_node_radio_row
     fi
 done
@@ -3369,6 +3391,7 @@ ALL_TEMP="$MAIN_TEMP$BULLET$NODE_TEMPS"
 ALL_LOAD="$MAIN_LOAD$BULLET$NODE_LOADS"
 ALL_UPTIME="$MAIN_UPTIME$BULLET$NODE_UPTIMES"
 ALL_BOOTTIME="$MAIN_BOOTTIME$BULLET$NODE_BOOTTIMES"
+ALL_FWVERSION="$MAIN_FWVERSION$BULLET$NODE_FWVERSIONS"
 ALL_NAMES="$MAIN_NAME$BULLET_LG$NODE_NAMES"
 ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
@@ -4396,6 +4419,7 @@ cat <<HTML >> "$WEB_PAGE"
                                             <td colspan="7" class="uptime-row">
                                                 <span>Uptime: $MAIN_UPTIME</span>
                                                 <span>Reboot: $MAIN_BOOTTIME</span>
+                                                <span>FW: $MAIN_FWVERSION</span>
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -4437,6 +4461,7 @@ cat <<HTML >> "$WEB_PAGE"
                                             <td colspan="7" class="uptime-row ${US}">
                                                 <span>Uptime: $NODE_UPTIMES</span>
                                                 <span>Reboot: $NODE_BOOTTIMES</span>
+                                                <span>FW: $NODE_FWVERSIONS</span>
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -4473,6 +4498,7 @@ cat <<HTML >> "$WEB_PAGE"
                                         <td colspan="7" class="uptime-row ${US}">
                                             <span>Uptime: $ALL_UPTIME</span>
                                             <span>Reboot: $ALL_BOOTTIME</span>
+                                            <span>FW: $ALL_FWVERSION</span>
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -4975,8 +5001,7 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 
 case "$1" in
     install)
-        get_modelid_fw
-        menu_time_color
+        main_init
         install_menu
         ;;
     inject)
