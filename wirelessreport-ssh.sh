@@ -219,10 +219,12 @@ printb() {
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
-    menu_buffer=""; MB="61"; echo -e "$B_COLOR"
-    PORT="$GR$SSH_PORT$NC"
 
+    menu_buffer=""; MB="61"; echo -e "$B_COLOR"
+
+    PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
+
     STATUS="$NC STATUS:"
     CURRENT="$NC CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
 
@@ -317,6 +319,7 @@ menu_time_color() {
     BL='\033[38;5;39m'; GR='\033[0;32m'; NC='\033[0m'
 
     update_time
+    get_hex_to_ansi
 
     DU="$TC°$TEMP_UNIT$NC"
     CT="$TC$CUR_TIME$NC"
