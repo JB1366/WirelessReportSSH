@@ -4656,7 +4656,7 @@ function triggerRefresh() {
                 span.innerText = "Reboot: --";
             } else if (span.textContent.trim().startsWith("FW")) {
                 span.style.color = "#888888";
-                span.innerText = "";
+                span.innerText = "FW: --";
             }
         });
     });
