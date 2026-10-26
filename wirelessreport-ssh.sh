@@ -283,6 +283,9 @@ menu_vars() {
     case "$CUR_DATE" in 1) TS="$ON" ;; *) TS="$OFF" ;; esac
 
     BN="$GR$BRANCH_NAME$NC"
+
+    SHOW_FW=${SHOW_FW:-1}
+    case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
 }
 
 get_main_fw() {
@@ -1225,6 +1228,7 @@ set_options() {
         printm "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
         printm "  $N8  Config RSSI Tooltip History ($CH)"
         printm "  $N9  Change Logo/Menu Border Color"
+        printm " $N10  Toggle Show Firmware ($SF)"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -1299,6 +1303,17 @@ set_options() {
                     echo -e "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
                     menu_time_color
                     pause
+                    ;;
+                10)
+                    if grep -q "SHOW_FW=" "$CONFIG"; then
+                        case "$SHOW_FW" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
+                        sed -i "s/SHOW_FW=.*/SHOW_FW=\"$NEW_SF\"/" "$CONFIG"
+                    else
+                        case "${SHOW_FW:-1}" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
+                        echo "SHOW_FW=\"$NEW_SF\"" >> "$CONFIG"
+                    fi
+                    SHOW_FW="$NEW_SF"
+                    case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
                     ;;
                 e|E)
                     return 0 ;;
@@ -2841,10 +2856,6 @@ ROW
 }
 
 get_main_radios() {
-    case "$RADIO_TEMPS" in
-        0) RADIO_ON='style="display: none !important;"' ;;
-        *) RADIO_ON="" ;;
-    esac
     if [ "$RADIO_TEMPS" = "1" ]; then
         for iface in $(nvram get wl_ifnames); do
             RAW_TEMP="$(wl -i "$iface" phy_tempsense 2>/dev/null)"
@@ -3015,8 +3026,11 @@ run_report() {
 #═════════════════#
 IPPAD=${IPPAD:-1}
 RADIO_TEMPS=${RADIO_TEMPS:-1}
+case "$RADIO_TEMPS" in 0) RADIO_ON='style="display: none !important;"' ;; *) RADIO_ON="" ;; esac
 HOSTNAME_COLOR=${HOSTNAME_COLOR:-0};
 TABLE_HEADERS=${TABLE_HEADERS:-1}
+SHOW_FW=${SHOW_FW:-1}
+case "$SHOW_FW" in 1) FW_ON="" ;; *) FW_ON='style="display:none !important;"' ;; esac
 read -r START_RUNTIME _ < /proc/uptime
 
 NODE_DATA="/tmp/node_data"
@@ -4419,7 +4433,7 @@ cat <<HTML >> "$WEB_PAGE"
                                             <td colspan="7" class="uptime-row">
                                                 <span>Uptime: $MAIN_UPTIME</span>
                                                 <span>Reboot: $MAIN_BOOTTIME</span>
-                                                <span>FW: $MAIN_FWVERSION</span>
+                                                <span $FW_ON>FW: $MAIN_FWVERSION</span>
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -4461,7 +4475,7 @@ cat <<HTML >> "$WEB_PAGE"
                                             <td colspan="7" class="uptime-row ${US}">
                                                 <span>Uptime: $NODE_UPTIMES</span>
                                                 <span>Reboot: $NODE_BOOTTIMES</span>
-                                                <span>FW: $NODE_FWVERSIONS</span>
+                                                <span $FW_ON>FW: $NODE_FWVERSIONS</span>
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -4498,7 +4512,7 @@ cat <<HTML >> "$WEB_PAGE"
                                         <td colspan="7" class="uptime-row ${US}">
                                             <span>Uptime: $ALL_UPTIME</span>
                                             <span>Reboot: $ALL_BOOTTIME</span>
-                                            <span>FW: $ALL_FWVERSION</span>
+                                            <span $FW_ON>FW: $ALL_FWVERSION</span>
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -4640,6 +4654,9 @@ function triggerRefresh() {
             } else if (span.textContent.trim().startsWith("Reboot")) {
                 span.style.color = "#888888";
                 span.innerText = "Reboot: --";
+            } else if (span.textContent.trim().startsWith("FW")) {
+                span.style.color = "#888888";
+                span.innerText = "";
             }
         });
     });
