@@ -293,8 +293,6 @@ menu_vars() {
 
     SHOW_FW=${SHOW_FW:-1}
     case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
-
-    FW_TO_CONFIG=${FW_TO_CONFIG:-0}
 }
 
 get_main_fw() {
@@ -671,8 +669,8 @@ do_uninstall() {
         echo -e "\n$YL[!] RSS Keys and Fingerprints preserved in /jffs/.ssh$NC"
     fi
 
-    unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOSTNAME_COLOR SSH_KEY
-    unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT uninstall_script
+    unset MAIN_COLOR NODE_COLORS REPORT_UNIT THEME RTIME RTIME_LOG BACKHAUL PULSE_MINS IPPAD HOSTNAME_COLOR SSH_KEY RADIO_TEMPS
+    unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT uninstall_script SHOW_FW
 
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
@@ -896,10 +894,10 @@ do_node_sorting() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                     Manual Node Sorting"
+        printm "                     Node Display Order"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
-        printm " Current order:"
+        printm "  Current order:"
         printm ""
 
         get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
