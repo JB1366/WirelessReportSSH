@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.3"
+SCRIPT_VERSION="2.3.4"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -91,9 +91,10 @@ install_menu() {
         printm "  $N4  Set Nicknames & Node Display Order"
         printm "  $N5  Set Device $COLORS"
         printm "  $N6  Set Theme ($TM_STAT)"
-        printm "  $N7  Set Options"
+        printm "  $N7  Set Report Options"
         printm "  $N8  SSH Config/Options  Key:($KEY)"
-        printm "  $N9  View Device Firmware"
+        printm "  $N9  Set Header/Menu Border Color"
+        printm " $N10  View Device Firmware"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -101,7 +102,7 @@ install_menu() {
             selection
             case "$choice" in
                 1) do_install; break ;;
-                2|3|4|5|6|7|8|9)
+                2|3|4|5|6|7|8|9|10)
                     froze || continue
                     case "$choice" in
                         2) do_uninstall ;;
@@ -111,7 +112,8 @@ install_menu() {
                         6) set_theme ;;
                         7) set_options ;;
                         8) check_ssh ;;
-                        9) show_device_firmware ;;
+                        9) set_border_color ;;
+                        10) show_device_firmware ;;
                     esac
                     break ;;
                 e|E) goodbye ;;
@@ -1220,7 +1222,7 @@ set_options() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                        Set Options"
+        printm "                      Report Options"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
         printm "  $N1  Toggle Runtime Tracking: ($RT_STAT)"
@@ -1230,9 +1232,8 @@ set_options() {
         printm "  $N5  Toggle Node Hostname Display: ($HN_STAT)"
         printm "  $N6  Toggle Loading Table Headers: ($TH_STAT)"
         printm "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
-        printm "  $N8  Config RSSI Tooltip History ($CH)"
-        printm "  $N9  Change Logo/Menu Border Color"
-        printm " $N10  Toggle Show Firmware ($SF)"
+        printm "  $N8  Config RSSI Tooltip History: ($CH)"
+        printm "  $N9  Toggle Show Firmware: ($SF)"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -1298,17 +1299,6 @@ set_options() {
                 8)
                     set_rssi_tooltip ;;
                 9)
-                    echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
-                    get_hex_to_ansi
-                    get_hex_ansi_selection
-                    B_COLOR="$selected_ansi"
-                    if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
-                    echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
-                    echo -e "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
-                    menu_time_color
-                    pause
-                    ;;
-                10)
                     if grep -q "SHOW_FW=" "$CONFIG"; then
                         case "$SHOW_FW" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
                         sed -i "s/SHOW_FW=.*/SHOW_FW=\"$NEW_SF\"/" "$CONFIG"
@@ -1495,6 +1485,18 @@ set_rssi_tooltip() {
     done
 }
 
+set_border_color() {
+    echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
+    get_hex_to_ansi
+    get_hex_ansi_selection
+    B_COLOR="$selected_ansi"
+    if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
+    echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
+    printf "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
+    menu_time_color
+    pause
+}
+
 set_github_branch() {
     while true; do
         show_header
@@ -1541,7 +1543,7 @@ show_device_firmware() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                   Device Firmware Version"
+        printm "                       Device Firmware"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
 
@@ -1563,26 +1565,36 @@ show_device_firmware() {
         get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
         node_idx=1
 
-        if [ -n "$CONFIG_NODES_DATA" ]; then
-            for node_fw in $CONFIG_NODES_DATA; do
-                n_name="${node_fw%%|*}"
-                n_rest="${node_fw#*|}"
-                n_ip="${n_rest%%|*}"
-                n_fw="${n_rest#*|}"
+        for node in $SSH_NODES; do
+            MODEL="${node%%|*}"
+            IP="${node#*|}"
+            CLEAN_IP="${IP//./_}"
+            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
+            HEX_CLR=$(get_node_color "$node_idx")
+            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
-                HEX_CLR=$(get_node_color "$node_idx")
-                NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
+            # Match this node's IP against the cached CONFIG_NODES_DATA entries
+            n_fw="Unknown"
+            if [ -n "$CONFIG_NODES_DATA" ]; then
+                for entry in $CONFIG_NODES_DATA; do
+                    e_name="${entry%%|*}"
+                    e_rest="${entry#*|}"
+                    e_ip="${e_rest%%|*}"
+                    e_fw="${e_rest#*|}"
 
-                formatted_node=$(printf "  %-16s  %-15s  FW: %s" "$n_name" "$n_ip" "$n_fw")
-                row_text="${NODE_CLR}${formatted_node}$NC"
-                printm "$row_text"
+                    if [ "$e_ip" = "$IP" ]; then
+                        n_fw="$e_fw"
+                        break
+                    fi
+                done
+            fi
 
-                node_idx=$((node_idx + 1))
-            done
-        else
-            printm ""
-            printm "$B_COLOR  [No Cached Nodes Data]$NC"
-        fi
+            formatted_node=$(printf "  %-16s  %-15s  FW: %s" "${SAVED_NICK:-$MODEL}" "$IP" "$n_fw")
+            row_text="${NODE_CLR}${formatted_node}$NC"
+            printm "$row_text"
+
+            node_idx=$((node_idx + 1))
+        done
 
         printm ""
         printm "  $LS Scan Devices - Update Config"
