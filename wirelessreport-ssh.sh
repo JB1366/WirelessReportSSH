@@ -235,7 +235,6 @@ menu_vars() {
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
 
     menu_buffer=""; MB="61"; echo -e "$B_COLOR"
-
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
 
