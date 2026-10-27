@@ -88,13 +88,14 @@ install_menu() {
         printm "  $N1  Install/Update"
         printm "  $N2  Uninstall"
         printm "  $N3  Set Temperature/Date ($DU) ($CT)"
-        printm "  $N4  Set Nicknames & Node Display Order"
+        printm "  $N4  Set Device Nicknames"
         printm "  $N5  Set Device $COLORS"
-        printm "  $N6  Set Theme ($TM_STAT)"
-        printm "  $N7  Set Report Options"
-        printm "  $N8  SSH Config/Options  Key:($KEY)"
-        printm "  $N9  Set Header/Menu Border Color"
-        printm " $N10  View Device Firmware"
+        printm "  $N6  Sort Node Display Order"
+        printm "  $N7  Set Report Theme ($TM_STAT)"
+        printm "  $N8  Set Report Options"
+        printm "  $N9  SSH Config/Options$SK($KEY)"
+        printm " $N10  Set Header/Menu Border Color"
+        printm " $N11  View Node Device Firmware"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -102,18 +103,19 @@ install_menu() {
             selection
             case "$choice" in
                 1) do_install; break ;;
-                2|3|4|5|6|7|8|9|10)
+                2|3|4|5|6|7|8|9|10|11)
                     froze || continue
                     case "$choice" in
                         2) do_uninstall ;;
                         3) set_temp_date ;;
                         4) set_device_nicknames ;;
                         5) set_device_colors ;;
-                        6) set_theme ;;
-                        7) set_options ;;
-                        8) check_ssh ;;
-                        9) set_border_color ;;
-                        10) show_device_firmware ;;
+                        6) do_node_sorting ;;
+                        7) set_theme ;;
+                        8) set_options ;;
+                        9) check_ssh ;;
+                        10) set_border_color ;;
+                        11) show_node_firmware ;;
                     esac
                     break ;;
                 e|E) goodbye ;;
@@ -232,6 +234,7 @@ menu_vars() {
     STATUS="$NC STATUS:"
     CURRENT="$NC CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
 
+    SK="$B_COLOR KEY:$NC"
     case "$SSH_KEY" in
         "") KEY="${RD}NO$NC" ;;
         *) KEY="${GR}YES$NC" ;;
@@ -740,14 +743,12 @@ set_device_nicknames() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "             Set Nicknames & Node Display Order"
+        printm "                   Set Device Nicknames"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
 		printm "  $N1 Reset to Default Nicknames"
 		printm "  $N2 Location-Based Nicknames"
 		printm "  $N3 Manual Custom Nicknames"
-		printm ""
-        printm "  $N4 Sort Node Display Order"
         printm ""
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
@@ -880,94 +881,6 @@ set_device_nicknames() {
                     done
                     printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n"
                     ;;
-                4)
-                    echo -e "\n$BL[*] Manual Node Sorting$NC"
-                    echo -e "\nCurrent order:\n"
-                    node_idx=1
-                    for node in $SSH_NODES; do
-                        MODEL="${node%%|*}"
-                        IP="${node#*|}"
-                        CLEAN_IP="${IP//./_}"
-                        eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
-                        HEX_CLR=$(get_node_color "$node_idx")
-                        NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
-
-                        echo -e "  $B_COLOR($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
-
-                        node_idx=$((node_idx + 1))
-                    done
-                    orig_count=$((node_idx - 1))
-                    echo -e "                                   "
-                    echo -e "  $LR Reset to default, sort by IP."
-                    echo -e "  $LE Exit with no changes.      \n"
-                    while true; do
-                        printf " Enter new order by index (e.g., ${B_COLOR}2 1 3$NC): "
-                        read -r new_order
-                        [ -z "$new_order" ] && { freeze; continue; }
-                        case "$new_order" in
-                            e|E)
-                                break 2 ;;
-                            r|R)
-                                sed -i '/^SSH_NODES=/d' "$CONFIG"
-                                printf "\n$GR[+] Reset node order to default.$NC\n"
-                                get_ssh_nodes
-                                MESH_NODES=""
-                                for node in $AIMESH_NODES; do
-                                    MESH_NODES="$MESH_NODES $node"
-                                done
-                                echo "SSH_NODES=\"$MESH_NODES\"" >> "$CONFIG"
-                                pause
-                                break 2
-                                ;;
-                            z|Z) goodbye ;;
-                        esac
-                        valid="true"
-                        entered_count=0
-                        for idx in $new_order; do
-                            entered_count=$((entered_count + 1))
-                            case "$idx" in
-                                *[!0-9]*|'')
-                                    valid="false"
-                                    ;;
-                                *)
-                                    if [ "$idx" -lt 1 ] || [ "$idx" -gt "$orig_count" ]; then
-                                        valid="false"
-                                    fi
-                                    ;;
-                            esac
-                        done
-
-                        if [ "$entered_count" -ne "$orig_count" ]; then
-                            valid="false"
-                        fi
-                        if [ "$valid" = "true" ]; then
-                            unique_check=$(for idx in $new_order; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
-                            if [ "$unique_check" -ne "$orig_count" ]; then
-                                freeze
-                                continue
-                            fi
-                            new_ssh_nodes=""
-                            for idx in $new_order; do
-                                current_idx=1
-                                for node in $SSH_NODES; do
-                                    if [ "$current_idx" -eq "$idx" ]; then
-                                        new_ssh_nodes="$new_ssh_nodes $node"
-                                        break
-                                    fi
-                                    current_idx=$((current_idx + 1))
-                                done
-                            done
-                            break
-                        else
-                            freeze
-                            continue
-                        fi
-                    done
-                    sed -i '/^SSH_NODES=/d' "$CONFIG"
-                    echo "SSH_NODES=\"$new_ssh_nodes\"" >> "$CONFIG"
-                    SSH_NODES="$new_ssh_nodes"
-                    printf "\n$GR[+] Node order successfully updated!$NC\n"
-                    ;;
                 e|E)
                     return 0 ;;
                 *)
@@ -976,6 +889,110 @@ set_device_nicknames() {
             pause
             break
         done
+    done
+}
+
+do_node_sorting() {
+    while true; do
+        show_header
+        printb "╔═════════════════════════════════════════════════════════════╗"
+        printm "                     Manual Node Sorting"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm " Current order:"
+        printm ""
+
+        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
+        node_idx=1
+        for node in $SSH_NODES; do
+            MODEL="${node%%|*}"
+            IP="${node#*|}"
+            CLEAN_IP="${IP//./_}"
+            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
+            HEX_CLR=$(get_node_color "$node_idx")
+            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
+
+            printm "  $B_COLOR($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+
+            node_idx=$((node_idx + 1))
+        done
+        orig_count=$((node_idx - 1))
+
+        printm ""
+        printm "  $LR Reset to default, sort by IP."
+        printm "  $LE Exit with no changes."
+        printm ""
+        printb "╚═════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            printf "\n Enter new order by index (e.g., ${B_COLOR}2 1 3$NC): "
+            read -r new_order
+            [ -z "$new_order" ] && { freeze 2; continue; }
+            case "$new_order" in
+                e|E)
+                    return 0 ;;
+                r|R)
+                    sed -i '/^SSH_NODES=/d' "$CONFIG"
+                    printf "\n$B_COLOR[+] Reset node order to default.$NC\n"
+                    get_ssh_nodes
+                    MESH_NODES=""
+                    for node in $AIMESH_NODES; do
+                        MESH_NODES="$MESH_NODES $node"
+                    done
+                    echo "SSH_NODES=\"$MESH_NODES\"" >> "$CONFIG"
+                    pause
+                    continue 2
+                    ;;
+                z|Z)
+                    goodbye ;;
+            esac
+            valid="true"
+            entered_count=0
+            for idx in $new_order; do
+                entered_count=$((entered_count + 1))
+                case "$idx" in
+                    *[!0-9]*|'')
+                        valid="false"
+                        ;;
+                    *)
+                        if [ "$idx" -lt 1 ] || [ "$idx" -gt "$orig_count" ]; then
+                            valid="false"
+                        fi
+                        ;;
+                esac
+            done
+
+            if [ "$entered_count" -ne "$orig_count" ]; then
+                valid="false"
+            fi
+            if [ "$valid" = "true" ]; then
+                unique_check=$(for idx in $new_order; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
+                if [ "$unique_check" -ne "$orig_count" ]; then
+                    freeze 2
+                    continue
+                fi
+                new_ssh_nodes=""
+                for idx in $new_order; do
+                    current_idx=1
+                    for node in $SSH_NODES; do
+                        if [ "$current_idx" -eq "$idx" ]; then
+                            new_ssh_nodes="$new_ssh_nodes $node"
+                            break
+                        fi
+                        current_idx=$((current_idx + 1))
+                    done
+                done
+                break
+            else
+                freeze 2
+                continue
+            fi
+        done
+        sed -i '/^SSH_NODES=/d' "$CONFIG"
+        echo "SSH_NODES=\"$new_ssh_nodes\"" >> "$CONFIG"
+        SSH_NODES="$new_ssh_nodes"
+        printf "\n$B_COLOR[+] Node order successfully updated!$NC\n"
+        pause
     done
 }
 
@@ -1232,7 +1249,7 @@ set_options() {
         printm "  $N5  Toggle Node Hostname Display: ($HN_STAT)"
         printm "  $N6  Toggle Loading Table Headers: ($TH_STAT)"
         printm "  $N7  Toggle WiFi Radio Temps: ($WF_STAT)"
-        printm "  $N8  Config RSSI Tooltip History: ($CH)"
+        printm "  $N8  Configure RSSI Tooltip History: ($CH)"
         printm "  $N9  Toggle Show Firmware: ($SF)"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
@@ -1539,28 +1556,16 @@ set_github_branch() {
     done
 }
 
-show_device_firmware() {
+show_node_firmware() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                       Device Firmware"
+        printm "                     Node Device Firmware"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
 
-        local MAIN_ROUTER MAIN_IP MAIN_CLR node_idx node MODEL IP CLEAN_IP HEX_CLR
-        local NODE_CLR row_text formatted_main formatted_node m_ip m_fw n_name n_ip n_fw
-
-        MAIN_ROUTER=$(nvram get productid)
-        MAIN_IP=$(nvram get lan_ipaddr)
-        MAIN_CLR=$(get_hex_to_ansi "$MAIN_COLOR")
-
-        if [ -n "$CONFIG_MAIN_DATA" ]; then
-            m_fw=$(echo "$CONFIG_MAIN_DATA" | cut -d'|' -f3)
-        fi
-
-        formatted_main=$(printf "  %-16s  %-15s  FW: %s" "${MAIN_NICK:-$MAIN_ROUTER}" "$MAIN_IP" "${m_fw:-Unknown}")
-        row_text="${MAIN_CLR}${formatted_main}$NC"
-        printm "$row_text"
+        local node_idx node MODEL IP CLEAN_IP HEX_CLR NODE_CLR
+        local row_text formatted_main formatted_node n_name n_ip n_fw
 
         get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
         node_idx=1
@@ -1573,10 +1578,9 @@ show_device_firmware() {
             HEX_CLR=$(get_node_color "$node_idx")
             NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
 
-            # Match this node's IP against the cached CONFIG_NODES_DATA entries
             n_fw="Unknown"
-            if [ -n "$CONFIG_NODES_DATA" ]; then
-                for entry in $CONFIG_NODES_DATA; do
+            if [ -n "$NODES_FW_DATA" ]; then
+                for entry in $NODES_FW_DATA; do
                     e_name="${entry%%|*}"
                     e_rest="${entry#*|}"
                     e_ip="${e_rest%%|*}"
@@ -1597,7 +1601,7 @@ show_device_firmware() {
         done
 
         printm ""
-        printm "  $LS Scan Devices - Update Config"
+        printm "  $LS Scan Nodes - Update Config"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -1605,7 +1609,7 @@ show_device_firmware() {
             selection
             case "$choice" in
                 s|S)
-                    echo -e "\n$B_COLOR[+] Running device scan and updating config...$NC"
+                    echo -e "\n$B_COLOR[+] Running Node scan and updating config...$NC"
                     FW_TO_CONFIG=1; CONFIG_NODES_CACHE=""
                     run_report
                     echo -e "\n$YL[✓] Scan complete!$NC"
@@ -3099,19 +3103,6 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
-check_main_fw() {
-    if [ "${FW_TO_CONFIG:-0}" -eq 1 ]; then
-        main_entry="Main|${MAIN_IP:-$(nvram get lan_ipaddr)}|$M_FWVERSION"
-        if grep -q "^CONFIG_MAIN_DATA=" "$CONFIG"; then
-            grep -v "^CONFIG_MAIN_DATA=" "$CONFIG" > "${CONFIG}.tmp"
-            echo "CONFIG_MAIN_DATA=\"$main_entry\"" >> "${CONFIG}.tmp"
-            mv "${CONFIG}.tmp" "$CONFIG"
-        else
-            echo "CONFIG_MAIN_DATA=\"$main_entry\"" >> "$CONFIG"
-        fi
-    fi
-}
-
 check_node_fw1() {
     if [ "${FW_TO_CONFIG:-0}" -eq 1 ]; then
         NODE_DATA_ENTRY="${NODE_NAME}|${IP}|${N_FWVERSION}"
@@ -3122,12 +3113,12 @@ check_node_fw1() {
 check_node_fw2() {
     if [ "${FW_TO_CONFIG:-0}" -eq 1 ] && [ -n "$CONFIG_NODES_CACHE" ]; then
         CONFIG_NODES_CACHE=$(echo "$CONFIG_NODES_CACHE" | sed 's/^[[:space:]]*//')
-        if grep -q "^CONFIG_NODES_DATA=" "$CONFIG"; then
-            grep -v "^CONFIG_NODES_DATA=" "$CONFIG" > "${CONFIG}.tmp"
-            echo "CONFIG_NODES_DATA=\"$CONFIG_NODES_CACHE\"" >> "${CONFIG}.tmp"
+        if grep -q "^NODES_FW_DATA=" "$CONFIG"; then
+            grep -v "^NODES_FW_DATA=" "$CONFIG" > "${CONFIG}.tmp"
+            echo "NODES_FW_DATA=\"$CONFIG_NODES_CACHE\"" >> "${CONFIG}.tmp"
             mv "${CONFIG}.tmp" "$CONFIG"
         else
-            echo "CONFIG_NODES_DATA=\"$CONFIG_NODES_CACHE\"" >> "$CONFIG"
+            echo "NODES_FW_DATA=\"$CONFIG_NODES_CACHE\"" >> "$CONFIG"
         fi
     fi
 }
@@ -3376,7 +3367,6 @@ MB_TIME=$(( $(date +%s) - M_UP ))
 M_BOOT=$(date -d @$MB_TIME "$D_FMT")
 M_FWVERSION="$fwVersion"
 
-check_main_fw
 get_main_radios
 
 WL_IFNAMES=$(printf "%s\n" $(nvram get wl_ifnames) $(ifconfig -a |
@@ -3540,7 +3530,6 @@ GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
-
 
 get_theme
 runtime_tracking
