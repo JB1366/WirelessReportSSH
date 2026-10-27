@@ -149,26 +149,34 @@ check_version() {
     case "$mode" in
         header_box)
             case "$STATE" in
-                OFFLINE)       HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable"
-                               VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
-                OUTDATED)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available"
-                               VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
-                HASH_DIFF)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available"
-                               VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="header-title2" ;;
-                UP_TO_DATE|*)  HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV"
-                               VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
+                OFFLINE)
+                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable"
+                            VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
+                OUTDATED)
+                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available"
+                            VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
+                HASH_DIFF)
+                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available"
+                            VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="header-title2" ;;
+                UP_TO_DATE|*)
+                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV"
+                            VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
             esac
             ;;
         do_install)
             case "$STATE" in
-                OFFLINE)       echo -e "\n$RD[!] Github Offline.$NC\n"
-                               UP="try again later?" ;;
-                OUTDATED)      echo -e "\n$GR[i] A new version (${WH}v$REMOTE_VERSION$GR) is available!$NC\n"
-                               UP="update version?" ;;
-                HASH_DIFF)     echo -e "\n$GR[i] There is a Hash Update for (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
-                               UP="update Hash?" ;;
-                UP_TO_DATE|*)  echo -e "\n$GR[i] You are already on the latest version (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
-                               UP="reinstall/overwrite anyway?" ;;
+                OFFLINE)
+                            echo -e "\n$RD[!] Github Offline.$NC\n"
+                            UP="try again later?" ;;
+                OUTDATED)
+                            echo -e "\n$GR[i] A new version (${WH}v$REMOTE_VERSION$GR) is available!$NC\n"
+                            UP="update version?" ;;
+                HASH_DIFF)
+                            echo -e "\n$GR[i] There is a Hash Update for (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
+                            UP="update Hash?" ;;
+                UP_TO_DATE|*)
+                            echo -e "\n$GR[i] You are already on the latest version (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
+                            UP="reinstall/overwrite anyway?" ;;
             esac
             ;;
         *)
