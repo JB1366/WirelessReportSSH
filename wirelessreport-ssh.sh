@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.4"
+SCRIPT_VERSION="2.3.5"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -925,12 +925,11 @@ do_node_sorting() {
 
         printm ""
         printm "  $LR Reset to default, sort by IP."
-        printm "  $LE Exit with no changes."
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            printf "\n Enter new order by index (e.g., ${B_COLOR}2 1 3$NC): "
+            printf "\n Enter new order by index [${B_COLOR}E=Exit$NC] (e.g., ${B_COLOR}2 1 3$NC): "
             read -r new_order
             [ -z "$new_order" ] && { freeze 2; continue; }
             case "$new_order" in
