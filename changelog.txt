@@ -2,7 +2,8 @@
 # Wireless Report - Changelog #
 #=============================#
 
-v2.3.5-fix get_main_modelid.
+v2.3.6-menu updates.
+v2.3.5-menu updates.
 v2.3.4-menu updates.
 v2.3.3-add toggle show FW.
 v2.3.2-menu updates.
