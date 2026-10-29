@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.6"
+SCRIPT_VERSION="2.3.5"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -611,7 +611,7 @@ inject_menu() {
 
     case "$INJECT" in
         2)
-            get_modelid_fw
+            get_main_modelid
             INSERT_DATA="{\
             \nmenuName: \"$TAB_LABEL\",\
             \nindex: \"menu_AiMesh\",\
