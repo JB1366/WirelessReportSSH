@@ -468,6 +468,71 @@ get_ssh_nodes() {
     sort -t . -k 4,4n)
 }
 
+get_hex_to_ansi() {
+    PK='\033[38;5;211m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'
+    RD='\033[38;5;196m'; NB='\033[38;5;39m'; OR='\033[38;5;208m'
+    YW='\033[38;5;226m'; SB='\033[38;5;75m'; BK='\033[30m'
+    WT='\033[38;5;231m'; MT='\033[38;5;86m'; DG='\033[0;90m'
+    case "$1" in
+        "#0096ff") echo -e "$NB" ;;
+        "#30d158") echo -e "$LG" ;;
+        "#bf40bf") echo -e "$MP" ;;
+        "#ffd60a") echo -e "$YW" ;;
+        "#64d2ff") echo -e "$SB" ;;
+        "#ff9500") echo -e "$OR" ;;
+        "#ff453a") echo -e "$RD" ;;
+        "#ffffff") echo -e "$WT" ;;
+        "#555555") echo -e "$DG" ;;
+        "#ff70a6") echo -e "$PK" ;;
+        "#64ffda") echo -e "$MT" ;;
+        "#000000") echo -e "$DG" ;;
+        *)         echo -e "$NC" ;;
+    esac
+}
+
+get_hex_ansi_selection() {
+    menu_buffer=""; MB=30
+    printb "╔══════════════════════════════╗"
+    printm "      Hex Color Pallete"
+    printb "╠══════════════════════════════╣"
+    printm ""
+    printm " $NB (1)  Neon-Blue (#0096ff)"
+    printm " $LG (2)  Lime-Green (#30d158)"
+    printm " $MP (3)  Med-Purple (#bf40bf)"
+    printm " $YW (4)  Yellow (#ffd60a)"
+    printm " $SB (5)  SkyBlue (#64d2ff)"
+    printm " $OR (6)  Orange (#ff9500)"
+    printm " $RD (7)  Red (#ff453a)"
+    printm " $WT (8)  White (#ffffff)"
+    printm " $DG (9)  Dark Gray (#555555)"
+    printm " $PK (10) Light-Pink (#ff70a6)"
+    printm " $MT (11) Mint-Green (#64ffda)"
+    printm " $DG (12) Black (#000000)"
+    printm ""
+    printb "╚══════════════════════════════╝"
+    printf "%b" "$menu_buffer"
+    while true; do
+        selection
+        case "$choice" in
+            1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
+            2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
+            3)  selected_hex="#bf40bf"; selected_ansi="$MP" ;;
+            4)  selected_hex="#ffd60a"; selected_ansi="$YW" ;;
+            5)  selected_hex="#64d2ff"; selected_ansi="$SB" ;;
+            6)  selected_hex="#ff9500"; selected_ansi="$OR" ;;
+            7)  selected_hex="#ff453a"; selected_ansi="$RD" ;;
+            8)  selected_hex="#ffffff"; selected_ansi="$WT" ;;
+            9)  selected_hex="#555555"; selected_ansi="$DG" ;;
+            10) selected_hex="#ff70a6"; selected_ansi="$PK" ;;
+            11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
+            12) selected_hex="#000000"; selected_ansi="$DG" ;;
+            e|E) break 2 ;;
+            *) freeze 2; continue ;;
+        esac
+        break
+    done
+}
+
 do_install() {
 	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
         echo -e "$RD[!] ERROR: JFFS custom scripts not enabled.$NC"
@@ -910,174 +975,6 @@ set_device_nicknames() {
     done
 }
 
-do_node_sorting() {
-    while true; do
-        show_header
-        printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                     Node Display Order"
-        printb "╠═════════════════════════════════════════════════════════════╣"
-        printm ""
-        printm "  Current order:"
-        printm ""
-
-        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
-        node_idx=1
-        for node in $SSH_NODES; do
-            MODEL="${node%%|*}"
-            IP="${node#*|}"
-            CLEAN_IP="${IP//./_}"
-            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
-            HEX_CLR=$(get_node_color "$node_idx")
-            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
-
-            printm "  $B_COLOR($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
-
-            node_idx=$((node_idx + 1))
-        done
-        orig_count=$((node_idx - 1))
-
-        printm ""
-        printm "  $LR Reset to default, sort by IP."
-        printm ""
-        printb "╚═════════════════════════════════════════════════════════════╝"
-        printf "%b" "$menu_buffer"
-        while true; do
-            printf "\n Enter new order by index [${B_COLOR}E=Exit$NC] (e.g., ${B_COLOR}2 1 3$NC): "
-            read -r new_order
-            [ -z "$new_order" ] && { freeze 2; continue; }
-            case "$new_order" in
-                e|E)
-                    return 0 ;;
-                r|R)
-                    sed -i '/^SSH_NODES=/d' "$CONFIG"
-                    printf "\n$B_COLOR[+] Reset node order to default.$NC\n"
-                    get_ssh_nodes
-                    MESH_NODES=""
-                    for node in $AIMESH_NODES; do
-                        MESH_NODES="$MESH_NODES $node"
-                    done
-                    echo "SSH_NODES=\"$MESH_NODES\"" >> "$CONFIG"
-                    pause
-                    continue 2
-                    ;;
-                z|Z)
-                    goodbye ;;
-            esac
-            valid="true"
-            entered_count=0
-            for idx in $new_order; do
-                entered_count=$((entered_count + 1))
-                case "$idx" in
-                    *[!0-9]*|'')
-                        valid="false"
-                        ;;
-                    *)
-                        if [ "$idx" -lt 1 ] || [ "$idx" -gt "$orig_count" ]; then
-                            valid="false"
-                        fi
-                        ;;
-                esac
-            done
-
-            if [ "$entered_count" -ne "$orig_count" ]; then
-                valid="false"
-            fi
-            if [ "$valid" = "true" ]; then
-                unique_check=$(for idx in $new_order; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
-                if [ "$unique_check" -ne "$orig_count" ]; then
-                    freeze 2
-                    continue
-                fi
-                new_ssh_nodes=""
-                for idx in $new_order; do
-                    current_idx=1
-                    for node in $SSH_NODES; do
-                        if [ "$current_idx" -eq "$idx" ]; then
-                            new_ssh_nodes="$new_ssh_nodes $node"
-                            break
-                        fi
-                        current_idx=$((current_idx + 1))
-                    done
-                done
-                break
-            else
-                freeze 2
-                continue
-            fi
-        done
-        sed -i '/^SSH_NODES=/d' "$CONFIG"
-        echo "SSH_NODES=\"$new_ssh_nodes\"" >> "$CONFIG"
-        SSH_NODES="$new_ssh_nodes"
-        printf "\n$B_COLOR[+] Node order successfully updated!$NC\n"
-        pause
-    done
-}
-
-get_hex_to_ansi() {
-    PK='\033[38;5;211m'; LG='\033[38;5;82m'; MP='\033[38;5;133m'
-    RD='\033[38;5;196m'; NB='\033[38;5;39m'; OR='\033[38;5;208m'
-    YW='\033[38;5;226m'; SB='\033[38;5;75m'; BK='\033[30m'
-    WT='\033[38;5;231m'; MT='\033[38;5;86m'; DG='\033[0;90m'
-    case "$1" in
-        "#0096ff") echo -e "$NB" ;;
-        "#30d158") echo -e "$LG" ;;
-        "#bf40bf") echo -e "$MP" ;;
-        "#ffd60a") echo -e "$YW" ;;
-        "#64d2ff") echo -e "$SB" ;;
-        "#ff9500") echo -e "$OR" ;;
-        "#ff453a") echo -e "$RD" ;;
-        "#ffffff") echo -e "$WT" ;;
-        "#555555") echo -e "$DG" ;;
-        "#ff70a6") echo -e "$PK" ;;
-        "#64ffda") echo -e "$MT" ;;
-        "#000000") echo -e "$DG" ;;
-        *)         echo -e "$NC" ;;
-    esac
-}
-
-get_hex_ansi_selection() {
-    menu_buffer=""; MB=30
-    printb "╔══════════════════════════════╗"
-    printm "      Hex Color Pallete"
-    printb "╠══════════════════════════════╣"
-    printm ""
-    printm " $NB (1)  Neon-Blue (#0096ff)"
-    printm " $LG (2)  Lime-Green (#30d158)"
-    printm " $MP (3)  Med-Purple (#bf40bf)"
-    printm " $YW (4)  Yellow (#ffd60a)"
-    printm " $SB (5)  SkyBlue (#64d2ff)"
-    printm " $OR (6)  Orange (#ff9500)"
-    printm " $RD (7)  Red (#ff453a)"
-    printm " $WT (8)  White (#ffffff)"
-    printm " $DG (9)  Dark Gray (#555555)"
-    printm " $PK (10) Light-Pink (#ff70a6)"
-    printm " $MT (11) Mint-Green (#64ffda)"
-    printm " $DG (12) Black (#000000)"
-    printm ""
-    printb "╚══════════════════════════════╝"
-    printf "%b" "$menu_buffer"
-    while true; do
-        selection
-        case "$choice" in
-            1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
-            2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
-            3)  selected_hex="#bf40bf"; selected_ansi="$MP" ;;
-            4)  selected_hex="#ffd60a"; selected_ansi="$YW" ;;
-            5)  selected_hex="#64d2ff"; selected_ansi="$SB" ;;
-            6)  selected_hex="#ff9500"; selected_ansi="$OR" ;;
-            7)  selected_hex="#ff453a"; selected_ansi="$RD" ;;
-            8)  selected_hex="#ffffff"; selected_ansi="$WT" ;;
-            9)  selected_hex="#555555"; selected_ansi="$DG" ;;
-            10) selected_hex="#ff70a6"; selected_ansi="$PK" ;;
-            11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
-            12) selected_hex="#000000"; selected_ansi="$DG" ;;
-            e|E) break 2 ;;
-            *) freeze 2; continue ;;
-        esac
-        break
-    done
-}
-
 set_device_colors() {
     local main_name main_ip m_color_hex current_colors total_nodes working_colors i
     local main_display_name main_display_color formatted_main_ip idx node MODEL IP
@@ -1215,6 +1112,109 @@ set_device_colors() {
     update_config_var "NODE_COLORS" "$working_colors"
     echo -e "$BL\n[+] Device colors successfully saved to CONFIG.$NC"
     pause
+}
+
+do_node_sorting() {
+    while true; do
+        show_header
+        printb "╔═════════════════════════════════════════════════════════════╗"
+        printm "                     Node Display Order"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm ""
+        printm "  Current order:"
+        printm ""
+
+        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
+        node_idx=1
+        for node in $SSH_NODES; do
+            MODEL="${node%%|*}"
+            IP="${node#*|}"
+            CLEAN_IP="${IP//./_}"
+            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
+            HEX_CLR=$(get_node_color "$node_idx")
+            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
+
+            printm "  $B_COLOR($node_idx) ${NODE_CLR}Node $IP -> ${SAVED_NICK:-$MODEL}$NC"
+
+            node_idx=$((node_idx + 1))
+        done
+        orig_count=$((node_idx - 1))
+
+        printm ""
+        printm "  $LR Reset to default, sort by IP."
+        printm ""
+        printb "╚═════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            printf "\n Enter new order by index [${B_COLOR}E=Exit$NC] (e.g., ${B_COLOR}2 1 3$NC): "
+            read -r new_order
+            [ -z "$new_order" ] && { freeze 2; continue; }
+            case "$new_order" in
+                e|E)
+                    return 0 ;;
+                r|R)
+                    sed -i '/^SSH_NODES=/d' "$CONFIG"
+                    printf "\n$B_COLOR[+] Reset node order to default.$NC\n"
+                    get_ssh_nodes
+                    MESH_NODES=""
+                    for node in $AIMESH_NODES; do
+                        MESH_NODES="$MESH_NODES $node"
+                    done
+                    echo "SSH_NODES=\"$MESH_NODES\"" >> "$CONFIG"
+                    pause
+                    continue 2
+                    ;;
+                z|Z)
+                    goodbye ;;
+            esac
+            valid="true"
+            entered_count=0
+            for idx in $new_order; do
+                entered_count=$((entered_count + 1))
+                case "$idx" in
+                    *[!0-9]*|'')
+                        valid="false"
+                        ;;
+                    *)
+                        if [ "$idx" -lt 1 ] || [ "$idx" -gt "$orig_count" ]; then
+                            valid="false"
+                        fi
+                        ;;
+                esac
+            done
+
+            if [ "$entered_count" -ne "$orig_count" ]; then
+                valid="false"
+            fi
+            if [ "$valid" = "true" ]; then
+                unique_check=$(for idx in $new_order; do echo "$idx"; done | sort -n | uniq | wc -l | tr -d ' ')
+                if [ "$unique_check" -ne "$orig_count" ]; then
+                    freeze 2
+                    continue
+                fi
+                new_ssh_nodes=""
+                for idx in $new_order; do
+                    current_idx=1
+                    for node in $SSH_NODES; do
+                        if [ "$current_idx" -eq "$idx" ]; then
+                            new_ssh_nodes="$new_ssh_nodes $node"
+                            break
+                        fi
+                        current_idx=$((current_idx + 1))
+                    done
+                done
+                break
+            else
+                freeze 2
+                continue
+            fi
+        done
+        sed -i '/^SSH_NODES=/d' "$CONFIG"
+        echo "SSH_NODES=\"$new_ssh_nodes\"" >> "$CONFIG"
+        SSH_NODES="$new_ssh_nodes"
+        printf "\n$B_COLOR[+] Node order successfully updated!$NC\n"
+        pause
+    done
 }
 
 set_theme() {
@@ -1516,18 +1516,6 @@ set_rssi_tooltip() {
     done
 }
 
-set_border_color() {
-    echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
-    get_hex_to_ansi
-    get_hex_ansi_selection
-    B_COLOR="$selected_ansi"
-    if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
-    echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
-    printf "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
-    menu_time_color
-    pause
-}
-
 set_github_branch() {
     while true; do
         show_header
@@ -1570,75 +1558,38 @@ set_github_branch() {
     done
 }
 
-show_node_firmware() {
-    while true; do
-        show_header
-        printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                     Node Device Firmware"
-        printb "╠═════════════════════════════════════════════════════════════╣"
-        printm ""
-
-        local node_idx node MODEL IP CLEAN_IP HEX_CLR NODE_CLR
-        local row_text formatted_main formatted_node n_name n_ip n_fw
-
-        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
-        node_idx=1
-
-        for node in $SSH_NODES; do
-            MODEL="${node%%|*}"
-            IP="${node#*|}"
-            CLEAN_IP="${IP//./_}"
-            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
-            HEX_CLR=$(get_node_color "$node_idx")
-            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
-
-            n_fw="Unknown"
-            if [ -n "$NODES_FW_DATA" ]; then
-                for entry in $NODES_FW_DATA; do
-                    e_name="${entry%%|*}"
-                    e_rest="${entry#*|}"
-                    e_ip="${e_rest%%|*}"
-                    e_fw="${e_rest#*|}"
-
-                    if [ "$e_ip" = "$IP" ]; then
-                        n_fw="$e_fw"
-                        break
-                    fi
-                done
-            fi
-
-            formatted_node=$(printf "  %-16s  %-15s  FW: %s" "${SAVED_NICK:-$MODEL}" "$IP" "$n_fw")
-            row_text="${NODE_CLR}${formatted_node}$NC"
-            printm "$row_text"
-
-            node_idx=$((node_idx + 1))
-        done
-
-        printm ""
-        printm "  $LS Scan Nodes - Update Config"
-        printm ""
-        printb "╚═════════════════════════════════════════════════════════════╝"
-        printf "%b" "$menu_buffer"
-        while true; do
-            selection
-            case "$choice" in
-                s|S)
-                    echo -e "\n$B_COLOR[+] Running Node scan and updating config...$NC"
-                    FW_TO_CONFIG=1; CONFIG_NODES_CACHE=""
-                    run_report
-                    echo -e "\n$YL[✓] Scan complete!$NC"
-                    FW_TO_CONFIG=0
-                    pause
-                    break
-                    ;;
-                e|E)
-                    return 0 ;;
-                *)
-                    freeze 2
-                    continue ;;
-            esac
-        done
+file_viewer() {
+    local title="$1"
+    local log_file="$2"
+    local viewer="${3:-log2}"
+    local total_width=63
+    local decorated=" $title "
+    local title_len=${#decorated}
+    local pad_total=$(( total_width - title_len ))
+    [ $pad_total -lt 0 ] && pad_total=0
+    local left_pad=$(( pad_total / 2 ))
+    local right_pad=$(( pad_total - left_pad ))
+    local top_line=""
+    local i=0
+    while [ $i -lt $left_pad ]; do
+        top_line="${top_line}═"
+        i=$((i + 1))
     done
+    top_line="${top_line}${decorated}"
+    i=0
+    while [ $i -lt $right_pad ]; do
+        top_line="${top_line}═"
+        i=$((i + 1))
+    done
+    local btm_line=""
+    i=0
+    while [ $i -lt $total_width ]; do
+        btm_line="${btm_line}═"
+        i=$((i + 1))
+    done
+    echo -e "\n$B_COLOR$top_line$NC\n"
+    if [ -f "$log_file" ]; then LOG="$log_file"; $viewer; else not_found; fi
+    echo -e "\n$B_COLOR$btm_line$NC"
 }
 
 go_developer() {
@@ -1754,40 +1705,6 @@ go_developer() {
             break
         done
     done
-}
-
-file_viewer() {
-    local title="$1"
-    local log_file="$2"
-    local viewer="${3:-log2}"
-    local total_width=63
-    local decorated=" $title "
-    local title_len=${#decorated}
-    local pad_total=$(( total_width - title_len ))
-    [ $pad_total -lt 0 ] && pad_total=0
-    local left_pad=$(( pad_total / 2 ))
-    local right_pad=$(( pad_total - left_pad ))
-    local top_line=""
-    local i=0
-    while [ $i -lt $left_pad ]; do
-        top_line="${top_line}═"
-        i=$((i + 1))
-    done
-    top_line="${top_line}${decorated}"
-    i=0
-    while [ $i -lt $right_pad ]; do
-        top_line="${top_line}═"
-        i=$((i + 1))
-    done
-    local btm_line=""
-    i=0
-    while [ $i -lt $total_width ]; do
-        btm_line="${btm_line}═"
-        i=$((i + 1))
-    done
-    echo -e "\n$B_COLOR$top_line$NC\n"
-    if [ -f "$log_file" ]; then LOG="$log_file"; $viewer; else not_found; fi
-    echo -e "\n$B_COLOR$btm_line$NC"
 }
 
 check_ssh() {
@@ -2114,6 +2031,89 @@ node_auth() {
                 ;;
         esac
     fi
+}
+
+set_border_color() {
+    echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
+    get_hex_to_ansi
+    get_hex_ansi_selection
+    B_COLOR="$selected_ansi"
+    if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
+    echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
+    printf "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
+    menu_time_color
+    pause
+}
+
+show_node_firmware() {
+    while true; do
+        show_header
+        printb "╔═════════════════════════════════════════════════════════════╗"
+        printm "                     Node Device Firmware"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm ""
+
+        local node_idx node MODEL IP CLEAN_IP HEX_CLR NODE_CLR
+        local row_text formatted_main formatted_node n_name n_ip n_fw
+
+        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
+        node_idx=1
+
+        for node in $SSH_NODES; do
+            MODEL="${node%%|*}"
+            IP="${node#*|}"
+            CLEAN_IP="${IP//./_}"
+            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
+            HEX_CLR=$(get_node_color "$node_idx")
+            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
+
+            n_fw="Unknown"
+            if [ -n "$NODES_FW_DATA" ]; then
+                for entry in $NODES_FW_DATA; do
+                    e_name="${entry%%|*}"
+                    e_rest="${entry#*|}"
+                    e_ip="${e_rest%%|*}"
+                    e_fw="${e_rest#*|}"
+
+                    if [ "$e_ip" = "$IP" ]; then
+                        n_fw="$e_fw"
+                        break
+                    fi
+                done
+            fi
+
+            formatted_node=$(printf "  %-16s  %-15s  FW: %s" "${SAVED_NICK:-$MODEL}" "$IP" "$n_fw")
+            row_text="${NODE_CLR}${formatted_node}$NC"
+            printm "$row_text"
+
+            node_idx=$((node_idx + 1))
+        done
+
+        printm ""
+        printm "  $LS Scan Nodes - Update Config"
+        printm ""
+        printb "╚═════════════════════════════════════════════════════════════╝"
+        printf "%b" "$menu_buffer"
+        while true; do
+            selection
+            case "$choice" in
+                s|S)
+                    echo -e "\n$B_COLOR[+] Running Node scan and updating config...$NC"
+                    FW_TO_CONFIG=1; CONFIG_NODES_CACHE=""
+                    run_report
+                    echo -e "\n$YL[✓] Scan complete!$NC"
+                    FW_TO_CONFIG=0
+                    pause
+                    break
+                    ;;
+                e|E)
+                    return 0 ;;
+                *)
+                    freeze 2
+                    continue ;;
+            esac
+        done
+    done
 }
 
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
