@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.6"
+SCRIPT_VERSION="2.3.7"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -207,29 +207,6 @@ version_compare() {
         }'
 }
 
-printm() {
-    local box_color="$B_COLOR"
-    local text="$1"
-    local target="${2:-$MB}"
-    local esc=$(printf '\033')
-    local plain=$(printf "%b" "$text" | sed "s/${esc}\[[0-9;]*m//g")
-    local len=${#plain}
-    local pad=$((target - len))
-    [ "$pad" -lt 0 ] && pad=0
-    local line="${box_color}║$NC${text}"
-    local i=0
-    while [ "$i" -lt "$pad" ]; do
-        line="${line} "
-        i=$((i + 1))
-    done
-    local line="${line}${box_color}║$NC\n"
-    menu_buffer="${menu_buffer}${line}"
-}
-
-printb() {
-    menu_buffer="${menu_buffer}$B_COLOR$1$NC\n"
-}
-
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
@@ -302,6 +279,42 @@ menu_vars() {
     case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
 }
 
+printm() {
+    local box_color="$B_COLOR"
+    local text="$1"
+    local target="${2:-$MB}"
+    local esc=$(printf '\033')
+    local plain=$(printf "%b" "$text" | sed "s/${esc}\[[0-9;]*m//g")
+    local len=${#plain}
+    local pad=$((target - len))
+    [ "$pad" -lt 0 ] && pad=0
+    local line="${box_color}║$NC${text}"
+    local i=0
+    while [ "$i" -lt "$pad" ]; do
+        line="${line} "
+        i=$((i + 1))
+    done
+    local line="${line}${box_color}║$NC\n"
+    menu_buffer="${menu_buffer}${line}"
+}
+
+printb() {
+    menu_buffer="${menu_buffer}$B_COLOR$1$NC\n"
+}
+
+printb_auto() {
+    local type="$1"
+    local w="$MB"
+    local bar
+    bar=$(awk -v len="$w" 'BEGIN {s=""; for(i=0; i<len; i++) s=s "═"; print s}')
+
+    case "$type" in
+        top) menu_buffer="${menu_buffer}${B_COLOR}╔${bar}╗${NC}\n" ;;
+        mid) menu_buffer="${menu_buffer}${B_COLOR}╠${bar}╣${NC}\n" ;;
+        btm) menu_buffer="${menu_buffer}${B_COLOR}╚${bar}╝${NC}\n" ;;
+    esac
+}
+
 get_main_fw() {
     firmver="$(nvram get firmver | tr -d '.')"
     buildno="$(nvram get buildno)"
@@ -360,6 +373,99 @@ menu_time_color() {
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
+}
+
+get_usb() {
+    [ -n "$USB_PATH" ] && return 0
+    local mount mountpoint
+    mountpoint="$(awk '$1 ~ /^\/dev\/sd/ && $2 ~ /^\/tmp\/mnt\// {print $2}' /proc/mounts | sort -u)"
+    ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
+
+    for mount in $mountpoint; do
+        if [ -d "$mount/wirelessreport-ssh" ]; then
+            USB_PATH="$mount/wirelessreport-ssh"
+            break
+        fi
+    done
+    if [ -z "$USB_PATH" ]; then
+        ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
+        if [ -n "$ROOT_PATH" ]; then
+            USB_PATH="$ROOT_PATH/wirelessreport-ssh"
+        else
+            USB_PATH="$CONFIG_DIR/data"
+        fi
+    fi
+
+    [ -n "$USB_PATH" ] && mkdir -p "$USB_PATH"
+    [ -f "$USB_PATH/rssi_history.db" ] || touch "$USB_PATH/rssi_history.db"
+    [ -f "$USB_PATH/known_macs.db" ] || touch "$USB_PATH/known_macs.db"
+
+    KNOWN_DB="$USB_PATH/known_macs.db"
+    HISTORY_DB="$USB_PATH/rssi_history.db"
+    ERROR_LOG="$USB_PATH/ssh_error.log"
+}
+
+do_hash_check() {
+    local file="$1" hash=""
+    [ -f "$file" ] || return 1
+    if command -v sha256sum >/dev/null 2>&1; then
+        hash=$(sha256sum "$file" 2>/dev/null | awk '{print $1}')
+    elif command -v busybox >/dev/null 2>&1 && busybox sha256sum "$file" >/dev/null 2>&1; then
+        hash=$(busybox sha256sum "$file" 2>/dev/null | awk '{print $1}')
+    elif command -v openssl >/dev/null 2>&1; then
+        hash=$(openssl dgst -sha256 "$file" 2>/dev/null | awk '{print $NF}')
+    fi
+    [ "${#hash}" -eq 64 ] || return 1
+    printf '%s\n' "$hash"
+}
+
+check_github() {
+    case "$BRANCH" in 1) BRANCH_NAME="Development"; DEV="D" ;; *) BRANCH_NAME="main"; DEV="" ;; esac
+    GITHUB="https://raw.githubusercontent.com/JB1366/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
+    REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
+    if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
+        REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
+        LOCAL_HASH=$(do_hash_check "$REPORT_SCRIPT" 2>/dev/null)
+        REMOTE_HASH=$(do_hash_check "$REMOTE_TMP" 2>/dev/null)
+        if [ -z "$LOCAL_HASH" ] || [ -z "$REMOTE_HASH" ]; then
+            if [ -f "$REPORT_SCRIPT" ]; then
+                if cmp -s "$REPORT_SCRIPT" "$REMOTE_TMP"; then
+                    LOCAL_HASH="same"
+                    REMOTE_HASH="same"
+                else
+                    LOCAL_HASH="local"
+                    REMOTE_HASH="remote"
+                fi
+            fi
+        fi
+    else
+        REMOTE_VERSION=""
+        REMOTE_HASH=""
+    fi
+    rm -f "$REMOTE_TMP"
+}
+
+ssh_init () {
+	NODE_USER=$(nvram get http_username)
+	SSH_PORT=$(nvram get sshd_port)
+    if [ -f "/root/.ssh/id_dropbear" ]; then
+        SSH_KEY="/root/.ssh/id_dropbear"
+	else
+        SSH_KEY=""
+    fi
+}
+
+device_default_colors() {
+    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
+    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
+}
+
+get_ssh_nodes() {
+    AIMESH_NODES=$(nvram get asus_device_list |
+    sed 's/</\n/g' |
+    grep '>2$' |
+    awk -F '>' '{print $2 "|" $3}' |
+    sort -t . -k 4,4n)
 }
 
 do_install() {
@@ -487,86 +593,6 @@ ScriptUpdateFromAMTM() {
 		return 0
     fi
     return 1
-}
-
-get_usb() {
-    [ -n "$USB_PATH" ] && return 0
-    local mount mountpoint
-    mountpoint="$(awk '$1 ~ /^\/dev\/sd/ && $2 ~ /^\/tmp\/mnt\// {print $2}' /proc/mounts | sort -u)"
-    ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
-
-    for mount in $mountpoint; do
-        if [ -d "$mount/wirelessreport-ssh" ]; then
-            USB_PATH="$mount/wirelessreport-ssh"
-            break
-        fi
-    done
-    if [ -z "$USB_PATH" ]; then
-        ROOT_PATH="$(echo "$mountpoint" | head -n 1)"
-        if [ -n "$ROOT_PATH" ]; then
-            USB_PATH="$ROOT_PATH/wirelessreport-ssh"
-        else
-            USB_PATH="$CONFIG_DIR/data"
-        fi
-    fi
-
-    [ -n "$USB_PATH" ] && mkdir -p "$USB_PATH"
-    [ -f "$USB_PATH/rssi_history.db" ] || touch "$USB_PATH/rssi_history.db"
-    [ -f "$USB_PATH/known_macs.db" ] || touch "$USB_PATH/known_macs.db"
-
-    KNOWN_DB="$USB_PATH/known_macs.db"
-    HISTORY_DB="$USB_PATH/rssi_history.db"
-    ERROR_LOG="$USB_PATH/ssh_error.log"
-}
-
-do_hash_check() {
-    local file="$1" hash=""
-    [ -f "$file" ] || return 1
-    if command -v sha256sum >/dev/null 2>&1; then
-        hash=$(sha256sum "$file" 2>/dev/null | awk '{print $1}')
-    elif command -v busybox >/dev/null 2>&1 && busybox sha256sum "$file" >/dev/null 2>&1; then
-        hash=$(busybox sha256sum "$file" 2>/dev/null | awk '{print $1}')
-    elif command -v openssl >/dev/null 2>&1; then
-        hash=$(openssl dgst -sha256 "$file" 2>/dev/null | awk '{print $NF}')
-    fi
-    [ "${#hash}" -eq 64 ] || return 1
-    printf '%s\n' "$hash"
-}
-
-check_github() {
-    case "$BRANCH" in 1) BRANCH_NAME="Development"; DEV="D" ;; *) BRANCH_NAME="main"; DEV="" ;; esac
-    GITHUB="https://raw.githubusercontent.com/JB1366/WirelessReportSSH/$BRANCH_NAME/wirelessreport-ssh.sh"
-    REMOTE_TMP="/tmp/wr_remote.tmp"; LOCAL_HASH=""; REMOTE_HASH=""
-    if curl -sfL --retry 3 "$GITHUB" -o "$REMOTE_TMP" 2>/dev/null && [ -s "$REMOTE_TMP" ]; then
-        REMOTE_VERSION=$(grep "SCRIPT_VERSION=" "$REMOTE_TMP" | head -n 1 | cut -d'"' -f2 | tr -cd '0-9.')
-        LOCAL_HASH=$(do_hash_check "$REPORT_SCRIPT" 2>/dev/null)
-        REMOTE_HASH=$(do_hash_check "$REMOTE_TMP" 2>/dev/null)
-        if [ -z "$LOCAL_HASH" ] || [ -z "$REMOTE_HASH" ]; then
-            if [ -f "$REPORT_SCRIPT" ]; then
-                if cmp -s "$REPORT_SCRIPT" "$REMOTE_TMP"; then
-                    LOCAL_HASH="same"
-                    REMOTE_HASH="same"
-                else
-                    LOCAL_HASH="local"
-                    REMOTE_HASH="remote"
-                fi
-            fi
-        fi
-    else
-        REMOTE_VERSION=""
-        REMOTE_HASH=""
-    fi
-    rm -f "$REMOTE_TMP"
-}
-
-ssh_init () {
-	NODE_USER=$(nvram get http_username)
-	SSH_PORT=$(nvram get sshd_port)
-    if [ -f "/root/.ssh/id_dropbear" ]; then
-        SSH_KEY="/root/.ssh/id_dropbear"
-	else
-        SSH_KEY=""
-    fi
 }
 
 inject_menu() {
@@ -729,19 +755,6 @@ set_temp_date() {
             break
         done
     done
-}
-
-device_default_colors() {
-    MAIN_COLOR="${MAIN_COLOR:-#0096ff}"
-    NODE_COLORS="${NODE_COLORS:-#30d158 #bf40bf #ffd60a #64d2ff #ff9500 #ff453a #ffffff #ff70a6 #64ffda}"
-}
-
-get_ssh_nodes() {
-    AIMESH_NODES=$(nvram get asus_device_list |
-    sed 's/</\n/g' |
-    grep '>2$' |
-    awk -F '>' '{print $2 "|" $3}' |
-    sort -t . -k 4,4n)
 }
 
 set_device_nicknames() {
