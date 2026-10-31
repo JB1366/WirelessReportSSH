@@ -1084,6 +1084,7 @@ set_device_colors() {
     local CLEAN_IP active_color nick_var_name node_display_name display_color formatted_ip
     local node_choice default_node_pool next_color target_name target_hex target_node target_ip
     local target_CLEAN_IP target_nick_var target_prompt_color selected_hex new_string step color_choice
+    local node_display_names=""
 
     main_name=$(nvram get productid)
     main_ip=$(nvram get lan_ipaddr)
@@ -1129,6 +1130,7 @@ set_device_colors() {
             nick_var_name="NODE_NICK_${CLEAN_IP}"
             node_display_name=$(eval echo \"\${$nick_var_name}\")
             node_display_name="${node_display_name:-$MODEL}"
+            node_display_names="${node_display_names}${node_display_names:+ }$node_display_name"
             display_color=$(get_hex_to_ansi "$active_color")
             formatted_ip=$(printf "(%s)" "$IP")
 
@@ -1175,12 +1177,7 @@ set_device_colors() {
                 target_name="${MAIN_NICK:-$main_name}"
                 target_hex="$m_color_hex"
             else
-                target_node=$(echo "$SSH_NODES" | awk -v n="$node_choice" '{print $n}')
-                target_ip=$(echo "$target_node" | cut -d'|' -f2)
-                target_CLEAN_IP=$(echo "$target_ip" | tr '.' '_')
-                target_nick_var="NODE_NICK_${target_CLEAN_IP}"
-                target_name=$(eval echo \"\${$target_nick_var}\")
-                target_name="${target_name:-$(echo "$target_node" | cut -d'|' -f1)}"
+                target_name=$(echo "$node_display_names" | awk -v n="$node_choice" '{print $n}')
                 target_hex=$(echo "$working_colors" | awk -v col="$node_choice" '{print $col}')
             fi
             selected_hex=""
