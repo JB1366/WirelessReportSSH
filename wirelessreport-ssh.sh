@@ -100,7 +100,7 @@ install_menu() {
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            selection no-exit no-z
+            selection no-e no-z
             case "$choice" in
                 1) do_install; break ;;
                 2|3|4|5|6|7|8|9|10|11)
@@ -118,7 +118,6 @@ install_menu() {
                         11) show_node_firmware ;;
                     esac
                     break ;;
-                e|E) goodbye ;;
                 *) freeze 2; continue ;;
             esac
         done
@@ -1583,23 +1582,23 @@ go_developer() {
         printm "                      Developers Menu"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
-        printm "  $N1 Inject WR TAB  --> menu_wireless"
-        printm "  $N2 Inject WR TAB  --> menu_addons"
-        printm "  $N3 Inject WR Menu --> before $B_COLOR$INSERT_BEFORE$NC"
-        printm "  $N4 Insert WR Menu before $B_COLOR<#ETAG#>$NC --> menuTree"
-        printm "  $N5 View menuTree - /tmp/menuTree.js"
+        printm "  $N1  Inject WR TAB  --> menu_wireless"
+        printm "  $N2  Inject WR TAB  --> menu_addons"
+        printm "  $N3  Inject WR Menu --> before $B_COLOR$INSERT_BEFORE$NC"
+        printm "  $N4  Insert WR Menu before $B_COLOR<#ETAG#>$NC --> menuTree"
+        printm "  $N5  View menuTree - /tmp/menuTree.js"
         printb "╠═════════════════════════════════════════════════════════════╣"
-        printm "  $N6 View CONGIG - webui-ssh.conf"
-        printm "  $N7 View profile.add - /jffs/configs/profile.add"
-        printm "  $N8 View services-start - /jffs/scripts/services-start"
-        printm "  $N9 View service-event - /jffs/scripts/service-event"
-        printm " $N10 View firewall-start - /jffs/scripts/firewall-start"
-        printm " $N11 View iptables - iptables -L -v -n --line-numbers"
-        printm " $N12 View syslog - /jffs/syslog.log"
-        printm " $N13 View iocmon - $ROOT_PATH/iocmon.d/state/iocmon.log"
+        printm "  $N6  View CONGIG - webui-ssh.conf"
+        printm "  $N7  View profile.add - /jffs/configs/profile.add"
+        printm "  $N8  View services-start - /jffs/scripts/services-start"
+        printm "  $N9  View service-event - /jffs/scripts/service-event"
+        printm "  $N10 View firewall-start - /jffs/scripts/firewall-start"
+        printm "  $N11 View iptables - iptables -L -v -n --line-numbers"
+        printm "  $N12 View syslog - /jffs/syslog.log"
+        printm "  $N13 View iocmon - $ROOT_PATH/iocmon.d/iocmon.log"
         printm ""
-        printm "  $LQ Power Exit from any Selection Prompt"
-        printm "  $LZ Return to 'Main Menu' from anywhere"
+        printm "  $LQ  Power Exit from any Selection Prompt"
+        printm "  $LZ  Return to 'Main Menu' from anywhere"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -2110,15 +2109,16 @@ restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/de
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
 selection() {
-    local use_exit=true use_z=true
+    local use_exit=true use_z=true use_e=true
     if [[ "$1" == "no-exit" ]]; then use_exit=false; fi
+    if [[ "$1" == "no-e" ]]; then use_e=false; fi
     if [[ "$2" == "no-z" ]]; then use_z=false; fi
     printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "
     read -r choice
     case "$choice" in
         secret) go_developer; break ;;
         dev) set_github_branch; break ;;
-        e|E) if [ "$use_exit" = true ]; then break 2; fi ;;
+        e|E) if [ "$use_e" = false ]; then goodbye; elif [ "$use_exit" = true ]; then break 2; fi ;;
         q|Q) goodbye ;;
         z|Z) if [ "$use_z" = true ]; then install_menu; fi ;;
     esac
