@@ -149,34 +149,26 @@ check_version() {
     case "$mode" in
         header_box)
             case "$STATE" in
-                OFFLINE)
-                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable"
-                            VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
-                OUTDATED)
-                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available"
-                            VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
-                HASH_DIFF)
-                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available"
-                            VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="header-title2" ;;
-                UP_TO_DATE|*)
-                            HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV"
-                            VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
+                OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable"
+                              VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
+                OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available"
+                              VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
+                HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available"
+                              VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="header-title2" ;;
+                UP_TO_DATE|*) HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV"
+                              VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
             esac
             ;;
         do_install)
             case "$STATE" in
-                OFFLINE)
-                            echo -e "\n$RD[!] Github Offline.$NC\n"
-                            UP="try again later?" ;;
-                OUTDATED)
-                            echo -e "\n$GR[i] A new version (${WH}v$REMOTE_VERSION$GR) is available!$NC\n"
-                            UP="update version?" ;;
-                HASH_DIFF)
-                            echo -e "\n$GR[i] There is a Hash Update for (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
-                            UP="update Hash?" ;;
-                UP_TO_DATE|*)
-                            echo -e "\n$GR[i] You are already on the latest version (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
-                            UP="reinstall/overwrite anyway?" ;;
+                OFFLINE)      echo -e "\n$RD[!] Github Offline.$NC\n"
+                              UP="try again later?" ;;
+                OUTDATED)     echo -e "\n$GR[i] A new version (${WH}v$REMOTE_VERSION$GR) is available!$NC\n"
+                              UP="update version?" ;;
+                HASH_DIFF)    echo -e "\n$GR[i] There is a Hash Update for (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
+                              UP="update Hash?" ;;
+                UP_TO_DATE|*) echo -e "\n$GR[i] You are already on the latest version (${WH}v$SCRIPT_VERSION$DEV$GR).$NC\n"
+                              UP="reinstall/overwrite anyway?" ;;
             esac
             ;;
         *)
@@ -366,7 +358,7 @@ menu_time_color() {
 
     B_COLOR=${B_COLOR:-$BL}
     for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
-	for i in E R S Z; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
+	for i in E Q R S Z; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
 
     MODELID="${MODEL_PAD}${B_COLOR}Router: ${NC}${CACHED_PRODID}${B_COLOR}   FW:${NC} ${CACHED_FW}"
     COLORS="${MP}C${NB}o${LG}l${YW}o${SB}r${OR}s"
@@ -1065,7 +1057,8 @@ set_device_colors() {
                     continue 2 ;;
                 s|S) break 2 ;;
                 e|E) return 0 ;;
-                z|Z) goodbye ;;
+                q|Q) goodbye ;;
+                z|Z) install_menu ;;
             esac
             case "$node_choice" in ""|*[!0-9]*) freeze 2; continue ;; esac
             if [ "$node_choice" -gt "$total_nodes" ]; then freeze 2; continue; fi
@@ -1164,8 +1157,10 @@ do_node_sorting() {
                     pause
                     continue 2
                     ;;
-                z|Z)
+                q|Q)
                     goodbye ;;
+                z|Z)
+                    install_menu ;;
             esac
             valid="true"
             entered_count=0
@@ -1614,7 +1609,8 @@ go_developer() {
         printm " $N12 View syslog - /jffs/syslog.log"
         printm " $N13 View iocmon - $ROOT_PATH/iocmon.d/state/iocmon.log"
         printm ""
-        printm "  $LZ Power Exit from any Menu"
+        printm "  $LQ Power Exit from any Selection Prompt"
+        printm "  $LZ Return to 'Main Menu' from anywhere"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -1650,7 +1646,7 @@ go_developer() {
                     echo -e "\nCurrent Insert Before menuName: $B_COLOR$INSERT_BEFORE$NC"
                     printf "\nEnter menuName $B_COLOR<#ETAG#>$NC to insert WR Menu before [${B_COLOR}E=Exit$NC]: "
                     read -r choice
-                    case "$choice" in e|E) break ;; z|Z) goodbye ;;  esac
+                    case "$choice" in e|E) break ;; q|Q) goodbye ;; z|Z) install_menu ;; esac
                     if [ -n "$choice" ]; then
                         INSERT_BEFORE="$choice"
                         echo -e "\nUpdated to: $B_COLOR$INSERT_BEFORE$NC"
@@ -2130,7 +2126,8 @@ pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
-selection() { printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "; read -r choice; case "$choice" in z|Z) goodbye ;; dev) set_github_branch; break ;; secret) go_developer; break ;; esac; }
+selection() { printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "; read -r choice; \
+case "$choice" in dev) set_github_branch; break ;; secret) go_developer; break ;; q|Q) goodbye ;; z|Z) install_menu ;; esac; }
 
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
