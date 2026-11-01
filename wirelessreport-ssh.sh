@@ -94,13 +94,13 @@ install_menu() {
         printm "  $N7  Set Report Theme ($TM_STAT)"
         printm "  $N8  Set Report Options"
         printm "  $N9  SSH Config/Options$SK($KEY)"
-        printm " $N10  Set Header/Menu Border Color"
-        printm " $N11  View Node Device Firmware"
+        printm "  $N10 Set Header/Menu Border Color"
+        printm "  $N11 View Node Device Firmware"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            selection
+            selection no-exit no-z
             case "$choice" in
                 1) do_install; break ;;
                 2|3|4|5|6|7|8|9|10|11)
@@ -201,7 +201,6 @@ version_compare() {
 
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
-    trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
 
     menu_buffer=""; MB="61"; echo -e "$B_COLOR"
     PORT="$GR$SSH_PORT$NC"
@@ -299,7 +298,6 @@ printb_auto() {
     local w="$MB"
     local bar
     bar=$(awk -v len="$w" 'BEGIN {s=""; for(i=0; i<len; i++) s=s "═"; print s}')
-
     case "$type" in
         top) menu_buffer="${menu_buffer}${B_COLOR}╔${bar}╗${NC}\n" ;;
         mid) menu_buffer="${menu_buffer}${B_COLOR}╠${bar}╣${NC}\n" ;;
@@ -340,6 +338,7 @@ get_main_modelid() {
 menu_time_color() {
     WH='\033[1;37m'; YL='\033[0;33m'; RD='\033[0;31m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; NC='\033[0m'
+    trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
 
     update_time
     get_hex_to_ansi
@@ -504,7 +503,7 @@ get_hex_ansi_selection() {
     printb "╚══════════════════════════════╝"
     printf "%b" "$menu_buffer"
     while true; do
-        selection
+        selection no-exit
         case "$choice" in
             1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
             2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
@@ -802,7 +801,6 @@ set_temp_date() {
                 6) NEW_UNIT="INTL1" ;;
                 7) NEW_UNIT="ISO1" ;;
                 8) NEW_UNIT="ISO3" ;;
-                e|E) return 0 ;;
                 *) freeze 2; continue ;;
             esac
             sed -i '/REPORT_UNIT=/d' "$CONFIG"
@@ -956,8 +954,6 @@ set_device_nicknames() {
                     done
                     printf "\n$GR[+] Manual nicknames saved (max 25 chars).$NC\n"
                     ;;
-                e|E)
-                    return 0 ;;
                 *)
                     freeze 2; continue ;;
             esac
@@ -1231,7 +1227,6 @@ set_theme() {
                 1) TM="ORIGINAL" ;;
                 2) TM="DARKMODE" ;;
                 3) TM="ASUS_WEBUI" ;;
-                e|E) return 0 ;;
                 *) freeze 2; continue ;;
             esac
             if grep -q "^THEME=" "$CONFIG"; then
@@ -1335,8 +1330,6 @@ set_options() {
                     SHOW_FW="$NEW_SF"
                     case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
                     ;;
-                e|E)
-                    return 0 ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1397,8 +1390,6 @@ set_runtime_tracking() {
                         fi
                     fi
                     ;;
-                e|E)
-                    return 0 ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1427,7 +1418,6 @@ set_ip_padding() {
                 1) NEW_PAD="0" ;;
                 2) NEW_PAD="1" ;;
                 3) NEW_PAD="2" ;;
-                e|E) return 0 ;;
                 *) freeze 2; continue ;;
             esac
             break
@@ -1456,7 +1446,7 @@ set_rssi_tooltip() {
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            selection
+            selection no-exit
             case "$choice" in
                 1)
                     case "$CUR_RS_HIST" in 1) CUR_RS_HIST="0" ;; *) CUR_RS_HIST="1" ;; esac
@@ -1530,7 +1520,6 @@ set_github_branch() {
             case "$choice" in
                 1) BRANCH="0" ;;
                 2) BRANCH="1" ;;
-                e|E) return 0 ;;
                 *) freeze 2; continue ;;
             esac
             break
@@ -1691,8 +1680,6 @@ go_developer() {
                 13)
                     file_viewer "iocmon.log" "$ROOT_PATH/iocmon.d/state/iocmon.log" log_tail
                     ;;
-                e|E)
-                    return 0 ;;
                 *)
                     freeze 2
                     continue ;;
@@ -1773,8 +1760,6 @@ check_ssh() {
                             node_auth ;;
                     esac
                     break ;;
-                e|E)
-                    return 0 ;;
                 *)
                     freeze 2
                     continue ;;
@@ -2017,8 +2002,6 @@ node_auth() {
                 pause
                 return 0
                 ;;
-            e|E)
-                return 0 ;;
             *)
                 printf "\n$BL[i] Retrying authentication...$NC"; sleep 5
                 echo -e ""
@@ -2102,8 +2085,6 @@ show_node_firmware() {
                     pause
                     break
                     ;;
-                e|E)
-                    return 0 ;;
                 *)
                     freeze 2
                     continue ;;
@@ -2126,10 +2107,22 @@ pause() { printf "\nPress $B_COLOR[Enter]$NC to return..."; read -r discard; }
 
 restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/dev/null 2>&1; }
 
-selection() { printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "; read -r choice; \
-case "$choice" in dev) set_github_branch; break ;; secret) go_developer; break ;; q|Q) goodbye ;; z|Z) install_menu ;; esac; }
-
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
+
+selection() {
+    local use_exit=true use_z=true
+    if [[ "$1" == "no-exit" ]]; then use_exit=false; fi
+    if [[ "$2" == "no-z" ]]; then use_z=false; fi
+    printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "
+    read -r choice
+    case "$choice" in
+        secret) go_developer; break ;;
+        dev) set_github_branch; break ;;
+        e|E) if [ "$use_exit" = true ]; then break 2; fi ;;
+        q|Q) goodbye ;;
+        z|Z) if [ "$use_z" = true ]; then install_menu; fi ;;
+    esac
+}
 
 runtime_tracking() {
 	RTIME=${RTIME:-1}
