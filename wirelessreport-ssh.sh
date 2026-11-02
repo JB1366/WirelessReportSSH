@@ -267,6 +267,9 @@ menu_vars() {
 
     SHOW_FW=${SHOW_FW:-1}
     case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
+
+    case "$FWUPDATE" in "") FWUP="Never" ;; *) FWUP=$(date -d "@$FWUPDATE" "$D_FMT" 2>/dev/null || echo "$FWUPDATE") ;; esac
+    CUR="$B_COLOR$(date "$D_FMT")$NC"; FWUP="$B_COLOR$FWUP$NC"
 }
 
 printm() {
@@ -2027,10 +2030,11 @@ show_node_firmware() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                     Node Device Firmware"
+        printm "                    Node Device Firmware"
+        printb "╠═════════════════════════════════════════════════════════════╣"
+        printm " Current: $CUR        Last: $FWUP"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
-
         local node_idx node MODEL IP CLEAN_IP HEX_CLR NODE_CLR
         local row_text formatted_main formatted_node n_name n_ip n_fw
 
@@ -2076,10 +2080,10 @@ show_node_firmware() {
             selection
             case "$choice" in
                 s|S)
-                    echo -e "\n$B_COLOR[+] Running Node scan and updating config...$NC"
+                    printf "\n$B_COLOR[+] Running Node scan and updating config...$NC"
                     FW_TO_CONFIG=1; CONFIG_NODES_CACHE=""
                     run_report
-                    echo -e "\n$YL[✓] Scan complete!$NC"
+                    echo -e "\n\n$YL[✓] Scan complete!$NC"
                     FW_TO_CONFIG=0
                     pause
                     break
@@ -3116,14 +3120,12 @@ check_node_fw1() {
 
 check_node_fw2() {
     if [ "${FW_TO_CONFIG:-0}" -eq 1 ] && [ -n "$CONFIG_NODES_CACHE" ]; then
+        local raw_time
+        raw_time=$(date +%s)
         CONFIG_NODES_CACHE=$(echo "$CONFIG_NODES_CACHE" | sed 's/^[[:space:]]*//')
-        if grep -q "^NODES_FW_DATA=" "$CONFIG"; then
-            grep -v "^NODES_FW_DATA=" "$CONFIG" > "${CONFIG}.tmp"
-            echo "NODES_FW_DATA=\"$CONFIG_NODES_CACHE\"" >> "${CONFIG}.tmp"
-            mv "${CONFIG}.tmp" "$CONFIG"
-        else
-            echo "NODES_FW_DATA=\"$CONFIG_NODES_CACHE\"" >> "$CONFIG"
-        fi
+        sed -i '/^NODES_FW_DATA=/d; /^FWUPDATE=/d' "$CONFIG" 2>/dev/null
+        echo "NODES_FW_DATA=\"$CONFIG_NODES_CACHE\"" >> "$CONFIG"
+        echo "FWUPDATE=\"$raw_time\"" >> "$CONFIG"
     fi
 }
 
