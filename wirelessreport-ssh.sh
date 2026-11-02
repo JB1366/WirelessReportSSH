@@ -200,8 +200,9 @@ version_compare() {
 
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
-
     menu_buffer=""; MB="61"; echo -e "$B_COLOR"
+    SELECTION="\n$NC Selection [${B_COLOR}E=Exit$NC]: "
+
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
 
@@ -268,7 +269,7 @@ menu_vars() {
     SHOW_FW=${SHOW_FW:-1}
     case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
 
-    case "$FWUPDATE" in "") FWUP="Never" ;; *) FWUP=$(date -d "@$FWUPDATE" "$D_FMT" 2>/dev/null || echo "$FWUPDATE") ;; esac
+    case "$FWUPDATE" in "") FWUP="Never" ;; *) FWUP=$(date -d "@$FWUPDATE" "$D_FMT") ;; esac
     CUR="$B_COLOR$(date "$D_FMT")$NC"; FWUP="$B_COLOR$FWUP$NC"
 }
 
@@ -484,7 +485,7 @@ get_hex_to_ansi() {
 }
 
 get_hex_ansi_selection() {
-    menu_buffer=""; MB=30
+    menu_vars; MB=30
     printb "╔══════════════════════════════╗"
     printm "      Hex Color Pallete"
     printb "╠══════════════════════════════╣"
@@ -505,7 +506,7 @@ get_hex_ansi_selection() {
     printb "╚══════════════════════════════╝"
     printf "%b" "$menu_buffer"
     while true; do
-        selection no-exit
+        selection
         case "$choice" in
             1)  selected_hex="#0096ff"; selected_ansi="$NB" ;;
             2)  selected_hex="#30d158"; selected_ansi="$LG" ;;
@@ -519,7 +520,6 @@ get_hex_ansi_selection() {
             10) selected_hex="#ff70a6"; selected_ansi="$PK" ;;
             11) selected_hex="#64ffda"; selected_ansi="$MT" ;;
             12) selected_hex="#000000"; selected_ansi="$DG" ;;
-            e|E) break 2 ;;
             *) freeze 2; continue ;;
         esac
         break
@@ -1035,8 +1035,9 @@ set_device_colors() {
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            printf "\n$NC Select number to change color [${B_COLOR}E=Exit$NC] (${B_COLOR}0-$total_nodes$NC): "
-            read -r node_choice
+            SELECTION="\n$NC Select number to change color [${B_COLOR}E=Exit$NC] (${B_COLOR}0-$total_nodes$NC): "
+            selection no-c
+            node_choice="$choice"
             case "$node_choice" in
                 r|R)
                     unset MAIN_COLOR NODE_COLORS
@@ -1054,9 +1055,6 @@ set_device_colors() {
                     pause
                     continue 2 ;;
                 s|S) break 2 ;;
-                e|E) return 0 ;;
-                q|Q) goodbye ;;
-                z|Z) install_menu ;;
             esac
             case "$node_choice" in ""|*[!0-9]*) freeze 2; continue ;; esac
             if [ "$node_choice" -gt "$total_nodes" ]; then freeze 2; continue; fi
@@ -1137,12 +1135,11 @@ do_node_sorting() {
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            printf "\n Enter new order by index [${B_COLOR}E=Exit$NC] (e.g., ${B_COLOR}2 1 3$NC): "
-            read -r new_order
+            SELECTION="\n Enter new order by index [${B_COLOR}E=Exit$NC] (e.g., ${B_COLOR}2 1 3$NC): "
+            selection no-c
+            new_order="$choice"
             [ -z "$new_order" ] && { freeze 2; continue; }
             case "$new_order" in
-                e|E)
-                    return 0 ;;
                 r|R)
                     sed -i '/^SSH_NODES=/d' "$CONFIG"
                     printf "\n$B_COLOR[+] Reset node order to default.$NC\n"
@@ -1155,10 +1152,6 @@ do_node_sorting() {
                     pause
                     continue 2
                     ;;
-                q|Q)
-                    goodbye ;;
-                z|Z)
-                    install_menu ;;
             esac
             valid="true"
             entered_count=0
@@ -1175,7 +1168,6 @@ do_node_sorting() {
                         ;;
                 esac
             done
-
             if [ "$entered_count" -ne "$orig_count" ]; then
                 valid="false"
             fi
@@ -1448,7 +1440,7 @@ set_rssi_tooltip() {
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
         while true; do
-            selection no-exit
+            selection
             case "$choice" in
                 1)
                     case "$CUR_RS_HIST" in 1) CUR_RS_HIST="0" ;; *) CUR_RS_HIST="1" ;; esac
@@ -1474,7 +1466,6 @@ set_rssi_tooltip() {
                     RS_HIST="$CUR_RS_HIST"
                     RS_HIST_ENTRIES="$CUR_ENTRIES"
                     RS_HIST_DATE="$CUR_DATE"
-
                     for var in RS_HIST RS_HIST_ENTRIES RS_HIST_DATE; do
                         eval "val=\$${var}"
                         if grep -q "^$var=" "$CONFIG"; then
@@ -1483,16 +1474,10 @@ set_rssi_tooltip() {
                             echo "$var=\"$val\"" >> "$CONFIG"
                         fi
                     done
-
                     rm -f "$HISTORY_DB"
-                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
                     echo -e "\n$GR[+] Configuration saved and DB cleared.$NC"
                     pause
-                    return 0
-                    ;;
-                e|E)
-                    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
-                    return 0
+                    break 2
                     ;;
                 *)
                     freeze 2
@@ -1501,6 +1486,7 @@ set_rssi_tooltip() {
             break
         done
     done
+    unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
 }
 
 set_github_branch() {
@@ -2113,16 +2099,16 @@ restart_httpd() { service restart_httpd >/dev/null 2>&1; killall -HUP httpd >/de
 sys_log() { logger -p user.info -t "Wireless_Report_SSH" "$1"; }
 
 selection() {
-    local use_exit=true use_z=true use_e=true
-    if [ "$1" = "no-exit" ]; then use_exit=false; fi
+    local use_z=true use_e=true use_c=true
+    if [ "$1" = "no-c" ]; then use_c=false; fi
     if [ "$1" = "no-e" ]; then use_e=false; fi
     if [ "$2" = "no-z" ]; then use_z=false; fi
-    printf "\n$NC Selection [${B_COLOR}E=Exit$NC]: "
+    printf "$SELECTION"
     read -r choice
     case "$choice" in
         secret) go_developer; break ;;
         dev) set_github_branch; break ;;
-        e|E) if [ "$use_e" = false ]; then goodbye; elif [ "$use_exit" = true ]; then break 2; fi ;;
+        e|E) if [ "$use_e" = false ]; then goodbye; elif [ "$use_c" = false ]; then break 3; else break 2; fi ;;
         q|Q) goodbye ;;
         z|Z) if [ "$use_z" = true ]; then install_menu; fi ;;
     esac
