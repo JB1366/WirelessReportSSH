@@ -623,7 +623,7 @@ do_update() {
     if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" 2>/dev/null && [ -s "$TEMP_SCRIPT" ]; then
         mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
         chmod +x "$REPORT_SCRIPT" 2>/dev/null
-        web_update
+        last_update
         return 0
     else
         rm -f "$TEMP_SCRIPT"
@@ -648,12 +648,13 @@ do_update() {
     fi
 }
 
-web_update() {
+last_update() {
+    update_time
     UPDATE_TIME="$CUR_TIME"
-    if grep -q "UPDATE_TIME=" "$CONFIG_FILE"; then
-        sed -i "s|^UPDATE_TIME=.*|UPDATE_TIME=\"$UPDATE_TIME\"|" "$CONFIG_FILE"
+    if grep -q "UPDATE_TIME=" "$CONFIG"; then
+        sed -i "s|^UPDATE_TIME=.*|UPDATE_TIME=\"$UPDATE_TIME\"|" "$CONFIG"
     else
-        echo "UPDATE_TIME=\"$UPDATE_TIME\"" >> "$CONFIG_FILE"
+        echo "UPDATE_TIME=\"$UPDATE_TIME\"" >> "$CONFIG"
     fi
 }
 
