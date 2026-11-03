@@ -683,7 +683,7 @@ inject_menu() {
     fi
 
     cp "$WEB_PAGE" "/www/user/$am_webui_page" 2>/dev/null
-    echo "INSTALLED_PAGE=$am_webui_page" >> "$CONFIG"
+    echo "INSTALLED_PAGE=\"$am_webui_page\"" >> "$CONFIG"
 
     if [ ! -f "$TEMP_MENU" ]; then
         cp "$SYSTEM_MENU" /tmp/
@@ -1089,16 +1089,16 @@ set_device_colors() {
             break
         done
     done
-    update_config_var() {
-        var_name="$1" var_val="$2"
-        if grep -q "^${var_name}=" "$CONFIG" 2>/dev/null; then
-            sed -i "s|^${var_name}=.*|${var_name}=\"${var_val}\"|" "$CONFIG"
-        else
-            echo "${var_name}=\"${var_val}\"" >> "$CONFIG"
-        fi
-    }
-    update_config_var "MAIN_COLOR" "$m_color_hex"
-    update_config_var "NODE_COLORS" "$working_colors"
+    if grep -q "^MAIN_COLOR=" "$CONFIG" 2>/dev/null; then
+        sed -i "s|^MAIN_COLOR=.*|MAIN_COLOR=\"$m_color_hex\"|" "$CONFIG"
+    else
+        echo "MAIN_COLOR=\"$m_color_hex\"" >> "$CONFIG"
+    fi
+    if grep -q "^NODE_COLORS=" "$CONFIG" 2>/dev/null; then
+        sed -i "s|^NODE_COLORS=.*|NODE_COLORS=\"$working_colors\"|" "$CONFIG"
+    else
+        echo "NODE_COLORS=\"$working_colors\"" >> "$CONFIG"
+    fi
     echo -e "$BL\n[+] Device colors successfully saved to CONFIG.$NC"
     pause
 }
@@ -1318,11 +1318,8 @@ set_options() {
                         case "$SHOW_FW" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
                         sed -i "s/SHOW_FW=.*/SHOW_FW=\"$NEW_SF\"/" "$CONFIG"
                     else
-                        case "${SHOW_FW:-1}" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
-                        echo "SHOW_FW=\"$NEW_SF\"" >> "$CONFIG"
+                        echo 'SHOW_FW="0"' >> "$CONFIG"
                     fi
-                    SHOW_FW="$NEW_SF"
-                    case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
                     ;;
                 *)
                     freeze 2
@@ -1769,7 +1766,7 @@ get_ssh_keys() {
             read -r update
             case "$update" in y|Y) break ;; n|N) return 0 ;; *) freeze 2 ;; esac
         done
-        echo -e "\n$GR[!]  Linking and configuring...$NC"
+        echo -e "\n$GR[!] Linking and configuring...$NC"
 	fi
 
     if [ ! -f "/jffs/.ssh/id_dropbear" ]; then
