@@ -4864,6 +4864,8 @@ function triggerUpdate(btn) {
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+    }).then(function() {
+        triggerRefresh();
     });
 
     var scanTime = parseFloat("$UP_DIFF") || 5.0;
@@ -5167,7 +5169,6 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 case "$1" in
     update)
         do_update
-        run_report
         ;;
     install)
         main_init
