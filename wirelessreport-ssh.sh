@@ -3548,6 +3548,7 @@ do_numbered_node
 check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
+UP_DIFF="${DIFF1:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 
@@ -4865,7 +4866,7 @@ function triggerUpdate(btn) {
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     });
 
-    var scanTime = parseFloat("$JS_DIFF") || 5.0;
+    var scanTime = parseFloat("$UP_DIFF") || 5.0;
     var delay = Math.max(2500, Math.ceil((scanTime * 1000) + 1500));
     setTimeout(function() { window.location.reload(); }, delay);
 }
