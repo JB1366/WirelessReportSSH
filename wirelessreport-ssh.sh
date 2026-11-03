@@ -596,6 +596,7 @@ do_install() {
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
     echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in restart:update_report) '"$REPORT_SCRIPT"' update & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
@@ -606,6 +607,15 @@ do_install() {
     echo -e "$BL[i] Tip: On router only install, you can add node(s) later."
     echo -e "$BL    Use option #7 in SSH menu to authenticate new node(s).$NC"
 	pause
+}
+
+check_updateSE() {
+    if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
+    if ! grep -q "restart:update_report" "$SE_FILE"; then
+        echo 'case "$1:$2" in restart:update_report) '"$REPORT_SCRIPT"' update & ;; esac # WR SSH' >> "$SE_FILE"
+    fi
+    chmod +x "$SE_FILE"
+    return 0
 }
 
 do_update() {
@@ -4505,6 +4515,7 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices</button>
                             <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
+                            <button class="button-tables" onclick="triggerUpdate(this)">Update</button>
                         </div>
                     </div>
                     <div class="grid-container">
@@ -4829,6 +4840,24 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function triggerUpdate(btn) {
+    if (btn) {
+        btn.innerText = "Updating...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    var expires = new Date(Date.now() + 30000).toUTCString();
+    document.cookie = "report_done1=true; expires=" + expires + "; path=/";
+    fetch('/apply.cgi', {
+        method: 'POST',
+        body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+    });
+
+    var scanTime = parseFloat("$JS_DIFF") || 5.0;
+    var delay = Math.max(2500, Math.ceil((scanTime * 1000) + 1500));
+    setTimeout(function() { window.location.reload(); }, delay);
+}
+
 function switchTab(view) {
     localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
@@ -5123,6 +5152,10 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
 case "$1" in
+    update)
+        do_update
+        check_updateSE
+        ;;
     install)
         main_init
         install_menu
