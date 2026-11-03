@@ -3530,6 +3530,7 @@ MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
 
+check_updateSE
 get_theme
 runtime_tracking
 do_numbered_node
@@ -5154,7 +5155,6 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 case "$1" in
     update)
         do_update
-        check_updateSE
         ;;
     install)
         main_init
