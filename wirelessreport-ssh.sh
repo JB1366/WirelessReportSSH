@@ -148,13 +148,13 @@ check_version() {
     case "$mode" in
         header_box)
             case "$STATE" in
-                OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable"
+                OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
-                OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available"
+                OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
-                HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available"
+                HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="header-title2" ;;
-                UP_TO_DATE|*) HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV"
+                UP_TO_DATE|*) HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
             esac
             ;;
@@ -623,6 +623,7 @@ do_update() {
     if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" 2>/dev/null && [ -s "$TEMP_SCRIPT" ]; then
         mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
         chmod +x "$REPORT_SCRIPT" 2>/dev/null
+        web_update
         return 0
     else
         rm -f "$TEMP_SCRIPT"
@@ -644,6 +645,15 @@ do_update() {
             echo -e "\n$YL[!] GitHub unreachable and script is already in place.$NC"
             pause; return 1
         fi
+    fi
+}
+
+web_update() {
+    UPDATE_TIME="$CUR_TIME"
+    if grep -q "UPDATE_TIME=" "$CONFIG_FILE"; then
+        sed -i "s|^UPDATE_TIME=.*|UPDATE_TIME=\"$UPDATE_TIME\"|" "$CONFIG_FILE"
+    else
+        echo "UPDATE_TIME=\"$UPDATE_TIME\"" >> "$CONFIG_FILE"
     fi
 }
 
