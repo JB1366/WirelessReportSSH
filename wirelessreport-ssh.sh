@@ -5166,6 +5166,7 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 case "$1" in
     update)
         do_update
+        run_report
         ;;
     install)
         main_init
