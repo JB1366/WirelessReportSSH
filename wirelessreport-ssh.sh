@@ -4526,7 +4526,6 @@ cat <<HTML >> "$WEB_PAGE"
                         <div class="header-wrap">
                             <div class="header-tooltip">
                                 <h1 class="$HEADER_TITLE">WIRELESS REPORT SSH</h1>
-                                <span class="header-box">$HOVER_TEXT</span>
                             </div>
                         </div>
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
@@ -4553,7 +4552,10 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices</button>
                             <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
-                            <button class="button-tables" onclick="triggerUpdate(this)">Update</button>
+                            <div class="header-tooltip" style="display:inline-block; position:relative;">
+                                <button class="button-tables" onclick="triggerUpdate(this)">Update</button>
+                                <span class="header-box">$HOVER_TEXT</span>
+                            </div>
                         </div>
                     </div>
                     <div class="grid-container">
