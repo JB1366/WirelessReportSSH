@@ -84,10 +84,11 @@ install_menu() {
         printb "╔═════════════════════════════════════════════════════════════╗"
         check_version
         printb "╠═════════════════════════════════════════════════════════════╣"
+        printm "$MM" "center"
         printm ""
         printm "  $N1  Install/Update"
         printm "  $N2  Uninstall"
-        printm "  $N3  Set Temperature/Date ($DU) ($CT)"
+        printm "  $N3  Set Temperature/Date"
         printm "  $N4  Set Device Nicknames"
         printm "  $N5  Set Device $COLORS"
         printm "  $N6  Sort Node Display Order"
@@ -276,15 +277,29 @@ menu_vars() {
 printm() {
     local box_color="$B_COLOR"
     local text="$1"
-    local target="${2:-$MB}"
+    local align="${2:-left}"
     local esc=$(printf '\033')
     local plain=$(printf "%b" "$text" | sed "s/${esc}\[[0-9;]*m//g")
     local len=${#plain}
-    local pad=$((target - len))
+    local pad=$((MB - len))
     [ "$pad" -lt 0 ] && pad=0
-    local line="${box_color}║$NC${text}"
+    local lpad=0
+    local rpad=0
+    if [ "$align" = "center" ]; then
+        lpad=$((pad / 2))
+        rpad=$((pad - lpad))
+    else
+        rpad="$pad"
+    fi
+    local line="${box_color}║$NC"
     local i=0
-    while [ "$i" -lt "$pad" ]; do
+    while [ "$i" -lt "$lpad" ]; do
+        line="${line} "
+        i=$((i + 1))
+    done
+    line="${line}${text}"
+    i=0
+    while [ "$i" -lt "$rpad" ]; do
         line="${line} "
         i=$((i + 1))
     done
@@ -348,6 +363,7 @@ menu_time_color() {
 
     DU="$TC°$TEMP_UNIT$NC"
     CT="$TC$CUR_TIME$NC"
+    MM="$B_COLOR$CUR_TIME$NC"
 
     DATE_USA="$GR$(date +'%b-%-d %-H:%M:%S')$NC"
     DATE_INTL="$GR$(date +'%d-%b %-H:%M:%S')$NC"
@@ -541,6 +557,7 @@ do_install() {
     if [ "$is_update" = "1" ]; then
         while true; do
             check_version do_install
+            echo -e "Last Updated: $B_COLOR$UPDATE_TIME$NC\n"
             printf "Do you want to $UP (y/n): "
             read -r update
             case "$update" in y|Y) break ;; n|N) return 0 ;; *) freeze 4 ;; esac
@@ -839,7 +856,7 @@ set_device_nicknames() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                   Set Device Nicknames"
+        printm "                    Set Device Nicknames"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
 		printm "  $N1 Reset to Default Nicknames"
