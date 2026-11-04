@@ -3571,6 +3571,7 @@ do_numbered_node
 check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
+UP_DIFF="${DIFF1:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 
@@ -4881,23 +4882,25 @@ function triggerUpdate(btn) {
         btn.classList.add('refresh-pulse');
     }
     var expires = new Date(Date.now() + 30000).toUTCString();
+
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    })
-    .then(response => {
-        setTimeout(function() {
-            if (window._updateWasPerformed) {
-                window.location.reload();
-            } else {
-                if (btn) {
-                    btn.innerText = "Up to Date";
-                    btn.classList.remove('refresh-pulse');
-                    setTimeout(() => { btn.innerText = "Update"; }, 5000);
-                }
-            }
-        }, 2000);
+    }).then(function() {
+        triggerRefresh();
     });
+
+    setTimeout(function() {
+        if (window._updateWasPerformed) {
+            window.location.reload();
+        } else {
+            if (btn) {
+                btn.innerText = "Up to Date";
+                btn.classList.remove('refresh-pulse');
+                setTimeout(() => { btn.innerText = "Update"; }, 5000);
+            }
+        }
+    }, 3000);
 }
 
 function switchTab(view) {
