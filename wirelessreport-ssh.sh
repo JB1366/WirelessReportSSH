@@ -4898,7 +4898,7 @@ function triggerUpdate(btn) {
             btn.classList.remove('refresh-pulse');
             setTimeout(() => { btn.innerText = "Update"; }, 5000);
         }
-    }, 2000);
+    }, 5000);
 }
 
 function switchTab(view) {
