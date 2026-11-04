@@ -4900,7 +4900,7 @@ function triggerUpdate(btn) {
                 btn.classList.remove('refresh-pulse');
                 setTimeout(function() { btn.innerText = "Update"; }, 5000);
             }
-        }, 5000);
+        }, 3000);
     });
 }
 
