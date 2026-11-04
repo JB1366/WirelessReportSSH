@@ -40,6 +40,7 @@ PROFILE_ADD="/jffs/configs/profile.add"
 NEW_HISTORY="/tmp/rssi_new.db"
 YAZ_CACHE="/tmp/yaz_cache.tmp"
 ARP_CACHE="/tmp/arp_cache.tmp"
+STATUS_FILE="/tmp/update_status.txt"
 KNOWN_CACHE="/tmp/known_macs.cache"
 HISTORY_CACHE="/tmp/rssi_history.cache"
 LEASES_CACHE="/tmp/dnsmasq_leases.cache"
@@ -3584,6 +3585,7 @@ cat <<HTML >> "$WEB_PAGE"
 <html>
 <head>
 <meta charset="UTF-8" />
+<!-- WR_STATUS:NONE -->
 <title>Wireless Report $SCRIPT_VERSION$VERSION_HASH</title>
 <link rel="shortcut icon" href="images/favicon.png">
 <link rel="icon" href="images/favicon.png">
@@ -4882,23 +4884,46 @@ function triggerUpdate(btn) {
         btn.classList.add('refresh-pulse');
     }
 
-    var expires = new Date(Date.now() + 30000).toUTCString();
-    document.cookie = "report_done1=true; expires=" + expires + "; path=/";
-
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    }).then(function() {
-        triggerRefresh();
+    })
+    .then(function() { return waitForStatus(15, 400); })
+    .then(function(status) {
+        console.log('[WR] status =', status);
+        if (status === 'UPDATED') triggerRefresh();
+    })
+    .finally(function() {
+        setTimeout(function() {
+            if (btn) {
+                btn.innerText = "Up to Date";
+                btn.classList.remove('refresh-pulse');
+                setTimeout(function() { btn.innerText = "Update"; }, 5000);
+            }
+        }, 5000);
     });
+}
 
-    setTimeout(function() {
-        if (btn) {
-            btn.innerText = "Up to Date";
-            btn.classList.remove('refresh-pulse');
-            setTimeout(() => { btn.innerText = "Update"; }, 5000);
-        }
-    }, 5000);
+function waitForStatus(maxTries, ms) {
+    var n = 0;
+    return new Promise(function(resolve) {
+        (function tick() {
+            n++;
+            fetch(location.pathname + '?_=' + Date.now(), { cache: 'no-store' })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var m = html.match(/WR_STATUS:([A-Z]+)/);
+                var s = m ? m[1] : '';
+                if (s === 'UPDATED' || s === 'UPTODATE' || s === 'FAILED') return resolve(s);
+                if (n >= maxTries) return resolve('NONE');
+                setTimeout(tick, ms);
+            })
+            .catch(function() {
+                if (n >= maxTries) resolve('NONE');
+                else setTimeout(tick, ms);
+            });
+        })();
+    });
 }
 
 function switchTab(view) {
@@ -5208,8 +5233,28 @@ case "$1" in
         exit "$?"
         ;;
 	update)
-        check_version web_check && exit 0
-        do_update
+        [ -z "$INSTALLED_PAGE" ] && INSTALLED_PAGE="user2.asp"
+        LIVE="/www/user/$INSTALLED_PAGE"
+        STATUS="UPTODATE"
+        if ! check_version web_check; then
+            if do_update; then
+                STATUS="UPDATED"
+            else
+                STATUS="FAILED"
+            fi
+        fi
+        echo "$STATUS" > "$STATUS_FILE"
+        SRC=""
+        [ -f "$WEB_PAGE" ] && SRC="$WEB_PAGE"
+        [ -z "$SRC" ] && [ -f "$LIVE" ] && SRC="$LIVE"
+        if [ -n "$SRC" ]; then
+            sed "s/<!-- WR_STATUS:[A-Z]* -->/<!-- WR_STATUS:$STATUS -->/" "$SRC" > /tmp/wr_page.asp
+            if [ -s /tmp/wr_page.asp ]; then
+                [ -f "$WEB_PAGE" ] && cat /tmp/wr_page.asp > "$WEB_PAGE"
+                cat /tmp/wr_page.asp > "$LIVE" 2>/dev/null
+            fi
+            rm -f /tmp/wr_page.asp
+        fi
         ;;
     *)
 		run_report
