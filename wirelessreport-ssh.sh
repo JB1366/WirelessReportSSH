@@ -4881,37 +4881,25 @@ function triggerUpdate(btn) {
         btn.innerText = "Checking...";
         btn.classList.add('refresh-pulse');
     }
-
     var expires = new Date(Date.now() + 30000).toUTCString();
     document.cookie = "report_done1=true; expires=" + expires + "; path=/";
-
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     }).then(function() {
-        // Wait a brief moment for the backend script to finish writing its state,
-        // then call triggerRefresh() to pull the updated report data into the DOM.
-        setTimeout(function() {
-            if (typeof triggerRefresh === 'function') {
-                triggerRefresh();
-            }
-
-            // Give the DOM a split second to update with the new data from triggerRefresh,
-            // then check if an actual update was performed.
-            setTimeout(function() {
-                if (window._updateWasPerformed === true) {
-                    window.location.reload();
-                } else {
-                    if (btn) {
-                        btn.innerText = "Up to Date";
-                        btn.classList.remove('refresh-pulse');
-                        setTimeout(() => { btn.innerText = "Update"; }, 5000);
-                    }
-                }
-            }, 800);
-
-        }, 2000); // 2-second buffer for the backend script execution
+        triggerRefresh();
     });
+    setTimeout(function() {
+        if (window._updateWasPerformed) {
+            window.location.reload();
+        } else {
+            if (btn) {
+                btn.innerText = "Up to Date";
+                btn.classList.remove('refresh-pulse');
+                setTimeout(() => { btn.innerText = "Update"; }, 5000);
+            }
+        }
+    }, 2000);
 }
 
 function switchTab(view) {
