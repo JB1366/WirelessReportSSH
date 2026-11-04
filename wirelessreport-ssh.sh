@@ -4881,7 +4881,9 @@ function triggerUpdate(btn) {
         btn.innerText = "Checking...";
         btn.classList.add('refresh-pulse');
     }
+
     var expires = new Date(Date.now() + 30000).toUTCString();
+    document.cookie = "report_done1=true; expires=" + expires + "; path=/";
 
     fetch('/apply.cgi', {
         method: 'POST',
