@@ -207,8 +207,8 @@ menu_vars() {
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
 
-    STATUS="$NC STATUS:"
-    CURRENT="$NC CURRENT:$GR v$SCRIPT_VERSION$DEV$NC"
+    STATUS="$NC Status:"
+    CURRENT="$NC Current:$GR v$SCRIPT_VERSION$DEV$NC"
 
     SK="$B_COLOR KEY:$NC"
     case "$SSH_KEY" in
