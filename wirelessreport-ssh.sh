@@ -4881,23 +4881,22 @@ function triggerUpdate(btn) {
         btn.innerText = "Checking...";
         btn.classList.add('refresh-pulse');
     }
+
     var expires = new Date(Date.now() + 30000).toUTCString();
     document.cookie = "report_done1=true; expires=" + expires + "; path=/";
+
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     }).then(function() {
         triggerRefresh();
     });
+
     setTimeout(function() {
-        if (window._updateWasPerformed) {
-            window.location.reload();
-        } else {
-            if (btn) {
-                btn.innerText = "Up to Date";
-                btn.classList.remove('refresh-pulse');
-                setTimeout(() => { btn.innerText = "Update"; }, 5000);
-            }
+        if (btn) {
+            btn.innerText = "Up to Date";
+            btn.classList.remove('refresh-pulse');
+            setTimeout(() => { btn.innerText = "Update"; }, 5000);
         }
     }, 2000);
 }
