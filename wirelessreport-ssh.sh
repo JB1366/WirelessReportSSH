@@ -5233,8 +5233,6 @@ case "$1" in
         exit "$?"
         ;;
 	update)
-        [ -z "$INSTALLED_PAGE" ] && INSTALLED_PAGE="user2.asp"
-        LIVE="/www/user/$INSTALLED_PAGE"
         STATUS="UPTODATE"
         if ! check_version web_check; then
             if do_update; then
@@ -5244,15 +5242,9 @@ case "$1" in
             fi
         fi
         echo "$STATUS" > "$STATUS_FILE"
-        SRC=""
-        [ -f "$WEB_PAGE" ] && SRC="$WEB_PAGE"
-        [ -z "$SRC" ] && [ -f "$LIVE" ] && SRC="$LIVE"
-        if [ -n "$SRC" ]; then
-            sed "s/<!-- WR_STATUS:[A-Z]* -->/<!-- WR_STATUS:$STATUS -->/" "$SRC" > /tmp/wr_page.asp
-            if [ -s /tmp/wr_page.asp ]; then
-                [ -f "$WEB_PAGE" ] && cat /tmp/wr_page.asp > "$WEB_PAGE"
-                cat /tmp/wr_page.asp > "$LIVE" 2>/dev/null
-            fi
+        if [ -f "$WEB_PAGE" ]; then
+            sed "s/<!-- WR_STATUS:[A-Z]* -->/<!-- WR_STATUS:$STATUS -->/" "$WEB_PAGE" > /tmp/wr_page.asp
+            [ -s /tmp/wr_page.asp ] && cat /tmp/wr_page.asp > "$WEB_PAGE"
             rm -f /tmp/wr_page.asp
         fi
         ;;
