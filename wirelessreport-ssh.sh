@@ -171,6 +171,12 @@ check_version() {
                               UP="reinstall/overwrite anyway?" ;;
             esac
             ;;
+        web_check)
+            case "$STATE" in
+                OUTDATED|HASH_DIFF) return 1 ;;
+                OFFLINE|UP_TO_DATE|*) return 0 ;;
+            esac
+            ;;
         *)
             case "$STATE" in
                 OFFLINE)       printm " $STATUS $RD[Offline]                     [GitHub Unreachable]" ;;
@@ -3565,7 +3571,6 @@ do_numbered_node
 check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
-UP_DIFF="${DIFF1:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 
@@ -4872,22 +4877,27 @@ window.addEventListener('DOMContentLoaded', function() {
 
 function triggerUpdate(btn) {
     if (btn) {
-        btn.innerText = "Updating...";
+        btn.innerText = "Checking...";
         btn.classList.add('refresh-pulse');
     }
-
     var expires = new Date(Date.now() + 30000).toUTCString();
-    document.cookie = "report_done1=true; expires=" + expires + "; path=/";
     fetch('/apply.cgi', {
         method: 'POST',
         body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    }).then(function() {
-        triggerRefresh();
+    })
+    .then(response => {
+        setTimeout(function() {
+            if (window._updateWasPerformed) {
+                window.location.reload();
+            } else {
+                if (btn) {
+                    btn.innerText = "Up to Date";
+                    btn.classList.remove('refresh-pulse');
+                    setTimeout(() => { btn.innerText = "Update"; }, 5000);
+                }
+            }
+        }, 2000);
     });
-
-    var scanTime = parseFloat("$UP_DIFF") || 5.0;
-    var delay = Math.max(2500, Math.ceil((scanTime * 1000) + 1500));
-    setTimeout(function() { window.location.reload(); }, delay);
 }
 
 function switchTab(view) {
@@ -5184,9 +5194,6 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
 case "$1" in
-    update)
-        do_update
-        ;;
     install)
         main_init
         install_menu
@@ -5199,7 +5206,11 @@ case "$1" in
         ScriptUpdateFromAMTM "$@"
         exit "$?"
         ;;
-	*)
+	update)
+        check_version web_check && exit 0
+        do_update
+        ;;
+    *)
 		run_report
         ;;
 esac
