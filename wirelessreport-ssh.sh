@@ -151,13 +151,13 @@ check_version() {
         header_box)
             case "$STATE" in
                 OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="header-title" ;;
+                              VERSION_HASH="$DEV [Offline]"; HEADER_TITLE="update-title" ;;
                 OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="header-title2" ;;
+                              VERSION_HASH="$DEV [$REMOTE_VERSION]"; HEADER_TITLE="update-title2" ;;
                 HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="header-title2" ;;
+                              VERSION_HASH="$DEV [Hash]"; HEADER_TITLE="update-title2" ;;
                 UP_TO_DATE|*) HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV"; HEADER_TITLE="header-title" ;;
+                              VERSION_HASH="$DEV"; HEADER_TITLE="update-title" ;;
             esac
             ;;
         do_install)
@@ -3628,7 +3628,7 @@ cat <<HTML >> "$WEB_PAGE"
         text-align: center;
     }
 
-    .header-title {
+    .update-title {
         display: inline-block;
         text-align: center;
         color: #0096ff;
@@ -3640,7 +3640,7 @@ cat <<HTML >> "$WEB_PAGE"
         margin: 10px 0;
     }
 
-    .header-title2 {
+    .update-title2 {
         display: inline-block;
         text-align: center;
         color: #0096ff;
