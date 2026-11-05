@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.7"
+SCRIPT_VERSION="2.3.8"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -5224,11 +5224,13 @@ case "$1" in
         if ! check_version web_check; then
             if do_update; then
                 STATUS="UPDATED"
+                STATUS2="TO: v$REMOTE_VERSION"
             else
                 STATUS="FAILED"
             fi
         fi
         echo "$STATUS" > "$STATUS_FILE"
+        sys_log "Current: v$SCRIPT_VERSION$DEV Remote: v$REMOTE_VERSION Status: $STATUS $STATUS2"
         if [ -f "$WEB_PAGE" ]; then
             sed "s/<!-- WR_STATUS:[A-Z]* -->/<!-- WR_STATUS:$STATUS -->/" "$WEB_PAGE" > /tmp/wr_page.asp
             [ -s /tmp/wr_page.asp ] && cat /tmp/wr_page.asp > "$WEB_PAGE"
