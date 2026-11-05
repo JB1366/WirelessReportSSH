@@ -4878,9 +4878,9 @@ function triggerUpdate(btn) {
     })
     .then(function() { return waitForStatus(15, 400); })
     .then(function(status) {
-        console.log('[WR] status =', status);
-        if (status === 'UPDATED') triggerRefresh();
+        if (status === 'UPDATED') {
         if (btn) { btn.innerText = "Updating..."; }
+        triggerRefresh(); }
     })
     .finally(function() {
         setTimeout(function() {
