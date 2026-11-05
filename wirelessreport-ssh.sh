@@ -1044,7 +1044,6 @@ set_device_colors() {
         printm ""
         printm "  Current Device Configuration:"
         printm ""
-
         main_display_name="${MAIN_NICK:-$main_name}"
         main_display_color=$(get_hex_to_ansi "$m_color_hex")
         formatted_main_ip=$(printf "(%s)" "$main_ip")
@@ -1072,7 +1071,6 @@ set_device_colors() {
 
             idx=$((idx + 1))
         done
-
         printm ""
         printm "  $LR Restore Default Colors"
         printm "  $LS Save Changes & Exit"
@@ -1157,7 +1155,6 @@ do_node_sorting() {
         printm ""
         printm "  Current order:"
         printm ""
-
         get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
         node_idx=1
         for node in $SSH_NODES; do
@@ -1173,7 +1170,6 @@ do_node_sorting() {
             node_idx=$((node_idx + 1))
         done
         orig_count=$((node_idx - 1))
-
         printm ""
         printm "  $LR Reset to default, sort by IP."
         printm ""
@@ -1937,7 +1933,6 @@ node_auth() {
     echo -e "$NC               Verifying Node Authentication                        "
     echo -e "$B_COLOR═══════════════════════════════════════════════════════════════"
     echo -e "                                                                       "
-
     get_ssh_nodes
     if [ -z "$AIMESH_NODES" ]; then
         echo -e "$RD[!] No AiMesh Nodes detected in NVRAM.$NC"
@@ -2076,7 +2071,6 @@ show_node_firmware() {
             eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
             HEX_CLR=$(get_node_color "$node_idx")
             NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
-
             n_fw="Unknown"
             if [ -n "$NODES_FW_DATA" ]; then
                 for entry in $NODES_FW_DATA; do
@@ -2098,7 +2092,6 @@ show_node_firmware() {
 
             node_idx=$((node_idx + 1))
         done
-
         printm ""
         printm "  $LS Scan Nodes - Update Config"
         printm ""
@@ -3547,8 +3540,6 @@ EOF
     fi
 done
 
-check_node_fw2
-
 #════════════════════════#
 #  All Devices Assembly  #
 #════════════════════════#
@@ -3563,8 +3554,9 @@ ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
-get_all_radio_row
 
+get_all_radio_row
+check_node_fw2
 check_updateSE
 get_theme
 runtime_tracking
@@ -3572,7 +3564,6 @@ do_numbered_node
 check_version header_box
 
 JS_DIFF="${DIFF:-5.00}"
-UP_DIFF="${DIFF1:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
 

@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.3.7-add update button.
 v2.3.6-menu updates.
 v2.3.5-menu updates.
 v2.3.4-menu updates.
