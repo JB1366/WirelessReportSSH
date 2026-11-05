@@ -2280,7 +2280,7 @@ get_theme() {
         "ASUS_WEBUI")
             RT_TOOLTIP="#3A4042"
             THEME_CSS=".top-header { background-color: #4D595D; }
-            .header-box { background: #3A4042; }
+            .update-box { background: #3A4042; }
             .section-header { background: #4D595D; }
             .report-column { background: #3A4042; }
             table.report_table td { background: #1c232b; } /* Table Background */
@@ -2297,7 +2297,7 @@ get_theme() {
         "DARKMODE")
             RT_TOOLTIP="#000000"
             THEME_CSS=".top-header { background: transparent !important; }
-            .header-box { background: #000000; }
+            .update-box { background: #000000; }
             .section-header { background: transparent !important; }
             .report-column { background: transparent !important; }
             table.report_table td { background: transparent !important; }
@@ -2313,7 +2313,7 @@ get_theme() {
         "ORIGINAL"|*)
             RT_TOOLTIP="#000000"
             THEME_CSS=".top-header { background: transparent !important; }
-            .header-box { background: #000000; }
+            .update-box { background: #000000; }
             .section-header { background: linear-gradient(to bottom, #171b1f, #354961); }
             .report-column { background: #1c232b; }
             table.report_table td { background: #1c232b; }
@@ -3636,6 +3636,8 @@ cat <<HTML >> "$WEB_PAGE"
         font-size: 24px;
         font-weight: bold;
         position: static;
+        width: 100%;
+        margin: 10px 0;
     }
 
     .header-title2 {
@@ -3646,6 +3648,8 @@ cat <<HTML >> "$WEB_PAGE"
         font-size: 24px;
         font-weight: bold;
         position: static;
+        width: 100%;
+        margin: 10px 0;
         animation: pulse-twice 1.2s ease-in-out 2;
     }
 
@@ -3686,13 +3690,7 @@ cat <<HTML >> "$WEB_PAGE"
         font-weight: 900;
     }
 
-    .header-wrap {
-        text-align: center;
-        width: 100%;
-        margin: 10px 0;
-    }
-
-    .header-box {
+    .update-box {
         visibility: hidden;
         width: max-content;
         min-width: 120px;
@@ -3715,12 +3713,12 @@ cat <<HTML >> "$WEB_PAGE"
         line-height: 1.4;
     }
 
-    .header-tooltip {
+    .update-tooltip {
         position: relative;
         display: inline-block;
     }
 
-    .header-tooltip:hover .header-box {
+    .update-tooltip:hover .update-box {
         visibility: visible;
         opacity: 1;
         bottom: 145%;
@@ -4523,11 +4521,7 @@ cat <<HTML >> "$WEB_PAGE"
                 <div id="tabMenu" class="submenuBlock"></div>
                 <div id="wifiReportContainer">
                     <div class="top-header">
-                        <div class="header-wrap">
-                            <div class="header-tooltip">
-                                <h1 class="$HEADER_TITLE">WIRELESS REPORT SSH</h1>
-                            </div>
-                        </div>
+                        <h1 class="$HEADER_TITLE">WIRELESS REPORT SSH</h1>
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
                         <div class="top-buttons">
                             <div class="button-refresh">
@@ -4552,9 +4546,9 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices</button>
                             <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
-                            <div class="header-tooltip" style="display:inline-block; position:relative;">
+                            <div class="update-tooltip" style="display:inline-block; position:relative;">
                                 <button class="button-tables" onclick="triggerUpdate(this)">Update</button>
-                                <span class="header-box">$HOVER_TEXT</span>
+                                <span class="update-box">$HOVER_TEXT</span>
                             </div>
                         </div>
                     </div>
