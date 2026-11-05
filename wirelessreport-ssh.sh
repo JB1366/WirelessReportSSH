@@ -40,7 +40,7 @@ PROFILE_ADD="/jffs/configs/profile.add"
 NEW_HISTORY="/tmp/rssi_new.db"
 YAZ_CACHE="/tmp/yaz_cache.tmp"
 ARP_CACHE="/tmp/arp_cache.tmp"
-STATUS_FILE="/tmp/update_status.txt"
+STATUS_FILE="/tmp/update_status.log"
 KNOWN_CACHE="/tmp/known_macs.cache"
 HISTORY_CACHE="/tmp/rssi_history.cache"
 LEASES_CACHE="/tmp/dnsmasq_leases.cache"
@@ -1699,6 +1699,7 @@ go_developer() {
                     LOG="/tmp/iptables_view.log"
                     iptables -L -v -n --line-numbers > "$LOG" 2>&1
                     file_viewer "iptables" "$LOG"
+                    rm -f "$LOG" 2>/dev/null
                     ;;
                 12)
                     file_viewer "syslog.log" "/jffs/syslog.log" log_tail
@@ -4879,6 +4880,7 @@ function triggerUpdate(btn) {
     .then(function(status) {
         console.log('[WR] status =', status);
         if (status === 'UPDATED') triggerRefresh();
+        if (btn) { btn.innerText = "Updating..."; }
     })
     .finally(function() {
         setTimeout(function() {
