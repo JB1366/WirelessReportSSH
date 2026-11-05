@@ -4879,7 +4879,7 @@ function triggerUpdate(btn) {
     .then(function() { return waitForStatus(15, 400); })
     .then(function(status) {
         if (status === 'UPDATED') {
-        if (btn) { btn.innerText = "Updating..."; }
+        btn.innerText = "Updating...";
         triggerRefresh(); }
     })
     .finally(function() {
