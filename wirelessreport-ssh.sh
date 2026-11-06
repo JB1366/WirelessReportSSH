@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.9"
+SCRIPT_VERSION="2.4.0"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -3567,7 +3567,6 @@ check_version header_box
 JS_DIFF="${DIFF:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
-SHOW_DAY=1
 
 #═════════════════#
 #  Generate HTML  #
@@ -4748,7 +4747,7 @@ function initial() {
 }
 
 const T_FMT = "${T_FMT#+}";
-const SHOW_DAY = ${SHOW_DAY:-0};
+const SHOW_DAY = ${SHOW_DAY:-1};
 function formatWithTFMT(fmt) {
 	const now = new Date();
 	const days   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -4776,7 +4775,9 @@ function formatWithTFMT(fmt) {
 }
 
 function updateLiveClock() {
-	document.getElementById("liveClock").textContent = formatWithTFMT(T_FMT);
+	const el = document.getElementById("liveClock");
+	if (!el) return;
+	el.textContent = formatWithTFMT(T_FMT);
 }
 
 updateLiveClock();
