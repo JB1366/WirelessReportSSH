@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.3.8"
+SCRIPT_VERSION="2.3.9"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -3567,6 +3567,7 @@ check_version header_box
 JS_DIFF="${DIFF:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
+SHOW_DAY=1
 
 #═════════════════#
 #  Generate HTML  #
@@ -3664,13 +3665,22 @@ cat <<HTML >> "$WEB_PAGE"
         margin: 0 0 12px 0;
     }
 
+    .live-time {
+        text-align: center;
+        color: #f2f2f7;
+        margin-top: 6px;
+	    margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
     .total-count {
         text-align: center;
         color: #f2f2f7;
+        margin-top: 10px;
         margin-bottom: 12px;
-        font-size: 13px;
+        font-size: 16px;
         font-weight: bold;
-        letter-spacing: 0.5px;
     }
 
     .count-highlight {
@@ -4514,6 +4524,7 @@ cat <<HTML >> "$WEB_PAGE"
                 <div id="wifiReportContainer">
                     <div class="top-header">
                         <h1 class="$HEADER_TITLE">WIRELESS REPORT SSH</h1>
+                        <span id="liveClock" class="live-time">$CUR_TIME</span>
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
                         <div class="top-buttons">
                             <div class="button-refresh">
@@ -4735,6 +4746,41 @@ function initial() {
         }
     });
 }
+
+const T_FMT = "${T_FMT#+}";
+const SHOW_DAY = ${SHOW_DAY:-0};
+function formatWithTFMT(fmt) {
+	const now = new Date();
+	const days   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+	const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+	const map = {
+		"%Y":  now.getFullYear(),
+		"%m":  String(now.getMonth() + 1).padStart(2, "0"),
+		"%b":  months[now.getMonth()],
+		"%d":  String(now.getDate()).padStart(2, "0"),
+		"%-d": now.getDate(),
+		"%H":  String(now.getHours()).padStart(2, "0"),
+		"%-H": now.getHours(),
+		"%I":  String(((now.getHours() + 11) % 12) + 1).padStart(2, "0"),
+		"%-I": ((now.getHours() + 11) % 12) + 1,
+		"%M":  String(now.getMinutes()).padStart(2, "0"),
+		"%S":  String(now.getSeconds()).padStart(2, "0"),
+		"%p":  now.getHours() >= 12 ? "PM" : "AM"
+	};
+	let timeStr = fmt.replace(/%-d|%-H|%-I|%Y|%m|%b|%d|%H|%I|%M|%S|%p/g, m => map[m]);
+	if (SHOW_DAY === 1) {
+		timeStr = days[now.getDay()] + ", " + timeStr;
+	}
+	return timeStr;
+}
+
+function updateLiveClock() {
+	document.getElementById("liveClock").textContent = formatWithTFMT(T_FMT);
+}
+
+updateLiveClock();
+setInterval(updateLiveClock, 1000);
 
 var timeLeft = 0; var refreshTimer = null; var isRefreshing = false;
 function triggerRefresh() {
