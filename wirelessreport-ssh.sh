@@ -382,7 +382,7 @@ menu_time_color() {
     DATE_ISO3="$DATE_ISO1"
 
     B_COLOR=${B_COLOR:-$BL}
-    for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
+    for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do eval "N${i}=\"\$B_COLOR(${i})\$NC\""; done
 	for i in E Q R S Z; do eval "L${i}=\"\$B_COLOR(${i})\$NC\""; done
 
     MODELID="${MODEL_PAD}${B_COLOR}Router: ${NC}${CACHED_PRODID}${B_COLOR}   FW:${NC} ${CACHED_FW}"
@@ -1624,6 +1624,7 @@ go_developer() {
         printm "  $N12 View iptables - iptables -L -v -n --line-numbers"
         printm "  $N13 View syslog - /jffs/syslog.log"
         printm "  $N14 View iocmon - $ROOT_PATH/iocmon.d/iocmon.log"
+        printm "  $N15 View Cron Jobs - cru l(ist)"
         printm ""
         printm "  $LQ  Power Exit from any Selection Prompt"
         printm "  $LZ  Return to 'Main Menu' from anywhere"
@@ -1725,6 +1726,23 @@ go_developer() {
                     ;;
                 14)
                     file_viewer "iocmon.log" "$ROOT_PATH/iocmon.d/state/iocmon.log" log_tail
+                    ;;
+                15)
+                    file_viewer "Cron Jobs" "/var/spool/cron/crontabs/$(nvram get http_username)"
+                    ;;
+                cron)
+                    echo -e "\n$B_COLOR══════════════════════════ Cron Jobs ══════════════════════════$NC\n"
+                    if [ ! "$(ls -A /var/spool/cron/crontabs)" ] || [ ! -s "/var/spool/cron/crontabs/$(nvram get http_username)" ]; then
+                        echo " (there are no cron jobs set at the moment)"
+                    else
+                        printf " .---------------- minute       (0 - 59)\\n |  .------------- hour         (0 - 23)\\n |  |  .---------- day of month (1 - 31)\\n"
+                        printf " |  |  |  .------- month        (1 - 12) OR Jan,Feb,mar ...\\n |  |  |  |  .---- day of week  (0 - 6) Sunday = 0 or 7, OR Sun,mon,Tue ...\\n"
+                        printf " |  |  |  |  |\\n *  *  *  *  *  command to be executed  #job_name#  ( * = every ... )\\n\\n"
+                        cru l | sed 's/^/ /'
+                        echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
+                    fi
+                    pause
+                    break
                     ;;
                 *)
                     freeze 2
