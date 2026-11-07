@@ -1678,14 +1678,19 @@ go_developer() {
                     fi
                     ;;
                 5)
+                    if [ ! -f "$CONFIG" ] || ! grep -q "^INSTALLED_PAGE=" "$CONFIG"; then
+                        echo -e "\n$YL[!] No page exists to unmount.$NC"
+                        pause
+                        break
+                    fi
                     printf "\n$B_COLOR[!]$NC Unmounting $B_COLOR$INSTALLED_PAGE$NC..."
                     umount -l "/www/user/$INSTALLED_PAGE" 2>/dev/null
                     rm -f "/www/user/$INSTALLED_PAGE" 2>/dev/null
                     rm -f "$WEB_PAGE" 2>/dev/null
+                    sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"
                     sleep 2
                     echo -e "\n\n$B_COLOR[!] $INSTALLED_PAGE$NC unmount complete."
                     sys_log "$INSTALLED_PAGE successfully unmounted."
-                    if [ -f "$CONFIG" ]; then sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"; fi
                     INSTALLED_PAGE=""
                     pause
                     break
