@@ -1728,19 +1728,18 @@ go_developer() {
                     file_viewer "iocmon.log" "$ROOT_PATH/iocmon.d/state/iocmon.log" log_tail
                     ;;
                 15)
-                    file_viewer "Cron Jobs" "/var/spool/cron/crontabs/$(nvram get http_username)"
-                    ;;
-                cron)
-                    echo -e "\n$B_COLOR══════════════════════════ Cron Jobs ══════════════════════════$NC\n"
-                    if [ ! "$(ls -A /var/spool/cron/crontabs)" ] || [ ! -s "/var/spool/cron/crontabs/$(nvram get http_username)" ]; then
-                        echo " (there are no cron jobs set at the moment)"
-                    else
-                        printf " .---------------- minute       (0 - 59)\\n |  .------------- hour         (0 - 23)\\n |  |  .---------- day of month (1 - 31)\\n"
-                        printf " |  |  |  .------- month        (1 - 12) OR Jan,Feb,mar ...\\n |  |  |  |  .---- day of week  (0 - 6) Sunday = 0 or 7, OR Sun,mon,Tue ...\\n"
-                        printf " |  |  |  |  |\\n *  *  *  *  *  command to be executed  #job_name#  ( * = every ... )\\n\\n"
-                        cru l | sed 's/^/ /'
-                        echo -e "\n$B_COLOR═══════════════════════════════════════════════════════════════$NC"
-                    fi
+                    {
+                        if [ -z "$(cru l)" ]; then
+                            printf " (there are no cron jobs set at the moment)\n"
+                        else
+                            printf " .---------------- minute       (0 - 59)\n |  .------------- hour         (0 - 23)\n |  |  .---------- day of month (1 - 31)\n"
+                            printf " |  |  |  .------- month        (1 - 12) OR Jan,Feb,mar ...\n |  |  |  |  .---- day of week  (0 - 6) Sunday = 0 or 7, OR Sun,mon,Tue ...\n"
+                            printf " |  |  |  |  |\n *  *  *  *  *  command to be executed  #job_name#  ( * = every ... )\n\n"
+                            cru l | sed 's/^/ /'
+                        fi
+                    } > /tmp/wireless_cron.txt
+                    file_viewer "Cron Jobs" "/tmp/wireless_cron.txt"
+                    rm -f /tmp/wireless_cron.txt 2>/dev/null
                     pause
                     break
                     ;;
