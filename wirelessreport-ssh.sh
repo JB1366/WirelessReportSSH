@@ -1684,6 +1684,7 @@ go_developer() {
                     rm -f "$WEB_PAGE" 2>/dev/null
                     sleep 2
                     echo -e "\n\n$B_COLOR[!] $INSTALLED_PAGE$NC unmount complete."
+                    sys_log "$INSTALLED_PAGE successfully unmounted."
                     if [ -f "$CONFIG" ]; then sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"; fi
                     INSTALLED_PAGE=""
                     pause
