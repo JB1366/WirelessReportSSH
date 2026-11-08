@@ -682,6 +682,25 @@ last_update() {
     fi
 }
 
+do_webcheck() {
+    STATUS="UPTODATE"
+    if ! check_version web_check; then
+        if do_update; then
+            STATUS="UPDATED"
+            STATUS2="TO: v$REMOTE_VERSION"
+        else
+            STATUS="FAILED"
+        fi
+    fi
+    echo "$STATUS" > "$STATUS_FILE"
+    sys_log "Current: v$SCRIPT_VERSION$DEV Remote: v$REMOTE_VERSION Status: $STATUS $STATUS2"
+    if [ -f "$WEB_PAGE" ]; then
+        sed "s/<!-- WR_STATUS:[A-Z]* -->/<!-- WR_STATUS:$STATUS -->/" "$WEB_PAGE" > /tmp/wr_page.asp
+        [ -s /tmp/wr_page.asp ] && cat /tmp/wr_page.asp > "$WEB_PAGE"
+        rm -f /tmp/wr_page.asp
+    fi
+}
+
 ScriptUpdateFromAMTM() {
     doScriptUpdateFromAMTM=true
     if [ "$doScriptUpdateFromAMTM" != "true" ]; then
@@ -5305,22 +5324,7 @@ case "$1" in
         exit "$?"
         ;;
 	update)
-        STATUS="UPTODATE"
-        if ! check_version web_check; then
-            if do_update; then
-                STATUS="UPDATED"
-                STATUS2="TO: v$REMOTE_VERSION"
-            else
-                STATUS="FAILED"
-            fi
-        fi
-        echo "$STATUS" > "$STATUS_FILE"
-        sys_log "Current: v$SCRIPT_VERSION$DEV Remote: v$REMOTE_VERSION Status: $STATUS $STATUS2"
-        if [ -f "$WEB_PAGE" ]; then
-            sed "s/<!-- WR_STATUS:[A-Z]* -->/<!-- WR_STATUS:$STATUS -->/" "$WEB_PAGE" > /tmp/wr_page.asp
-            [ -s /tmp/wr_page.asp ] && cat /tmp/wr_page.asp > "$WEB_PAGE"
-            rm -f /tmp/wr_page.asp
-        fi
+        do_webcheck
         ;;
     *)
 		run_report
