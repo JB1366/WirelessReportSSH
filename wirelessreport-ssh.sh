@@ -618,7 +618,7 @@ do_install() {
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
-    echo 'case "$1:$2" in restart:report_*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in restart:report*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
@@ -635,8 +635,8 @@ check_updateSE() {
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "\|restart:wireless_report\b|d" "$SE_FILE" 2>/dev/null
     sed -i "\|restart:update_report\b|d" "$SE_FILE" 2>/dev/null
-    if ! grep -q "restart:report_" "$SE_FILE"; then
-        echo 'case "$1:$2" in restart:report_*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
+    if ! grep -q "start:report" "$SE_FILE"; then
+        echo 'case "$1:$2" in start:report*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
     fi
     chmod +x "$SE_FILE"
     return 0
@@ -4941,7 +4941,7 @@ function triggerRefresh() {
     document.cookie = "report_done=true; expires=" + expires + "; path=/";
     fetch('/apply.cgi', {
         method: 'POST',
-        body: 'action_mode=apply&rc_service=restart_report_restart&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        body: 'action_mode=apply&rc_service=start_report_restart&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     });
 
     var scanTime = parseFloat("$JS_DIFF") || 5.0;
@@ -4985,7 +4985,7 @@ function triggerUpdate(btn) {
 
     fetch('/apply.cgi', {
         method: 'POST',
-        body: 'action_mode=apply&rc_service=restart_report_update&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        body: 'action_mode=apply&rc_service=start_report_update&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     })
     .then(function() { return waitForStatus(15, 400); })
     .then(function(status) {
