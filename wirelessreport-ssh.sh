@@ -618,7 +618,7 @@ do_install() {
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
-    echo 'case "$1:$2" in restart:report*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in start:report*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
