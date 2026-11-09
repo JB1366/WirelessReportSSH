@@ -4957,11 +4957,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
 
             if (confirm("Are you sure you want to reset stats?")) {
-                // Safely update text and add pulse class
                 triggerBtn.innerText = "Resetting...";
                 triggerBtn.classList.add('refresh-pulse');
 
-                // Reuse the same cookie to prevent duplicate refresh loops
                 var expires = new Date(Date.now() + 30000).toUTCString();
                 document.cookie = "report_done=true; expires=" + expires + "; path=/";
 
@@ -4969,7 +4967,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     body: 'action_mode=apply&rc_service=start_report_resetstats&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
                 }).then(function() {
-                    // Increased delay to 3 seconds to guarantee the backend finishes deleting and writing fresh state
                     setTimeout(function() {
                         window.location.reload();
                     }, 3000);
