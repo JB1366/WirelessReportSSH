@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.6.1"
+SCRIPT_VERSION="2.6.2"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -4940,7 +4940,7 @@ function triggerRefresh() {
     document.cookie = "report_done=true; expires=" + expires + "; path=/";
     fetch('/apply.cgi', {
         method: 'POST',
-        body: 'action_mode=apply&rc_service=restart_wireless_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        body: 'action_mode=apply&rc_service=restart_report_restart&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     });
 
     var scanTime = parseFloat("$JS_DIFF") || 5.0;
@@ -4984,7 +4984,7 @@ function triggerUpdate(btn) {
 
     fetch('/apply.cgi', {
         method: 'POST',
-        body: 'action_mode=apply&rc_service=restart_update_report&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        body: 'action_mode=apply&rc_service=restart_report_update&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
     })
     .then(function() { return waitForStatus(15, 400); })
     .then(function(status) {
@@ -5331,7 +5331,7 @@ case "$1" in
         ScriptUpdateFromAMTM "$@"
         exit "$?"
         ;;
-	update)
+	*update)
         do_webcheck
         ;;
     *)
