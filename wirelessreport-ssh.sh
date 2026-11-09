@@ -618,8 +618,7 @@ do_install() {
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
-    echo 'case "$1:$2" in restart:wireless_report) '"$REPORT_SCRIPT"' & ;; esac # WR SSH' >> "$SE_FILE"
-    echo 'case "$1:$2" in restart:update_report) '"$REPORT_SCRIPT"' update & ;; esac # WR SSH' >> "$SE_FILE"
+    echo 'case "$1:$2" in restart:report_*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
     chmod +x "$SE_FILE"
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
@@ -634,8 +633,10 @@ do_install() {
 
 check_updateSE() {
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
-    if ! grep -q "restart:update_report" "$SE_FILE"; then
-        echo 'case "$1:$2" in restart:update_report) '"$REPORT_SCRIPT"' update & ;; esac # WR SSH' >> "$SE_FILE"
+    sed -i "\|restart:wireless_report\b|d" "$SE_FILE" 2>/dev/null
+    sed -i "\|restart:update_report\b|d" "$SE_FILE" 2>/dev/null
+    if ! grep -q "restart:report_" "$SE_FILE"; then
+        echo 'case "$1:$2" in restart:report_*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
     fi
     chmod +x "$SE_FILE"
     return 0
