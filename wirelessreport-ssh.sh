@@ -4644,18 +4644,18 @@ cat <<HTML >> "$WEB_PAGE"
                                     <span id="refresh-countdown"></span>
                                 </div>
                             </div>
-                            <button id="btnMain" class="button-tables active" onclick="switchTab('split')" $ROUTER_ONLY>Main View</button>
-                            <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices</button>
+                            <button id="btnMain" class="button-tables active" onclick="switchTab('split')" $ROUTER_ONLY>Main View ★</button>
+                            <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices ❖</button>
                             <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
                             <button id="btnOptionsToggle" class="button-tables" onclick="toggleOptionsRow()">Options ⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;"> <!-- Row 2 (Hidden by default -->
-                                <button class="button-tables" onclick="rotateThemes(this)">Rotate Themes</button>
+                                <button class="button-tables" onclick="rotateThemes(this)">Rotate Themes ⟳</button>
                                 <!-- <button class="button-tables" onclick="alert('Extra Button 2 clicked!')">Extra Option 2</button> -->
                                 <!-- <button class="button-tables" onclick="alert('Extra Button 3 clicked!')">Extra Option 3</button> -->
                                 <div class="update-tooltip" style="display:inline-block; position:relative;">
-                                    <button class="button-tables" onclick="triggerUpdate(this)">Update</button>
+                                    <button class="button-tables" onclick="triggerUpdate(this)">Update ↻</button>
                                     <span class="update-box">$HOVER_TEXT</span>
                                 </div>
                             </div>
