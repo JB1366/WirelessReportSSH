@@ -4651,7 +4651,7 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnOptionsToggle" class="button-tables" onclick="toggleOptionsRow()">Options ⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;"> <!-- Row 2 (Hidden by default -->
-                                <button class="button-tables" onclick="toggleThemes(this)">Toggle Themes</button>
+                                <button class="button-tables" onclick="rotateThemes(this)">Rotate Themes</button>
                                 <!-- <button class="button-tables" onclick="alert('Extra Button 2 clicked!')">Extra Option 2</button> -->
                                 <!-- <button class="button-tables" onclick="alert('Extra Button 3 clicked!')">Extra Option 3</button> -->
                                 <div class="update-tooltip" style="display:inline-block; position:relative;">
@@ -5110,7 +5110,7 @@ function toggleOptionsRow() {
     }
 }
 
-function toggleThemes(btn) {
+function rotateThemes(btn) {
     if (btn) {
         btn.innerText = "Switching...";
         btn.classList.add('refresh-pulse');
