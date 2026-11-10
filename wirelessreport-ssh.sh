@@ -4070,9 +4070,9 @@ cat <<HTML >> "$WEB_PAGE"
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        gap: 8px;
-        margin-top: 2px;
-        margin-bottom: 16px;
+        gap: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
         border-top: none;
         padding-top: 0;
     }
