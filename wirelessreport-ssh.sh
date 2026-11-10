@@ -5097,13 +5097,23 @@ function waitForStatus(maxTries, ms) {
     });
 }
 
+let optionsTimeout = null;
+
 function toggleOptionsRow() {
     var secondaryRow = document.getElementById('secondaryButtonRow');
     var optionsBtn = document.getElementById('btnOptionsToggle');
-
+    if (optionsTimeout) {
+        clearTimeout(optionsTimeout);
+        optionsTimeout = null;
+    }
     if (secondaryRow.style.display === "none" || secondaryRow.style.display === "") {
         secondaryRow.style.display = "flex";
         optionsBtn.classList.add('active');
+        optionsTimeout = setTimeout(function() {
+            secondaryRow.style.display = "none";
+            optionsBtn.classList.remove('active');
+            optionsTimeout = null;
+        }, 15000);
     } else {
         secondaryRow.style.display = "none";
         optionsBtn.classList.remove('active');
