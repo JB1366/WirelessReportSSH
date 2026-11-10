@@ -5069,7 +5069,7 @@ function triggerUpdate(btn) {
             if (btn) {
                 btn.innerText = "Up to Date";
                 btn.classList.remove('refresh-pulse');
-                setTimeout(function() { btn.innerText = "Update"; }, 5000);
+                setTimeout(function() { btn.innerText = "Update ↻"; }, 5000);
             }
         }, 3000);
     });
@@ -5128,7 +5128,7 @@ function rotateThemes(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Toggle Themes";
+                btn.innerText = "Rotate Themes ⟳";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
@@ -5136,7 +5136,7 @@ function rotateThemes(btn) {
     .catch(function(err) {
         console.error("Theme toggle failed:", err);
         if (btn) {
-            btn.innerText = "Toggle Themes";
+            btn.innerText = "Rotate Themes ⟳";
             btn.classList.remove('refresh-pulse');
         }
     });
