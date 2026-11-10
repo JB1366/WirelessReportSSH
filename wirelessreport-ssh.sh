@@ -4951,6 +4951,9 @@ function triggerRefresh() {
 
 // Right-click listener for resetting stats
 document.addEventListener('DOMContentLoaded', function() {
+    var rtimeEnabled = ("$RTIME" === "1");
+    if (!rtimeEnabled) return; // Skip binding if RTIME is not enabled
+
     var triggerBtn = document.querySelector('.button-trigger');
     if (triggerBtn) {
         triggerBtn.addEventListener('contextmenu', function(e) {
