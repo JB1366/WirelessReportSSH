@@ -1292,6 +1292,21 @@ set_theme() {
     done
 }
 
+do_rotate_theme() {
+    if grep -q 'THEME="ORIGINAL"' "$CONFIG"; then
+        TM="DARKMODE"
+    elif grep -q 'THEME="DARKMODE"' "$CONFIG"; then
+        TM="ASUS_WEBUI"
+    else
+        TM="ORIGINAL"
+    fi
+    if grep -q "^THEME=" "$CONFIG"; then
+        sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
+    else
+        echo "THEME=\"$TM\"" >> "$CONFIG"
+    fi
+}
+
 set_options() {
     while true; do
         show_header
@@ -1404,49 +1419,53 @@ set_runtime_tracking() {
         while true; do
             selection
             case "$choice" in
-                1)
-                    case "$RTIME" in
-                        1) NEW_RTIME="0"; rm -f "$USB_PATH/runtime.db" ;;
-                        *) NEW_RTIME="1" ;;
-                    esac
-                    if grep -q "RTIME=" "$CONFIG"; then
-                        sed -i "s/RTIME=.*/RTIME=\"$NEW_RTIME\"/" "$CONFIG"
-                    else
-                        echo "RTIME=\"$NEW_RTIME\"" >> "$CONFIG"
-                    fi
-                    if [ "$NEW_RTIME" = "0" ]; then
-                        if grep -q "RTIME_LOG=" "$CONFIG"; then
-                            sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"0\"/" "$CONFIG"
-                        else
-                            echo "RTIME_LOG=\"0\"" >> "$CONFIG"
-                        fi
-                    fi
-                    ;;
-                2)
-                    case "$RTIME_LOG" in
-                        1) NEW_LOG="0" ;;
-                        *) NEW_LOG="1" ;;
-                    esac
-                    if grep -q "RTIME_LOG=" "$CONFIG"; then
-                        sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$NEW_LOG\"/" "$CONFIG"
-                    else
-                        echo "RTIME_LOG=\"$NEW_LOG\"" >> "$CONFIG"
-                    fi
-                    if [ "$RTIME" != "1" ]; then
-                        if grep -q "RTIME=" "$CONFIG"; then
-                            sed -i "s/RTIME=.*/RTIME=\"1\"/" "$CONFIG"
-                        else
-                            echo "RTIME=\"1\"" >> "$CONFIG"
-                        fi
-                    fi
-                    ;;
-                *)
-                    freeze 2
-                    continue ;;
+                1) do_runtime_tracking ;;
+                2) do_runtime_tracking_log ;;
+                *)freeze 2; continue ;;
             esac
             break
         done
     done
+}
+
+do_runtime_tracking() {
+    RTIME=${RTIME:-1}
+    case "$RTIME" in
+        1) NEW_RTIME="0"; rm -f "$USB_PATH/runtime.db" ;;
+        *) NEW_RTIME="1" ;;
+    esac
+    if grep -q "RTIME=" "$CONFIG"; then
+        sed -i "s/RTIME=.*/RTIME=\"$NEW_RTIME\"/" "$CONFIG"
+    else
+        echo "RTIME=\"$NEW_RTIME\"" >> "$CONFIG"
+    fi
+    if [ "$NEW_RTIME" = "0" ]; then
+        if grep -q "RTIME_LOG=" "$CONFIG"; then
+            sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"0\"/" "$CONFIG"
+        else
+            echo "RTIME_LOG=\"0\"" >> "$CONFIG"
+        fi
+    fi
+}
+
+do_runtime_tracking_log() {
+    RTIME_LOG=${RTIME_LOG:-1}
+    case "$RTIME_LOG" in
+        1) NEW_LOG="0" ;;
+        *) NEW_LOG="1" ;;
+    esac
+    if grep -q "RTIME_LOG=" "$CONFIG"; then
+        sed -i "s/RTIME_LOG=.*/RTIME_LOG=\"$NEW_LOG\"/" "$CONFIG"
+    else
+        echo "RTIME_LOG=\"$NEW_LOG\"" >> "$CONFIG"
+    fi
+    if [ "$RTIME" != "1" ]; then
+        if grep -q "RTIME=" "$CONFIG"; then
+            sed -i "s/RTIME=.*/RTIME=\"1\"/" "$CONFIG"
+        else
+            echo "RTIME=\"1\"" >> "$CONFIG"
+        fi
+    fi
 }
 
 set_ip_padding() {
@@ -1545,6 +1564,21 @@ set_rssi_tooltip() {
     unset CUR_RS_HIST CUR_ENTRIES CUR_DATE
 }
 
+do_rssi_history() {
+    RS_HIST=${RS_HIST:-0}
+    if [ "$current_state" = "1" ]; then
+        RS_HIST="0"
+    else
+        RS_HIST="1"
+    fi
+    if grep -q "^RS_HIST=" "$CONFIG"; then
+        sed -i "s|^RS_HIST=.*|RS_HIST=\"$RS_HIST\"|" "$CONFIG"
+    else
+        echo "RS_HIST=\"$RS_HIST\"" >> "$CONFIG"
+    fi
+    rm -f "$HISTORY_DB" 2>/dev/null
+}
+
 set_github_branch() {
     while true; do
         show_header
@@ -1584,64 +1618,6 @@ set_github_branch() {
             pause
         fi
     done
-}
-
-do_rotate_theme() {
-    if grep -q 'THEME="ORIGINAL"' "$CONFIG"; then
-        TM="DARKMODE"
-    elif grep -q 'THEME="DARKMODE"' "$CONFIG"; then
-        TM="ASUS_WEBUI"
-    else
-        TM="ORIGINAL"
-    fi
-    if grep -q "^THEME=" "$CONFIG"; then
-        sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
-    else
-        echo "THEME=\"$TM\"" >> "$CONFIG"
-    fi
-}
-
-do_rssi_history() {
-    local current_state="${RS_HIST:-0}"
-    if [ "$current_state" = "1" ]; then
-        RS_HIST="0"
-    else
-        RS_HIST="1"
-    fi
-    if grep -q "^RS_HIST=" "$CONFIG"; then
-        sed -i "s|^RS_HIST=.*|RS_HIST=\"$RS_HIST\"|" "$CONFIG"
-    else
-        echo "RS_HIST=\"$RS_HIST\"" >> "$CONFIG"
-    fi
-    rm -f "$HISTORY_DB" 2>/dev/null
-}
-
-do_runtime_tracking() {
-    local current_state="${RTIME:-1}"
-    if [ "$current_state" = "1" ]; then
-        NEW_RTIME="0"
-    else
-        NEW_RTIME="1"
-    fi
-    if grep -q "^RTIME=" "$CONFIG"; then
-        sed -i "s|^RTIME=.*|RTIME=\"$NEW_RTIME\"|" "$CONFIG"
-    else
-        echo "RTIME=\"$NEW_RTIME\"" >> "$CONFIG"
-    fi
-    if [ "$NEW_RTIME" = "0" ]; then
-        if grep -q "^RTIME_LOG=" "$CONFIG"; then
-            sed -i "s|^RTIME_LOG=.*|RTIME_LOG=\"0\"|" "$CONFIG"
-        else
-            echo "RTIME_LOG=\"0\"" >> "$CONFIG"
-        fi
-        rm -f "$USB_PATH/runtime.db" 2>/dev/null
-    else
-        if grep -q "^RTIME_LOG=" "$CONFIG"; then
-            sed -i "s|^RTIME_LOG=.*|RTIME_LOG=\"1\"|" "$CONFIG"
-        else
-            echo "RTIME_LOG=\"1\"" >> "$CONFIG"
-        fi
-    fi
 }
 
 file_viewer() {
@@ -5578,6 +5554,7 @@ case "$1" in
         ;;
     *runtimetracking)
         do_runtime_tracking
+        do_runtime_tracking_log
         ;;
     *update)
         do_webcheck
