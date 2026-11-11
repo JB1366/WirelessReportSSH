@@ -1364,13 +1364,7 @@ set_options() {
                 4)
                     set_ip_padding ;;
                 5)
-                    if grep -q "HOSTNAME_COLOR=" "$CONFIG"; then
-                        case "$HOSTNAME_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
-                        sed -i "s/HOSTNAME_COLOR=.*/HOSTNAME_COLOR=\"$NEW_HC\"/" "$CONFIG"
-                    else
-                        echo 'HOSTNAME_COLOR="1"' >> "$CONFIG"
-                    fi
-                    ;;
+                    do_host_color ;;
                 6)
                     if grep -q "TABLE_HEADERS=" "$CONFIG"; then
                         case "$TABLE_HEADERS" in 1) NEW_TH="0" ;; *) NEW_TH="1" ;; esac
@@ -1499,6 +1493,15 @@ set_ip_padding() {
             echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
         fi
     done
+}
+
+do_host_color() {
+    if grep -q "HOSTNAME_COLOR=" "$CONFIG"; then
+        case "$HOSTNAME_COLOR" in 1) NEW_HC="0" ;; *) NEW_HC="1" ;; esac
+        sed -i "s/HOSTNAME_COLOR=.*/HOSTNAME_COLOR=\"$NEW_HC\"/" "$CONFIG"
+    else
+        echo 'HOSTNAME_COLOR="1"' >> "$CONFIG"
+    fi
 }
 
 set_rssi_tooltip() {
@@ -4676,6 +4679,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 <button class="button-tables" onclick="runtimeTracking(this)">Runtime Tracking ☰</button>
                                 <button class="button-tables" onclick="rotateThemes(this)">Theme Change ⟳</button>
                                 <button class="button-tables" onclick="rssiHistory(this)">RSSI Tooltips ⇵</button>
+                                <button class="button-tables" onclick="hostColor(this)">Hostname ▤</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                         </div>
@@ -5234,6 +5238,38 @@ function runtimeTracking(btn) {
     });
 }
 
+function hostColor(btn) {
+    if (btn) {
+        btn.innerText = "Colored/Numbered...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    fetch('/apply.cgi', {
+        method: 'POST',
+        body: 'action_mode=apply&rc_service=start_report_hostcolor&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+    })
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "Hostname ▤";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Hostname coloring failed:", err);
+        if (btn) {
+            btn.innerText = "Hostname ▤";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
 function switchTab(view) {
     localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
@@ -5539,6 +5575,9 @@ case "$1" in
     install)
         main_init
         install_menu
+        ;;
+    *hostcolor)
+        do_host_color
         ;;
     *resetstats)
         rm -f "$USB_PATH/runtime.db" 2>/dev/null
