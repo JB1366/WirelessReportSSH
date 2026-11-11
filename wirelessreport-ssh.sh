@@ -1599,7 +1599,6 @@ do_rotate_theme() {
     else
         echo "THEME=\"$TM\"" >> "$CONFIG"
     fi
-    menu_vars
 }
 
 do_rssi_history() {
