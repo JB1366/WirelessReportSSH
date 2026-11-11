@@ -1602,6 +1602,21 @@ do_rotate_theme() {
     menu_vars
 }
 
+do_rssi_history() {
+    local current_state="${RS_HIST:-0}"
+    if [ "$current_state" = "1" ]; then
+        RS_HIST="0"
+    else
+        RS_HIST="1"
+    fi
+    if grep -q "^RS_HIST=" "$CONFIG"; then
+        sed -i "s|^RS_HIST=.*|RS_HIST=\"$RS_HIST\"|" "$CONFIG"
+    else
+        echo "RS_HIST=\"$RS_HIST\"" >> "$CONFIG"
+    fi
+    rm -f "$HISTORY_DB" 2>/dev/null
+}
+
 file_viewer() {
     local title="$1"
     local log_file="$2"
@@ -3246,6 +3261,9 @@ run_report() {
 #═════════════════#
 #  Node Scan(s)   #
 #═════════════════#
+RS_HIST=${RS_HIST:-0}
+RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
+RS_HIST_DATE=${RS_HIST_DATE:-1}
 IPPAD=${IPPAD:-1}
 RADIO_TEMPS=${RADIO_TEMPS:-1}
 case "$RADIO_TEMPS" in 0) RADIO_ON='style="display: none !important;"' ;; *) RADIO_ON="" ;; esac
@@ -4652,7 +4670,7 @@ cat <<HTML >> "$WEB_PAGE"
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;"> <!-- Row 2 (Hidden by default -->
                                 <button class="button-tables" onclick="rotateThemes(this)">Rotate Themes ⟳</button>
-                                <!-- <button class="button-tables" onclick="alert('Extra Button 2 clicked!')">Extra Option 2</button> -->
+                                <button class="button-tables" onclick="rssiHistory(this)">RSSI History ⇵</button>
                                 <!-- <button class="button-tables" onclick="alert('Extra Button 3 clicked!')">Extra Option 3</button> -->
                                 <div class="update-tooltip" style="display:inline-block; position:relative;">
                                     <button class="button-tables" onclick="triggerUpdate(this)">Update ↻</button>
@@ -5151,6 +5169,38 @@ function rotateThemes(btn) {
     });
 }
 
+function rssiHistory(btn) {
+    if (btn) {
+        btn.innerText = "Toggling On/Off...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    fetch('/apply.cgi', {
+        method: 'POST',
+        body: 'action_mode=apply&rc_service=start_report_rssihistory&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+    })
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "RSSI History ⇵";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("RSSI history failed:", err);
+        if (btn) {
+            btn.innerText = "RSSI History ⇵";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
 function switchTab(view) {
     localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
@@ -5463,6 +5513,9 @@ case "$1" in
         ;;
     *rotatetheme)
         do_rotate_theme
+        ;;
+    *rssihistory)
+        do_rssi_history
         ;;
     *update)
         do_webcheck
