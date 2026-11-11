@@ -5088,7 +5088,7 @@ function triggerUpdate(btn) {
     .finally(function() {
         setTimeout(function() {
             if (btn) {
-                btn.innerText = "Up to Date";
+                btn.innerText = "Up to Date ↻";
                 btn.classList.remove('refresh-pulse');
                 setTimeout(function() { btn.innerText = "Update ↻"; }, 5000);
             }
