@@ -149,12 +149,14 @@ check_version() {
     fi
     case "$mode" in
         update_box)
+            GH="<span style='color: #0096ff;'>"
             case "$STATE" in
-                OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Github Offline or Unreachable <br> Last Update: $UPDATE_TIME"
+                OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Github Offline or Unreachable</span> <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV [Offline]"; UPDATE_TITLE="update-title" ;;
-                OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> New Version v$REMOTE_VERSION available <br> Last Update: $UPDATE_TIME"
+                OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}New Version</span> v$REMOTE_VERSION ${GH}available</span>
+                              <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV [$REMOTE_VERSION]"; UPDATE_TITLE="update-title2" ;;
-                HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Hash Update available <br> Last Update: $UPDATE_TIME"
+                HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Hash Update available</span> <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV [Hash]"; UPDATE_TITLE="update-title2" ;;
                 UP_TO_DATE|*) HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $UPDATE_TIME"
                               VERSION_HASH="$DEV"; UPDATE_TITLE="update-title" ;;
@@ -4665,9 +4667,9 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All Devices ❖</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
                             <div class="update-tooltip" style="display:inline-block; position:relative;">
-                                    <button class="button-tables $UPDATE_TITLE" onclick="triggerUpdate(this)">Update ↻</button>
-                                    <span class="update-box">$HOVER_TEXT</span>
-                                </div>
+                                <button class="button-tables $UPDATE_TITLE" onclick="triggerUpdate(this)">Update ↻</button>
+                                <span class="update-box">$HOVER_TEXT</span>
+                            </div>
                             <button id="btnOptionsToggle" class="button-tables" onclick="toggleOptionsRow()">Options ⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
