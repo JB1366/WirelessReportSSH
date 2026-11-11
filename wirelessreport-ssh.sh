@@ -5530,19 +5530,19 @@ rm -rf "$DEVICE_LIST_CACHE" "$DHCPSTATIC_CACHE" "$LEASES_CACHE" 2>/dev/null
 }
 
 case "$1" in
-    install)
-        main_init
-        install_menu
-        ;;
-    inject)
-        inject_menu
-        ;;
     amtmupdate)
 		shift
         ScriptUpdateFromAMTM "$@"
         exit "$?"
         ;;
-	*resetstats)
+	inject)
+        inject_menu
+        ;;
+    install)
+        main_init
+        install_menu
+        ;;
+    *resetstats)
         rm -f "$USB_PATH/runtime.db" 2>/dev/null
         run_report
         ;;
