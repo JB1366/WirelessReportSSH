@@ -4674,8 +4674,8 @@ cat <<HTML >> "$WEB_PAGE"
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
                                 <button class="button-tables" onclick="runtimeTracking(this)">Runtime Tracking ☰</button>
-                                <button class="button-tables" onclick="rotateThemes(this)">Rotate Themes ⟳</button>
-                                <button class="button-tables" onclick="rssiHistory(this)">RSSI History ⇵</button>
+                                <button class="button-tables" onclick="rotateThemes(this)">Theme Change ⟳</button>
+                                <button class="button-tables" onclick="rssiHistory(this)">RSSI Tooltips ⇵</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                         </div>
