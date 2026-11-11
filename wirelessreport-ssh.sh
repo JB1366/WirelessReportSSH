@@ -1617,6 +1617,34 @@ do_rssi_history() {
     rm -f "$HISTORY_DB" 2>/dev/null
 }
 
+do_runtime_tracking() {
+    local current_state="${RTIME:-1}"
+    if [ "$current_state" = "1" ]; then
+        NEW_RTIME="0"
+    else
+        NEW_RTIME="1"
+    fi
+    if grep -q "^RTIME=" "$CONFIG"; then
+        sed -i "s|^RTIME=.*|RTIME=\"$NEW_RTIME\"|" "$CONFIG"
+    else
+        echo "RTIME=\"$NEW_RTIME\"" >> "$CONFIG"
+    fi
+    if [ "$NEW_RTIME" = "0" ]; then
+        if grep -q "^RTIME_LOG=" "$CONFIG"; then
+            sed -i "s|^RTIME_LOG=.*|RTIME_LOG=\"0\"|" "$CONFIG"
+        else
+            echo "RTIME_LOG=\"0\"" >> "$CONFIG"
+        fi
+        rm -f "$USB_PATH/runtime.db" 2>/dev/null
+    else
+        if grep -q "^RTIME_LOG=" "$CONFIG"; then
+            sed -i "s|^RTIME_LOG=.*|RTIME_LOG=\"1\"|" "$CONFIG"
+        else
+            echo "RTIME_LOG=\"1\"" >> "$CONFIG"
+        fi
+    fi
+}
+
 file_viewer() {
     local title="$1"
     local log_file="$2"
@@ -4669,9 +4697,9 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnOptionsToggle" class="button-tables" onclick="toggleOptionsRow()">Options ⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;"> <!-- Row 2 (Hidden by default -->
+                                <button class="button-tables" onclick="runtimeTracking(this)">Runtime Tracking ☰</button>
                                 <button class="button-tables" onclick="rotateThemes(this)">Rotate Themes ⟳</button>
                                 <button class="button-tables" onclick="rssiHistory(this)">RSSI History ⇵</button>
-                                <!-- <button class="button-tables" onclick="alert('Extra Button 3 clicked!')">Extra Option 3</button> -->
                                 <div class="update-tooltip" style="display:inline-block; position:relative;">
                                     <button class="button-tables" onclick="triggerUpdate(this)">Update ↻</button>
                                     <span class="update-box">$HOVER_TEXT</span>
@@ -5201,6 +5229,38 @@ function rssiHistory(btn) {
     });
 }
 
+function runtimeTracking(btn) {
+    if (btn) {
+        btn.innerText = "Toggling On/Off...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    fetch('/apply.cgi', {
+        method: 'POST',
+        body: 'action_mode=apply&rc_service=start_report_runtimetracking&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+    })
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "Runtime Tracking ☰";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Runtime tracking failed:", err);
+        if (btn) {
+            btn.innerText = "Runtime Tracking ☰";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
 function switchTab(view) {
     localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
@@ -5516,6 +5576,9 @@ case "$1" in
         ;;
     *rssihistory)
         do_rssi_history
+        ;;
+    *runtimetracking)
+        do_runtime_tracking
         ;;
     *update)
         do_webcheck
