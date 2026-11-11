@@ -5240,7 +5240,7 @@ function runtimeTracking(btn) {
 
 function hostColor(btn) {
     if (btn) {
-        btn.innerText = "Colored/Numbered...";
+        btn.innerText = "Colored⇄Numbered...";
         btn.classList.add('refresh-pulse');
     }
 
