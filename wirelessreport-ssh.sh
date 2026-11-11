@@ -4666,7 +4666,7 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnSplit" class="button-tables active" onclick="switchTab('split')" $ROUTER_ONLY>Split View ★</button>
                             <button id="btnAll" class="button-tables" onclick="switchTab('all')" $ROUTER_ONLY>All View ❖</button>
                             <button id="btnWide" class="button-tables" onclick="toggleWideView()">Wide View ⛶</button>
-                            <div class="update-tooltip" style="display:inline-block; position:relative;">
+                            <div class="update-tooltip">
                                 <button class="button-tables $UPDATE_TITLE" onclick="triggerUpdate(this)">Update ↻</button>
                                 <span class="update-box">$HOVER_TEXT</span>
                             </div>
