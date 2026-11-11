@@ -5156,7 +5156,7 @@ function rotateThemes(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Rotate Themes ⟳";
+                btn.innerText = "Theme Change ⟳";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
@@ -5164,7 +5164,7 @@ function rotateThemes(btn) {
     .catch(function(err) {
         console.error("Theme toggle failed:", err);
         if (btn) {
-            btn.innerText = "Rotate Themes ⟳";
+            btn.innerText = "Theme Change ⟳";
             btn.classList.remove('refresh-pulse');
         }
     });
@@ -5188,15 +5188,15 @@ function rssiHistory(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "RSSI History ⇵";
+                btn.innerText = "RSSI Tooltips ⇵";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
     })
     .catch(function(err) {
-        console.error("RSSI history failed:", err);
+        console.error("RSSI tooltips failed:", err);
         if (btn) {
-            btn.innerText = "RSSI History ⇵";
+            btn.innerText = "RSSI Tooltips ⇵";
             btn.classList.remove('refresh-pulse');
         }
     });
