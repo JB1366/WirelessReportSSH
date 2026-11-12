@@ -5035,8 +5035,8 @@ function triggerRefresh() {
     setTimeout(function() { window.location.reload(); }, delay);
 }
 
-// Right-click listener for resetting stats
 document.addEventListener('DOMContentLoaded', function() {
+    // Right-click listener for resetting stats
     var rtimeEnabled = ("$RTIME" === "1");
     if (!rtimeEnabled) return;
     var triggerBtn = document.querySelector('.button-trigger');
@@ -5097,6 +5097,7 @@ function applyService(service) {
         method: 'POST',
         body: body
     });
+    // applyService('start_report_service')
 }
 
 function triggerUpdate(btn) {
@@ -5191,15 +5192,13 @@ function toggleTertiaryRow() {
 }
 
 function ipPadding() {
-    let selectElem = document.getElementById('webPadding');
+    const selectElem = document.getElementById('webPadding');
     if (!selectElem) return;
-    let choice = selectElem.value;
-    if (choice !== "1" && choice !== "2" && choice !== "3") {
-        return;
-    }
+    const choice = selectElem.value;
+    if (choice !== "1" && choice !== "2" && choice !== "3") return;
     selectElem.classList.add('refresh-pulse');
 
-   applyService('start_report_ippadding' + choice)
+    applyService('start_report_ippadding' + choice)
 
     .then(function() {
         setTimeout(function() {
