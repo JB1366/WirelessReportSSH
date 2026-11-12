@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.6.4"
+SCRIPT_VERSION="2.6.5"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -4095,7 +4095,8 @@ cat <<HTML >> "$WEB_PAGE"
         margin-bottom: 12px;
     }
 
-    .top-buttons-secondary {
+    .top-buttons-secondary,
+    .top-buttons-tertiary {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
@@ -4107,8 +4108,9 @@ cat <<HTML >> "$WEB_PAGE"
         padding-top: 0;
     }
 
-    /* Active toggle state for the Options button */
-    #btnOptionsToggle.active {
+    /* Active toggle state for both Options buttons */
+    #btnOptionsToggle.active,
+    #btnOptionsToggle2.active {
         background-color: #0055ff;
         border-color: #3377ff;
     }
@@ -4681,7 +4683,8 @@ cat <<HTML >> "$WEB_PAGE"
                                 <button class="button-tables $UPDATE_TITLE" onclick="triggerUpdate(this)">Update ↻</button>
                                 <span class="update-box">$HOVER_TEXT</span>
                             </div>
-                            <button id="btnOptionsToggle" class="button-tables" onclick="toggleOptionsRow()">⚙</button>
+                            <button id="btnOptionsToggle" class="button-tables" onclick="toggleSecondaryRow()">⚙</button>
+                            <button id="btnOptionsToggle2" class="button-tables" onclick="toggleTertiaryRow()">⚙⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
                                 <button class="button-tables" onclick="runtimeTracking(this)">Runtime ☰</button>
@@ -4700,6 +4703,10 @@ cat <<HTML >> "$WEB_PAGE"
                                 </select>
                                 <button class="button-tables" onclick="rssiHistory(this)">RSSI Tooltips ⇵</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
+                            </div>
+                            <div id="tertiaryButtonRow" class="top-buttons-tertiary" style="display: none;">
+                                <button class="button-tables" onclick="customActionOne(this)">Action One ⚡</button>
+                                <button class="button-tables" onclick="customActionTwo(this)">Action Two 🛠</button>
                             </div>
                         </div>
                     <div class="grid-container">
@@ -5139,14 +5146,17 @@ function waitForStatus(maxTries, ms) {
     });
 }
 
-let optionsTimeout = null;
-function toggleOptionsRow() {
+var optionsTimeout = null;
+var tertiaryTimeout = null;
+function toggleSecondaryRow() {
     var secondaryRow = document.getElementById('secondaryButtonRow');
     var optionsBtn = document.getElementById('btnOptionsToggle');
+
     if (optionsTimeout) {
         clearTimeout(optionsTimeout);
         optionsTimeout = null;
     }
+
     if (secondaryRow.style.display === "none" || secondaryRow.style.display === "") {
         secondaryRow.style.display = "flex";
         optionsBtn.classList.add('active');
@@ -5158,6 +5168,29 @@ function toggleOptionsRow() {
     } else {
         secondaryRow.style.display = "none";
         optionsBtn.classList.remove('active');
+    }
+}
+
+function toggleTertiaryRow() {
+    var tertiaryRow = document.getElementById('tertiaryButtonRow');
+    var optionsBtn2 = document.getElementById('btnOptionsToggle2');
+
+    if (tertiaryTimeout) {
+        clearTimeout(tertiaryTimeout);
+        tertiaryTimeout = null;
+    }
+
+    if (tertiaryRow.style.display === "none" || tertiaryRow.style.display === "") {
+        tertiaryRow.style.display = "flex";
+        optionsBtn2.classList.add('active');
+        tertiaryTimeout = setTimeout(function() {
+            tertiaryRow.style.display = "none";
+            optionsBtn2.classList.remove('active');
+            tertiaryTimeout = null;
+        }, 30000);
+    } else {
+        tertiaryRow.style.display = "none";
+        optionsBtn2.classList.remove('active');
     }
 }
 
