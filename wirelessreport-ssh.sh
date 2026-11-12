@@ -1482,12 +1482,16 @@ set_ip_padding() {
             esac
             break
         done
-        if grep -q "IPPAD=" "$CONFIG"; then
-            sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
-        else
-            echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
-        fi
+        do_ippadding
     done
+}
+
+do_ippadding() {
+    if grep -q "IPPAD=" "$CONFIG"; then
+        sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
+    else
+        echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
+    fi
 }
 
 do_host_color() {
@@ -4072,15 +4076,17 @@ cat <<HTML >> "$WEB_PAGE"
         background: rgba(0, 150, 255, 0.15);
     }
 
-    #themeSelect option {
+    #themeSelect option,
+    #webPadding option {
         background-color: #000000;
         color: #0096ff;
         font-weight: bold;
     }
 
-    #themeSelect:focus {
+    #themeSelect:focus,
+    #webPadding:focus {
         outline: none;
-        border-color: white
+        border-color: white; /* Added missing semicolon here */
         box-shadow: none;
     }
 
@@ -4683,7 +4689,14 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnOptionsToggle" class="button-tables" onclick="toggleOptionsRow()">⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
-                                <button class="button-tables" onclick="runtimeTracking(this)">Runtime Tracking ☰</button>
+                                <button class="button-tables" onclick="runtimeTracking(this)">Runtime ☰</button>
+                                <button class="button-tables" onclick="hostColor(this)">Hostname ▤</button>
+                                <select id="webPadding" onchange="ipPadding()" class="button-tables">
+                                    <option selected disabled>IP Padding ⇥</option>
+                                    <option value="1">Last 2 Octets</option>
+                                    <option value="2">Last Octet</option>
+                                    <option value="3">Disabled</option>
+                                </select>
                                 <select id="themeSelect" onchange="webThemes()" class="button-tables">
                                     <option selected disabled>Themes ⟳</option>
                                     <option value="1">Original</option>
@@ -4691,7 +4704,6 @@ cat <<HTML >> "$WEB_PAGE"
                                     <option value="3">AsusUI</option>
                                 </select>
                                 <button class="button-tables" onclick="rssiHistory(this)">RSSI Tooltips ⇵</button>
-                                <button class="button-tables" onclick="hostColor(this)">Hostname ▤</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                         </div>
@@ -5154,6 +5166,49 @@ function toggleOptionsRow() {
     }
 }
 
+function ipPadding() {
+    let selectElem = document.getElementById('webPadding');
+    if (!selectElem) return;
+    let choice = selectElem.value;
+    if (choice !== "1" && choice !== "2" && choice !== "3") {
+        return;
+    }
+    selectElem.classList.add('refresh-pulse');
+
+    let fetchCall;
+    if (choice === "1") {
+        fetchCall = fetch('/apply.cgi', {
+            method: 'POST',
+            body: 'action_mode=apply&rc_service=start_report_ippadding1&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        });
+    } else if (choice === "2") {
+        fetchCall = fetch('/apply.cgi', {
+            method: 'POST',
+            body: 'action_mode=apply&rc_service=start_report_ippadding2&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        });
+    } else if (choice === "3") {
+        fetchCall = fetch('/apply.cgi', {
+            method: 'POST',
+            body: 'action_mode=apply&rc_service=start_report_ippadding3&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        });
+    }
+
+    fetchCall
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("IP Padding failed:", err);
+        selectElem.classList.remove('refresh-pulse');
+    });
+}
+
 function webThemes() {
     let selectElem = document.getElementById('themeSelect');
     if (!selectElem) return;
@@ -5604,6 +5659,18 @@ case "$1" in
         ;;
     *hostcolor)
         do_host_color
+        ;;
+    *ippadding1)
+        NEW_PAD="2"
+        do_ippadding
+        ;;
+    *ippadding2)
+        NEW_PAD="1"
+        do_ippadding
+        ;;
+    *ippadding3)
+        NEW_PAD="0"
+        do_ippadding
         ;;
     *resetstats)
         rm -f "$USB_PATH/runtime.db" 2>/dev/null
