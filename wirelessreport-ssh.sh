@@ -5020,19 +5020,15 @@ function triggerRefresh() {
             span.innerText = "0";
         });
     }
-
     var btn = document.querySelector('.button-trigger');
     if (btn) {
         btn.innerText = "Refreshing...";
         btn.classList.add('refresh-pulse');
     }
-
     var expires = new Date(Date.now() + 30000).toUTCString();
     document.cookie = "report_done=true; expires=" + expires + "; path=/";
-    fetch('/apply.cgi', {
-        method: 'POST',
-        body: 'action_mode=apply&rc_service=start_report_restart&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    });
+
+    applyService('start_report_restart')
 
     var scanTime = parseFloat("$JS_DIFF") || 5.0;
     var delay = Math.max(2500, Math.ceil((scanTime * 1000) + 1500));
@@ -5042,24 +5038,20 @@ function triggerRefresh() {
 // Right-click listener for resetting stats
 document.addEventListener('DOMContentLoaded', function() {
     var rtimeEnabled = ("$RTIME" === "1");
-    if (!rtimeEnabled) return; // Skip binding if RTIME is not enabled
-
+    if (!rtimeEnabled) return;
     var triggerBtn = document.querySelector('.button-trigger');
     if (triggerBtn) {
         triggerBtn.addEventListener('contextmenu', function(e) {
             e.preventDefault();
-
             if (confirm("Are you sure you want to reset stats?")) {
                 triggerBtn.innerText = "Resetting...";
                 triggerBtn.classList.add('refresh-pulse');
-
                 var expires = new Date(Date.now() + 30000).toUTCString();
                 document.cookie = "report_done=true; expires=" + expires + "; path=/";
 
-                fetch('/apply.cgi', {
-                    method: 'POST',
-                    body: 'action_mode=apply&rc_service=start_report_resetstats&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-                }).then(function() {
+                applyService('start_report_resetstats')
+
+                .then(function() {
                     setTimeout(function() {
                         window.location.reload();
                     }, 3000);
@@ -5097,16 +5089,24 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function applyService(service) {
+    const body = 'action_mode=apply&rc_service=' + service +
+                 '&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE';
+
+    return fetch('/apply.cgi', {
+        method: 'POST',
+        body: body
+    });
+}
+
 function triggerUpdate(btn) {
     if (btn) {
         btn.innerText = "Checking...";
         btn.classList.add('refresh-pulse');
     }
 
-    fetch('/apply.cgi', {
-        method: 'POST',
-        body: 'action_mode=apply&rc_service=start_report_update&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    })
+    applyService('start_report_update')
+
     .then(function() { return waitForStatus(15, 400); })
     .then(function(status) {
         if (status === 'UPDATED') {
@@ -5147,16 +5147,13 @@ function waitForStatus(maxTries, ms) {
 }
 
 var optionsTimeout = null;
-var tertiaryTimeout = null;
 function toggleSecondaryRow() {
     var secondaryRow = document.getElementById('secondaryButtonRow');
     var optionsBtn = document.getElementById('btnOptionsToggle');
-
     if (optionsTimeout) {
         clearTimeout(optionsTimeout);
         optionsTimeout = null;
     }
-
     if (secondaryRow.style.display === "none" || secondaryRow.style.display === "") {
         secondaryRow.style.display = "flex";
         optionsBtn.classList.add('active');
@@ -5171,15 +5168,14 @@ function toggleSecondaryRow() {
     }
 }
 
+var tertiaryTimeout = null;
 function toggleTertiaryRow() {
     var tertiaryRow = document.getElementById('tertiaryButtonRow');
     var optionsBtn2 = document.getElementById('btnOptionsToggle2');
-
     if (tertiaryTimeout) {
         clearTimeout(tertiaryTimeout);
         tertiaryTimeout = null;
     }
-
     if (tertiaryRow.style.display === "none" || tertiaryRow.style.display === "") {
         tertiaryRow.style.display = "flex";
         optionsBtn2.classList.add('active');
@@ -5203,25 +5199,8 @@ function ipPadding() {
     }
     selectElem.classList.add('refresh-pulse');
 
-    let fetchCall;
-    if (choice === "1") {
-        fetchCall = fetch('/apply.cgi', {
-            method: 'POST',
-            body: 'action_mode=apply&rc_service=start_report_ippadding1&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-        });
-    } else if (choice === "2") {
-        fetchCall = fetch('/apply.cgi', {
-            method: 'POST',
-            body: 'action_mode=apply&rc_service=start_report_ippadding2&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-        });
-    } else if (choice === "3") {
-        fetchCall = fetch('/apply.cgi', {
-            method: 'POST',
-            body: 'action_mode=apply&rc_service=start_report_ippadding3&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-        });
-    }
+   applyService('start_report_ippadding' + choice)
 
-    fetchCall
     .then(function() {
         setTimeout(function() {
             if (typeof triggerRefresh === 'function') {
@@ -5238,35 +5217,16 @@ function ipPadding() {
 }
 
 function webThemes() {
-    let selectElem = document.getElementById('themeSelect');
+    const selectElem = document.getElementById('themeSelect');
     if (!selectElem) return;
-    let choice = selectElem.value;
-    if (choice !== "1" && choice !== "2" && choice !== "3") {
-        return;
-    }
+    const choice = selectElem.value;
+    if (choice !== '1' && choice !== '2' && choice !== '3') return;
     selectElem.classList.add('refresh-pulse');
 
-    let fetchCall;
-    if (choice === "1") {
-        fetchCall = fetch('/apply.cgi', {
-            method: 'POST',
-            body: 'action_mode=apply&rc_service=start_report_theme1&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-        });
-    } else if (choice === "2") {
-        fetchCall = fetch('/apply.cgi', {
-            method: 'POST',
-            body: 'action_mode=apply&rc_service=start_report_theme2&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-        });
-    } else if (choice === "3") {
-        fetchCall = fetch('/apply.cgi', {
-            method: 'POST',
-            body: 'action_mode=apply&rc_service=start_report_theme3&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-        });
-    }
+    applyService('start_report_theme' + choice)
 
-    fetchCall
-    .then(function() {
-        setTimeout(function() {
+    .then(function () {
+        setTimeout(function () {
             if (typeof triggerRefresh === 'function') {
                 triggerRefresh();
             } else {
@@ -5274,12 +5234,9 @@ function webThemes() {
             }
         }, 1000);
     })
-    .catch(function(err) {
-        console.error("Web Themes failed:", err);
-        if (btn) {
-            btn.innerText = "Themes ⟳";
-            btn.classList.remove('refresh-pulse');
-        }
+    .catch(function (err) {
+        console.error('Web Themes failed:', err);
+        selectElem.classList.remove('refresh-pulse');
     });
 }
 
@@ -5289,10 +5246,8 @@ function rssiHistory(btn) {
         btn.classList.add('refresh-pulse');
     }
 
-    fetch('/apply.cgi', {
-        method: 'POST',
-        body: 'action_mode=apply&rc_service=start_report_rssihistory&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    })
+    applyService('start_report_rssihistory')
+
     .then(function() {
         setTimeout(function() {
             if (typeof triggerRefresh === 'function') {
@@ -5321,10 +5276,8 @@ function runtimeTracking(btn) {
         btn.classList.add('refresh-pulse');
     }
 
-    fetch('/apply.cgi', {
-        method: 'POST',
-        body: 'action_mode=apply&rc_service=start_report_runtimetracking&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    })
+    applyService('start_report_runtimetracking')
+
     .then(function() {
         setTimeout(function() {
             if (typeof triggerRefresh === 'function') {
@@ -5353,10 +5306,8 @@ function hostColor(btn) {
         btn.classList.add('refresh-pulse');
     }
 
-    fetch('/apply.cgi', {
-        method: 'POST',
-        body: 'action_mode=apply&rc_service=start_report_hostcolor&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    })
+    applyService('start_report_hostcolor')
+
     .then(function() {
         setTimeout(function() {
             if (typeof triggerRefresh === 'function') {
