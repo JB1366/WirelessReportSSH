@@ -1295,17 +1295,12 @@ set_theme() {
 }
 
 do_rotate_theme() {
-    if grep -q 'THEME="ORIGINAL"' "$CONFIG"; then
-        TM="DARKMODE"
-    elif grep -q 'THEME="DARKMODE"' "$CONFIG"; then
-        TM="ASUS_WEBUI"
-    else
-        TM="ORIGINAL"
-    fi
-    if grep -q "^THEME=" "$CONFIG"; then
-        sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
-    else
-        echo "THEME=\"$TM\"" >> "$CONFIG"
+    if [ -n "$TM" ]; then
+        if grep -q "^THEME=" "$CONFIG"; then
+            sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
+        else
+            echo "THEME=\"$TM\"" >> "$CONFIG"
+        fi
     fi
 }
 
@@ -1571,7 +1566,7 @@ set_rssi_tooltip() {
 
 do_rssi_history() {
     RS_HIST=${RS_HIST:-0}
-    if [ "$current_state" = "1" ]; then
+    if [ "$RS_HIST" = "1" ]; then
         RS_HIST="0"
     else
         RS_HIST="1"
@@ -4077,6 +4072,18 @@ cat <<HTML >> "$WEB_PAGE"
         background: rgba(0, 150, 255, 0.15);
     }
 
+    #themeSelect option {
+        background-color: #000000;
+        color: #0096ff;
+        font-weight: bold;
+    }
+
+    #themeSelect:focus {
+        outline: none;
+        border-color: white
+        box-shadow: none;
+    }
+
     .top-buttons {
         display: flex;
         flex-wrap: wrap;
@@ -4677,7 +4684,12 @@ cat <<HTML >> "$WEB_PAGE"
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
                                 <button class="button-tables" onclick="runtimeTracking(this)">Runtime Tracking ☰</button>
-                                <button class="button-tables" onclick="rotateThemes(this)">Theme Change ⟳</button>
+                                <select id="themeSelect" onchange="webThemes()" class="button-tables">
+                                    <option selected disabled>Themes ⟳</option>
+                                    <option value="1">Original</option>
+                                    <option value="2">Darkmode</option>
+                                    <option value="3">AsusUI</option>
+                                </select>
                                 <button class="button-tables" onclick="rssiHistory(this)">RSSI Tooltips ⇵</button>
                                 <button class="button-tables" onclick="hostColor(this)">Hostname ▤</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
@@ -5142,16 +5154,34 @@ function toggleOptionsRow() {
     }
 }
 
-function rotateThemes(btn) {
-    if (btn) {
-        btn.innerText = "Switching...";
-        btn.classList.add('refresh-pulse');
+function webThemes() {
+    let selectElem = document.getElementById('themeSelect');
+    if (!selectElem) return;
+    let choice = selectElem.value;
+    if (choice !== "1" && choice !== "2" && choice !== "3") {
+        return;
+    }
+    selectElem.classList.add('refresh-pulse');
+
+    let fetchCall;
+    if (choice === "1") {
+        fetchCall = fetch('/apply.cgi', {
+            method: 'POST',
+            body: 'action_mode=apply&rc_service=start_report_theme1&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        });
+    } else if (choice === "2") {
+        fetchCall = fetch('/apply.cgi', {
+            method: 'POST',
+            body: 'action_mode=apply&rc_service=start_report_theme2&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        });
+    } else if (choice === "3") {
+        fetchCall = fetch('/apply.cgi', {
+            method: 'POST',
+            body: 'action_mode=apply&rc_service=start_report_theme3&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
+        });
     }
 
-    fetch('/apply.cgi', {
-        method: 'POST',
-        body: 'action_mode=apply&rc_service=start_report_rotatetheme&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE'
-    })
+    fetchCall
     .then(function() {
         setTimeout(function() {
             if (typeof triggerRefresh === 'function') {
@@ -5159,16 +5189,12 @@ function rotateThemes(btn) {
             } else {
                 window.location.reload();
             }
-            if (btn) {
-                btn.innerText = "Theme Change ⟳";
-                btn.classList.remove('refresh-pulse');
-            }
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Theme toggle failed:", err);
+        console.error("Web Themes failed:", err);
         if (btn) {
-            btn.innerText = "Theme Change ⟳";
+            btn.innerText = "Themes ⟳";
             btn.classList.remove('refresh-pulse');
         }
     });
@@ -5583,15 +5609,24 @@ case "$1" in
         rm -f "$USB_PATH/runtime.db" 2>/dev/null
         run_report
         ;;
-    *rotatetheme)
-        do_rotate_theme
-        ;;
     *rssihistory)
         do_rssi_history
         ;;
     *runtimetracking)
         do_runtime_tracking
         do_runtime_tracking_log
+        ;;
+    *theme1)
+        TM="ORIGINAL"
+        do_rotate_theme
+        ;;
+    *theme2)
+        TM="DARKMODE"
+        do_rotate_theme
+        ;;
+    *theme3)
+        TM="ASUS_WEBUI"
+        do_rotate_theme
         ;;
     *update)
         do_webcheck
