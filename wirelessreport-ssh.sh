@@ -1284,23 +1284,17 @@ set_theme() {
                 3) TM="ASUS_WEBUI" ;;
                 *) freeze 2; continue ;;
             esac
-            if grep -q "^THEME=" "$CONFIG"; then
-                sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
-            else
-                echo "THEME=\"$TM\"" >> "$CONFIG"
-            fi
+            do_change_theme
             break
         done
     done
 }
 
-do_rotate_theme() {
-    if [ -n "$TM" ]; then
-        if grep -q "^THEME=" "$CONFIG"; then
-            sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
-        else
-            echo "THEME=\"$TM\"" >> "$CONFIG"
-        fi
+do_change_theme() {
+    if grep -q "^THEME=" "$CONFIG"; then
+        sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
+    else
+        echo "THEME=\"$TM\"" >> "$CONFIG"
     fi
 }
 
@@ -5685,15 +5679,15 @@ case "$1" in
         ;;
     *theme1)
         TM="ORIGINAL"
-        do_rotate_theme
+        do_change_theme
         ;;
     *theme2)
         TM="DARKMODE"
-        do_rotate_theme
+        do_change_theme
         ;;
     *theme3)
         TM="ASUS_WEBUI"
-        do_rotate_theme
+        do_change_theme
         ;;
     *update)
         do_webcheck
