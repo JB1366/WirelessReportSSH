@@ -5090,6 +5090,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 function applyService(service) {
     const currentPage = window.location.pathname.replace(/^\//, '');
+
     const body = 'action_mode=apply&rc_service=' + service +
                  '&current_page=' + encodeURIComponent(currentPage) +
                  '&next_page=' + encodeURIComponent(currentPage);
