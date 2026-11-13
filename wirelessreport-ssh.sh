@@ -4060,7 +4060,7 @@ cat <<HTML >> "$WEB_PAGE"
     .button-auto-refresh.active {
         border-color: #0096ff;
         box-shadow: 0 0 25px rgba(0, 150, 255, 0.6);
-        color: white;
+        color: #0096ff;
         position: relative;
         z-index: 5;
     }
