@@ -5425,7 +5425,7 @@ function timeDate() {
         }, 1000);
     })
     .catch(function(err) {
-        console.error("IP Padding failed:", err);
+        console.error("Set Time/Date/Temp failed:", err);
         selectElem.classList.remove('refresh-pulse');
     });
 }
