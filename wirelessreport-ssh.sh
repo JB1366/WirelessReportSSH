@@ -1266,13 +1266,24 @@ set_theme() {
                 3) TM="ASUS_WEBUI" ;;
                 *) freeze 2; continue ;;
             esac
-            do_change_theme
+            if grep -q "^THEME=" "$CONFIG"; then
+                sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
+            else
+                echo "THEME=\"$TM\"" >> "$CONFIG"
+            fi
             break
         done
     done
 }
 
 do_change_theme() {
+    local num=${1##*theme}
+    case $num in
+        1) TM="ORIGINAL" ;;
+        2) TM="DARKMODE" ;;
+        3) TM="ASUS_WEBUI" ;;
+        *) return 1 ;;
+    esac
     if grep -q "^THEME=" "$CONFIG"; then
         sed -i "s/^THEME=.*/THEME=\"$TM\"/" "$CONFIG"
     else
@@ -1430,11 +1441,22 @@ set_ip_padding() {
             esac
             break
         done
-        do_ippadding
+        if grep -q "IPPAD=" "$CONFIG"; then
+        sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
+        else
+            echo "IPPAD=\"$NEW_PAD\"" >> "$CONFIG"
+        fi
     done
 }
 
 do_ippadding() {
+    local num=${1##*ippadding}
+    case $num in
+        1) NEW_PAD="2" ;;
+        2) NEW_PAD="1" ;;
+        3) NEW_PAD="0" ;;
+        *) return 1 ;;
+    esac
     if grep -q "IPPAD=" "$CONFIG"; then
         sed -i "s/IPPAD=.*/IPPAD=\"$NEW_PAD\"/" "$CONFIG"
     else
@@ -5360,7 +5382,7 @@ function wirelessBackhaul(btn) {
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Runtime tracking failed:", err);
+        console.error("Backhaul failed:", err);
         if (btn) {
             btn.innerText = "Backhaul ⟳";
             btn.classList.remove('refresh-pulse');
@@ -5390,7 +5412,7 @@ function tableHeaders(btn) {
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Runtime tracking failed:", err);
+        console.error("Show Table Headers:", err);
         if (btn) {
             btn.innerText = "Show Table Headers ▤";
             btn.classList.remove('refresh-pulse');
@@ -5420,7 +5442,7 @@ function radioTemps(btn) {
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Runtime tracking failed:", err);
+        console.error("Show Radio Temps:", err);
         if (btn) {
             btn.innerText = "Show Radio Temps ⟳";
             btn.classList.remove('refresh-pulse');
@@ -5450,7 +5472,7 @@ function showFirmware(btn) {
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Runtime tracking failed:", err);
+        console.error("Show Firmware failed:", err);
         if (btn) {
             btn.innerText = "Show Firmware ⟳";
             btn.classList.remove('refresh-pulse');
@@ -5767,17 +5789,8 @@ case "$1" in
     *hostcolor)
         do_host_color
         ;;
-    *ippadding1)
-        NEW_PAD="2"
-        do_ippadding
-        ;;
-    *ippadding2)
-        NEW_PAD="1"
-        do_ippadding
-        ;;
-    *ippadding3)
-        NEW_PAD="0"
-        do_ippadding
+    *ippadding[1-3])
+        do_ippadding "$1"
         ;;
     *radiotemps)
         do_radiotemps
@@ -5799,17 +5812,8 @@ case "$1" in
     *tableheaders)
         do_tableheaders
         ;;
-    *theme1)
-        TM="ORIGINAL"
-        do_change_theme
-        ;;
-    *theme2)
-        TM="DARKMODE"
-        do_change_theme
-        ;;
-    *theme3)
-        TM="ASUS_WEBUI"
-        do_change_theme
+    *theme[1-3])
+        do_change_theme "$1"
         ;;
     *update)
         do_webcheck
