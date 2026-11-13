@@ -224,45 +224,31 @@ menu_vars() {
         *) KEY="${GR}YES$NC" ;;
     esac
 
-    THEME=${THEME:-ORIGINAL}
     TM1_STAT="$GR$THEME$NC"
     TM_STAT="$BL$THEME$NC"
 
-    RTIME=${RTIME:-1}
-    case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
-
-    RTIME_LOG=${RTIME_LOG:-0}
-    case "$RTIME_LOG" in 0) WS_STAT="$OFF" ;; *) WS_STAT="$ON" ;; esac
-
-    BACKHAUL=${BACKHAUL:-0}
-    case "$BACKHAUL" in 0) WB_STAT="$OFF" ;; *) WB_STAT="$ON" ;; esac
-
-    PULSE_MINS=${PULSE_MINS:-15}
-    case "$PULSE_MINS" in 0) UP_STAT="$OFF" ;; *) UP_STAT="$GR${PULSE_MINS} Mins$NC" ;; esac
-
-    IPPAD=${IPPAD:-1}; PD1="${GR}Last 2 Octets$NC"
-    PD2="${BL}Last Octet$NC"; PD3="${RD}Disabled$NC"
+    PD1="${GR}Last 2 Octets$NC"
+    PD2="${BL}Last Octet$NC"
+    PD3="${RD}Disabled$NC"
     case "$IPPAD" in
         2) PD_STAT="$PD1" ;;
         1) PD_STAT="$PD2" ;;
         *) PD_STAT="$PD3" ;;
     esac
 
-    HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
+    case "$BACKHAUL" in 0) WB_STAT="$OFF" ;; *) WB_STAT="$ON" ;; esac
+    case "$FWUPDATE" in "") FWUP="Never" ;; *) FWUP=$(date -d "@$FWUPDATE" "$D_FMT") ;; esac
     case "$HOSTNAME_COLOR" in 1) HN_STAT="${BL}Colored$NC" ;; *) HN_STAT="${GR}Numbered$NC" ;; esac
-
-    TABLE_HEADERS=${TABLE_HEADERS:-1}
+    case "$PULSE_MINS" in 0) UP_STAT="$OFF" ;; *) UP_STAT="$GR${PULSE_MINS} Mins$NC" ;; esac
+    case "$RADIO_TEMPS" in 1) WF_STAT="$ON" ;; *) WF_STAT="$OFF" ;; esac
+    case "$RS_HIST_DATE" in 0|1) ;; *) RS_HIST_DATE=0 ;; esac
+    case "$RTIME" in 0) RT_STAT="$OFF" ;; *) RT_STAT="$ON" ;; esac
+    case "$RTIME_LOG" in 0) WS_STAT="$OFF" ;; *) WS_STAT="$ON" ;; esac
+    case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
     case "$TABLE_HEADERS" in 1) TH_STAT="$ON" ;; *) TH_STAT="$OFF" ;; esac
 
-    RADIO_TEMPS=${RADIO_TEMPS:-1}
-    case "$RADIO_TEMPS" in 1) WF_STAT="$ON" ;; *) WF_STAT="$OFF" ;; esac
-
-    RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
     case "$RS_HIST_ENTRIES" in ""|*[!0-9]*) RS_HIST_ENTRIES=5 ;; esac
     if [ "$RS_HIST_ENTRIES" -lt 5 ] || [ "$RS_HIST_ENTRIES" -gt 20 ]; then RS_HIST_ENTRIES=5; fi
-
-    RS_HIST_DATE=${RS_HIST_DATE:-0}
-    case "$RS_HIST_DATE" in 0|1) ;; *) RS_HIST_DATE=0 ;; esac
 
     CUR_RS_HIST=${CUR_RS_HIST:-$RS_HIST}
     case "$CUR_RS_HIST" in 1) CH="$ON" ;; *) CH="$OFF" ;; esac
@@ -275,10 +261,6 @@ menu_vars() {
 
     BN="$GR$BRANCH_NAME$NC"
 
-    SHOW_FW=${SHOW_FW:-1}
-    case "$SHOW_FW" in 1) SF="$ON" ;; *) SF="$OFF" ;; esac
-
-    case "$FWUPDATE" in "") FWUP="Never" ;; *) FWUP=$(date -d "@$FWUPDATE" "$D_FMT") ;; esac
     CUR="$B_COLOR$(date "$D_FMT")$NC"; FWUP="$B_COLOR$FWUP$NC"
 }
 
@@ -1320,18 +1302,9 @@ set_options() {
         while true; do
             selection
             case "$choice" in
-                1)
-                    set_runtime_tracking ;;
-                2)
-                    if grep -q "^BACKHAUL=" "$CONFIG"; then
-                        case "$BACKHAUL" in 1) NEW_BH="0" ;; *) NEW_BH="1" ;; esac
-                        sed -i "s/^BACKHAUL=.*/BACKHAUL=\"$NEW_BH\"/" "$CONFIG"
-                    else
-                        echo 'BACKHAUL="1"' >> "$CONFIG"
-                    fi
-                    ;;
-                3)
-                    while true; do
+                1) set_runtime_tracking ;;
+                2) do_backhaul ;;
+                3) while true; do
                         echo -e "\n (${GR}0$NC) disable      (${GR}15$NC)def      (${GR}1440$NC) max "
                         printf " Enter alert interval in mins [${B_COLOR}E=exit$NC]: "
                         read -r user_mins
@@ -1350,39 +1323,13 @@ set_options() {
                     done
                     pause
                     ;;
-                4)
-                    set_ip_padding ;;
-                5)
-                    do_host_color ;;
-                6)
-                    if grep -q "TABLE_HEADERS=" "$CONFIG"; then
-                        case "$TABLE_HEADERS" in 1) NEW_TH="0" ;; *) NEW_TH="1" ;; esac
-                        sed -i "s/TABLE_HEADERS=.*/TABLE_HEADERS=\"$NEW_TH\"/" "$CONFIG"
-                    else
-                        echo 'TABLE_HEADERS="0"' >> "$CONFIG"
-                    fi
-                    ;;
-                7)
-                    if grep -q "RADIO_TEMPS=" "$CONFIG"; then
-                        case "$RADIO_TEMPS" in 1) NEW_WF="0" ;; *) NEW_WF="1" ;; esac
-                        sed -i "s/RADIO_TEMPS=.*/RADIO_TEMPS=\"$NEW_WF\"/" "$CONFIG"
-                    else
-                        echo 'RADIO_TEMPS="0"' >> "$CONFIG"
-                    fi
-                    ;;
-                8)
-                    set_rssi_tooltip ;;
-                9)
-                    if grep -q "SHOW_FW=" "$CONFIG"; then
-                        case "$SHOW_FW" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
-                        sed -i "s/SHOW_FW=.*/SHOW_FW=\"$NEW_SF\"/" "$CONFIG"
-                    else
-                        echo 'SHOW_FW="0"' >> "$CONFIG"
-                    fi
-                    ;;
-                *)
-                    freeze 2
-                    continue ;;
+                4) set_ip_padding ;;
+                5) do_host_color ;;
+                6) do_tableheaders ;;
+                7) do_radiotemps ;;
+                8) set_rssi_tooltip ;;
+                9) do_showfirmware ;;
+                *) freeze 2; continue ;;
             esac
             break
         done
@@ -1414,7 +1361,6 @@ set_runtime_tracking() {
 }
 
 do_runtime_tracking() {
-    RTIME=${RTIME:-1}
     case "$RTIME" in
         1) NEW_RTIME="0"; rm -f "$USB_PATH/runtime.db" ;;
         *) NEW_RTIME="1" ;;
@@ -1434,7 +1380,6 @@ do_runtime_tracking() {
 }
 
 do_runtime_tracking_log() {
-    RTIME_LOG=${RTIME_LOG:-1}
     case "$RTIME_LOG" in
         1) NEW_LOG="0" ;;
         *) NEW_LOG="1" ;;
@@ -1450,6 +1395,15 @@ do_runtime_tracking_log() {
         else
             echo "RTIME=\"1\"" >> "$CONFIG"
         fi
+    fi
+}
+
+do_backhaul() {
+    if grep -q "^BACKHAUL=" "$CONFIG"; then
+        case "$BACKHAUL" in 1) NEW_BH="0" ;; *) NEW_BH="1" ;; esac
+        sed -i "s/^BACKHAUL=.*/BACKHAUL=\"$NEW_BH\"/" "$CONFIG"
+    else
+        echo 'BACKHAUL="1"' >> "$CONFIG"
     fi
 }
 
@@ -1494,6 +1448,24 @@ do_host_color() {
         sed -i "s/HOSTNAME_COLOR=.*/HOSTNAME_COLOR=\"$NEW_HC\"/" "$CONFIG"
     else
         echo 'HOSTNAME_COLOR="1"' >> "$CONFIG"
+    fi
+}
+
+do_tableheaders() {
+    if grep -q "TABLE_HEADERS=" "$CONFIG"; then
+        case "$TABLE_HEADERS" in 1) NEW_TH="0" ;; *) NEW_TH="1" ;; esac
+        sed -i "s/TABLE_HEADERS=.*/TABLE_HEADERS=\"$NEW_TH\"/" "$CONFIG"
+    else
+        echo 'TABLE_HEADERS="0"' >> "$CONFIG"
+    fi
+}
+
+do_radiotemps() {
+    if grep -q "RADIO_TEMPS=" "$CONFIG"; then
+        case "$RADIO_TEMPS" in 1) NEW_WF="0" ;; *) NEW_WF="1" ;; esac
+        sed -i "s/RADIO_TEMPS=.*/RADIO_TEMPS=\"$NEW_WF\"/" "$CONFIG"
+    else
+        echo 'RADIO_TEMPS="0"' >> "$CONFIG"
     fi
 }
 
@@ -1563,7 +1535,6 @@ set_rssi_tooltip() {
 }
 
 do_rssi_history() {
-    RS_HIST=${RS_HIST:-0}
     if [ "$RS_HIST" = "1" ]; then
         RS_HIST="0"
     else
@@ -1575,6 +1546,15 @@ do_rssi_history() {
         echo "RS_HIST=\"$RS_HIST\"" >> "$CONFIG"
     fi
     rm -f "$HISTORY_DB" 2>/dev/null
+}
+
+do_showfirmware() {
+    if grep -q "SHOW_FW=" "$CONFIG"; then
+        case "$SHOW_FW" in 1) NEW_SF="0" ;; *) NEW_SF="1" ;; esac
+        sed -i "s/SHOW_FW=.*/SHOW_FW=\"$NEW_SF\"/" "$CONFIG"
+    else
+        echo 'SHOW_FW="0"' >> "$CONFIG"
+    fi
 }
 
 set_github_branch() {
@@ -3259,19 +3239,25 @@ get_usb
 check_github
 device_default_colors
 
+BACKHAUL=${BACKHAUL:-0}
+HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
+IPPAD=${IPPAD:-1}
+PULSE_MINS=${PULSE_MINS:-15}
+RADIO_TEMPS=${RADIO_TEMPS:-1}
+RS_HIST=${RS_HIST:-0}
+RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
+RS_HIST_DATE=${RS_HIST_DATE:-1}
+RTIME=${RTIME:-1}
+RTIME_LOG=${RTIME_LOG:-1}
+SHOW_FW=${SHOW_FW:-1}
+TABLE_HEADERS=${TABLE_HEADERS:-1}
+THEME=${THEME:-ORIGINAL}
+
 run_report() {
 #═════════════════#
 #  Node Scan(s)   #
 #═════════════════#
-RS_HIST=${RS_HIST:-0}
-RS_HIST_ENTRIES=${RS_HIST_ENTRIES:-5}
-RS_HIST_DATE=${RS_HIST_DATE:-1}
-IPPAD=${IPPAD:-1}
-RADIO_TEMPS=${RADIO_TEMPS:-1}
 case "$RADIO_TEMPS" in 0) RADIO_ON='style="display: none !important;"' ;; *) RADIO_ON="" ;; esac
-HOSTNAME_COLOR=${HOSTNAME_COLOR:-0};
-TABLE_HEADERS=${TABLE_HEADERS:-1}
-SHOW_FW=${SHOW_FW:-1}
 case "$SHOW_FW" in 1) FW_ON="" ;; *) FW_ON='style="display:none !important;"' ;; esac
 
 read -r START_RUNTIME _ < /proc/uptime
@@ -4718,8 +4704,10 @@ cat <<HTML >> "$WEB_PAGE"
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                             <div id="tertiaryButtonRow" class="top-buttons-tertiary" style="display: none;">
-                                <button class="button-tables" onclick="customActionOne(this)">Action One ⚡</button>
-                                <button class="button-tables" onclick="customActionTwo(this)">Action Two 🛠</button>
+                                <button class="button-tables" onclick="wirelessBackhaul(this)">Backhaul ⟳</button>
+                                <button class="button-tables" onclick="tableHeaders(this)">Table Headers ▤</button>
+                                <button class="button-tables" onclick="radioTemps(this)">Radio Temps ⟳</button>
+                                <button class="button-tables" onclick="showFirmware(this)">Show Firmware ⟳</button>
                             </div>
                         </div>
                     <div class="grid-container">
@@ -5350,6 +5338,126 @@ function hostColor(btn) {
     });
 }
 
+function wirelessBackhaul(btn) {
+    if (btn) {
+        btn.innerText = "Toggling On/Off...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    applyService('start_report_wirelessbackhaul')
+
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "Backhaul ⟳";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Runtime tracking failed:", err);
+        if (btn) {
+            btn.innerText = "Backhaul ⟳";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
+function tableHeaders(btn) {
+    if (btn) {
+        btn.innerText = "Toggling On/Off...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    applyService('start_report_tableheaders')
+
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "Table Headers ▤";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Runtime tracking failed:", err);
+        if (btn) {
+            btn.innerText = "Table Headers ▤";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
+function radioTemps(btn) {
+    if (btn) {
+        btn.innerText = "Toggling On/Off...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    applyService('start_report_radiotemps')
+
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "Radio Temps ⟳";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Runtime tracking failed:", err);
+        if (btn) {
+            btn.innerText = "Radio Temps ⟳";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
+function showFirmware(btn) {
+    if (btn) {
+        btn.innerText = "Toggling On/Off...";
+        btn.classList.add('refresh-pulse');
+    }
+
+    applyService('start_report_showfirmware')
+
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+            if (btn) {
+                btn.innerText = "Show Firmware ⟳";
+                btn.classList.remove('refresh-pulse');
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Runtime tracking failed:", err);
+        if (btn) {
+            btn.innerText = "Show Firmware ⟳";
+            btn.classList.remove('refresh-pulse');
+        }
+    });
+}
+
 function switchTab(view) {
     localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
@@ -5671,6 +5779,9 @@ case "$1" in
         NEW_PAD="0"
         do_ippadding
         ;;
+    *radiotemps)
+        do_radiotemps
+        ;;
     *resetstats)
         rm -f "$USB_PATH/runtime.db" 2>/dev/null
         run_report
@@ -5681,6 +5792,12 @@ case "$1" in
     *runtimetracking)
         do_runtime_tracking
         do_runtime_tracking_log
+        ;;
+    *showfirmware)
+        do_showfirmware
+        ;;
+    *tableheaders)
+        do_tableheaders
         ;;
     *theme1)
         TM="ORIGINAL"
@@ -5696,6 +5813,9 @@ case "$1" in
         ;;
     *update)
         do_webcheck
+        ;;
+    *wirelessbackhaul)
+        do_backhaul
         ;;
     *)
 		run_report
