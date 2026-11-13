@@ -861,6 +861,24 @@ set_temp_date() {
     done
 }
 
+do_timedate() {
+	local num=${1##*timedate}
+	case $num in
+		1) NEW_UNIT="USA" ;;
+		2) NEW_UNIT="INTL" ;;
+		3) NEW_UNIT="ISO" ;;
+		4) NEW_UNIT="ISO2" ;;
+		5) NEW_UNIT="USA1" ;;
+		6) NEW_UNIT="INTL1" ;;
+		7) NEW_UNIT="ISO1" ;;
+		8) NEW_UNIT="ISO3" ;;
+		*) return 1 ;;
+	esac
+	sed -i '/REPORT_UNIT=/d' "$CONFIG"
+	echo "REPORT_UNIT=\"$NEW_UNIT\"" >> "$CONFIG"
+	REPORT_UNIT="$NEW_UNIT"
+}
+
 set_device_nicknames() {
     while true; do
         show_header
@@ -2381,7 +2399,7 @@ get_theme() {
             table.report_table th:hover { background: #77A5C6; }
             .separator-line { border: 0; border-top: 1px solid black; }
             #refresh-option:focus { background: #3A4042; }
-            #themeSelect option, #webPadding option { background-color: #3A4042; }
+            #themeSelect option, #webPadding option, #timeSelect option { background-color: #3A4042; }
             .rssi-tooltip { background: #1c232b; }
             .button-auto-refresh { background: #3A4042; }
             .button-tables { background: #3A4042; }
@@ -2481,6 +2499,17 @@ update_time() {
         ISO3)  T_FMT="+%Y-%m-%d %-I:%M:%S %p"; D_FMT="+%Y-%m-%d %-I:%M %p"; TEMP_UNIT="F"; DN="ISO"; TC="$BL" ;;
     esac
     CUR_TIME=$(date "$T_FMT")
+}
+
+web_update_time() {
+    DATE_USA="$(date +'%b-%-d %-H:%M:%S')"
+    DATE_INTL="$(date +'%d-%b %-H:%M:%S')"
+    DATE_ISO="$(date +'%Y-%m-%d %H:%M:%S')"
+    DATE_ISO2="$(date +'%Y-%m-%d %H:%M:%S')"
+    DATE_USA1="$(date +'%b-%-d %-I:%M:%S %p')"
+    DATE_INTL1="$(date +'%d-%b %-I:%M:%S %p')"
+    DATE_ISO1="$(date +'%Y-%m-%d %-I:%M:%S %p')"
+    DATE_ISO3="$(date +'%Y-%m-%d %-I:%M:%S %p')"
 }
 
 get_temp_unit() {
@@ -3261,6 +3290,7 @@ get_usb
 check_github
 device_default_colors
 
+
 BACKHAUL=${BACKHAUL:-0}
 HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
 IPPAD=${IPPAD:-1}
@@ -3671,6 +3701,7 @@ get_theme
 runtime_tracking
 do_numbered_node
 check_version update_box
+web_update_time
 
 JS_DIFF="${DIFF:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
@@ -4080,14 +4111,16 @@ cat <<HTML >> "$WEB_PAGE"
     }
 
     #themeSelect option,
-    #webPadding option {
+    #webPadding option,
+    #timeSelect option {
         background-color: #000000;
-        color: #0096ff;
+        color: white;
         font-weight: bold;
     }
 
     #themeSelect:focus,
-    #webPadding:focus {
+    #webPadding:focus,
+    #timeSelect:focus {
         outline: none;
         border-color: white; /* Added missing semicolon here */
         box-shadow: none;
@@ -4711,13 +4744,13 @@ cat <<HTML >> "$WEB_PAGE"
                                 <button class="button-tables" onclick="runtimeTracking(this)">Runtime ☰</button>
                                 <button class="button-tables" onclick="hostColor(this)">Hostname ▤</button>
                                 <select id="webPadding" onchange="ipPadding()" class="button-tables">
-                                    <option selected disabled>IP Padding ⇥</option>
+                                    <option selected disabled hidden>IP Padding ⇥</option>
                                     <option value="1">Last 2 Octets</option>
                                     <option value="2">Last Octet</option>
                                     <option value="3">Disabled</option>
                                 </select>
                                 <select id="themeSelect" onchange="webThemes()" class="button-tables">
-                                    <option selected disabled>Themes ⟳</option>
+                                    <option selected disabled hidden>Themes ⟳</option>
                                     <option value="1">Original</option>
                                     <option value="2">Darkmode</option>
                                     <option value="3">AsusUI</option>
@@ -4726,10 +4759,23 @@ cat <<HTML >> "$WEB_PAGE"
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                             <div id="tertiaryButtonRow" class="top-buttons-tertiary" style="display: none;">
+                                <select id="timeSelect" onchange="timeDate()" class="button-tables">
+                                    <option selected disabled hidden>Set Time/Date/Temp ☰</option>
+                                    <option disabled>───── Military ─────</option>
+                                    <option value="1">$DATE_USA °F</option>
+                                    <option value="2">$DATE_INTL °C</option>
+                                    <option value="3">$DATE_ISO °C</option>
+                                    <option value="4">$DATE_ISO2 °F</option>
+                                    <option disabled>─── 12HR am/pm ───</option>
+                                    <option value="5">$DATE_USA1 °F</option>
+                                    <option value="6">$DATE_INTL1 °C</option>
+                                    <option value="7">$DATE_ISO1 °C</option>
+                                    <option value="8">$DATE_ISO3 °F</option>
+                                </select>
                                 <button class="button-tables" onclick="wirelessBackhaul(this)">Backhaul ⟳</button>
-                                <button class="button-tables" onclick="tableHeaders(this)">Show Table Headers ▤</button>
-                                <button class="button-tables" onclick="radioTemps(this)">Show Radio Temps ⟳</button>
-                                <button class="button-tables" onclick="showFirmware(this)">Show Firmware ⟳</button>
+                                <button class="button-tables" onclick="tableHeaders(this)">Table Headers ▤</button>
+                                <button class="button-tables" onclick="radioTemps(this)">Radio Temps ⟳</button>
+                                <button class="button-tables" onclick="showFirmware(this)">Firmware ⟳</button>
                             </div>
                         </div>
                     <div class="grid-container">
@@ -5360,6 +5406,30 @@ function hostColor(btn) {
     });
 }
 
+function timeDate() {
+    const selectElem = document.getElementById('timeSelect');
+    if (!selectElem) return;
+    const choice = selectElem.value;
+    if (choice < "1" || choice > "8") return;
+    selectElem.classList.add('refresh-pulse');
+
+    applyService('start_report_timedate' + choice)
+
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("IP Padding failed:", err);
+        selectElem.classList.remove('refresh-pulse');
+    });
+}
+
 function wirelessBackhaul(btn) {
     if (btn) {
         btn.innerText = "Toggling On/Off...";
@@ -5406,15 +5476,15 @@ function tableHeaders(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Show Table Headers ▤";
+                btn.innerText = "Table Headers ▤";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Show Table Headers:", err);
+        console.error("Table Headers:", err);
         if (btn) {
-            btn.innerText = "Show Table Headers ▤";
+            btn.innerText = "Table Headers ▤";
             btn.classList.remove('refresh-pulse');
         }
     });
@@ -5436,15 +5506,15 @@ function radioTemps(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Show Radio Temps ⟳";
+                btn.innerText = "Radio Temps ⟳";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Show Radio Temps:", err);
+        console.error("Radio Temps:", err);
         if (btn) {
-            btn.innerText = "Show Radio Temps ⟳";
+            btn.innerText = "Radio Temps ⟳";
             btn.classList.remove('refresh-pulse');
         }
     });
@@ -5466,15 +5536,15 @@ function showFirmware(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Show Firmware ⟳";
+                btn.innerText = "Firmware ⟳";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
     })
     .catch(function(err) {
-        console.error("Show Firmware failed:", err);
+        console.error("Firmware failed:", err);
         if (btn) {
-            btn.innerText = "Show Firmware ⟳";
+            btn.innerText = "Firmware ⟳";
             btn.classList.remove('refresh-pulse');
         }
     });
@@ -5811,6 +5881,9 @@ case "$1" in
         ;;
     *tableheaders)
         do_tableheaders
+        ;;
+    *timedate*)
+        do_timedate "$1"
         ;;
     *theme*)
         do_change_theme "$1"
