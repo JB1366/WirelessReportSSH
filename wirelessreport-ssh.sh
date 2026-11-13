@@ -211,7 +211,6 @@ version_compare() {
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     menu_buffer=""; MB="61"; echo -e "$B_COLOR"
-
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
 
@@ -1407,7 +1406,7 @@ set_runtime_tracking() {
             case "$choice" in
                 1) do_runtime_tracking ;;
                 2) do_runtime_tracking_log ;;
-                *)freeze 2; continue ;;
+                *) freeze 2; continue ;;
             esac
             break
         done
@@ -5090,8 +5089,10 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 function applyService(service) {
+    const currentPage = window.location.pathname.replace(/^\//, '');
     const body = 'action_mode=apply&rc_service=' + service +
-                 '&current_page=$INSTALLED_PAGE&next_page=$INSTALLED_PAGE';
+                 '&current_page=' + encodeURIComponent(currentPage) +
+                 '&next_page=' + encodeURIComponent(currentPage);
 
     return fetch('/apply.cgi', {
         method: 'POST',
