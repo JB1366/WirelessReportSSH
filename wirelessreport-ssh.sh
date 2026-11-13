@@ -4705,8 +4705,8 @@ cat <<HTML >> "$WEB_PAGE"
                             </div>
                             <div id="tertiaryButtonRow" class="top-buttons-tertiary" style="display: none;">
                                 <button class="button-tables" onclick="wirelessBackhaul(this)">Backhaul ⟳</button>
-                                <button class="button-tables" onclick="tableHeaders(this)">Table Headers ▤</button>
-                                <button class="button-tables" onclick="radioTemps(this)">Radio Temps ⟳</button>
+                                <button class="button-tables" onclick="tableHeaders(this)">Show Table Headers ▤</button>
+                                <button class="button-tables" onclick="radioTemps(this)">Show Radio Temps ⟳</button>
                                 <button class="button-tables" onclick="showFirmware(this)">Show Firmware ⟳</button>
                             </div>
                         </div>
@@ -5384,7 +5384,7 @@ function tableHeaders(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Table Headers ▤";
+                btn.innerText = "Show Table Headers ▤";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
@@ -5392,7 +5392,7 @@ function tableHeaders(btn) {
     .catch(function(err) {
         console.error("Runtime tracking failed:", err);
         if (btn) {
-            btn.innerText = "Table Headers ▤";
+            btn.innerText = "Show Table Headers ▤";
             btn.classList.remove('refresh-pulse');
         }
     });
@@ -5414,7 +5414,7 @@ function radioTemps(btn) {
                 window.location.reload();
             }
             if (btn) {
-                btn.innerText = "Radio Temps ⟳";
+                btn.innerText = "Show Radio Temps ⟳";
                 btn.classList.remove('refresh-pulse');
             }
         }, 1000);
@@ -5422,7 +5422,7 @@ function radioTemps(btn) {
     .catch(function(err) {
         console.error("Runtime tracking failed:", err);
         if (btn) {
-            btn.innerText = "Radio Temps ⟳";
+            btn.innerText = "Show Radio Temps ⟳";
             btn.classList.remove('refresh-pulse');
         }
     });
