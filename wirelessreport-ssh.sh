@@ -5789,7 +5789,7 @@ case "$1" in
     *hostcolor)
         do_host_color
         ;;
-    *ippadding[1-3])
+    *ippadding*)
         do_ippadding "$1"
         ;;
     *radiotemps)
@@ -5812,7 +5812,7 @@ case "$1" in
     *tableheaders)
         do_tableheaders
         ;;
-    *theme[1-3])
+    *theme*)
         do_change_theme "$1"
         ;;
     *update)
