@@ -4060,7 +4060,7 @@ cat <<HTML >> "$WEB_PAGE"
     .button-auto-refresh.active {
         border-color: #0096ff;
         box-shadow: 0 0 25px rgba(0, 150, 255, 0.6);
-        color: #0096ff;
+        color: white;
         position: relative;
         z-index: 5;
     }
@@ -4122,7 +4122,6 @@ cat <<HTML >> "$WEB_PAGE"
     #webPadding:focus,
     #timeSelect:focus {
         outline: none;
-        border-color: white; /* Added missing semicolon here */
         box-shadow: none;
     }
 
