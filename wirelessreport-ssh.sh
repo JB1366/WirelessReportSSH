@@ -3307,6 +3307,9 @@ do_button_labels() {
     case "$SHOW_FW" in 1) FW_LABEL="Firmware On" ;; *) FW_LABEL="Firmware Off" ;; esac
     case "$TABLE_HEADERS" in 1) TH_LABEL="Table Headers On" ;; *) TH_LABEL="Table Headers Off" ;; esac
     case "$THEME" in ORIGINAL) TH_STATUS="Original" ;; DARKMODE) TH_STATUS="Darkmode" ;; ASUS_WEBUI) TH_STATUS="AsusUI" ;; esac
+    # 2-below not button labels, added after refactor.
+    case "$RADIO_TEMPS" in 0) RADIO_ON='style="display: none !important;"' ;; *) RADIO_ON="" ;; esac
+    case "$SHOW_FW" in 1) FW_ON="" ;; *) FW_ON='style="display:none !important;"' ;; esac
 }
 
 ssh_init
@@ -3332,9 +3335,6 @@ run_report() {
 #═════════════════#
 #  Node Scan(s)   #
 #═════════════════#
-case "$RADIO_TEMPS" in 0) RADIO_ON='style="display: none !important;"' ;; *) RADIO_ON="" ;; esac
-case "$SHOW_FW" in 1) FW_ON="" ;; *) FW_ON='style="display:none !important;"' ;; esac
-
 read -r START_RUNTIME _ < /proc/uptime
 
 NODE_DATA="/tmp/node_data"
