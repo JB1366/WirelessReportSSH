@@ -4772,16 +4772,17 @@ cat <<HTML >> "$WEB_PAGE"
                                     <option value="2">Last Octet</option>
                                     <option value="3">Disabled</option>
                                 </select>
+                                <button class="button-tables" onclick="rssiHistory(this)">$RS_LABEL ⇵</button>
                                 <select id="themeSelect" onchange="webThemes()" class="button-tables" data-status="$TH_STATUS">
                                     <option selected disabled hidden>Themes ⟳</option>
                                     <option value="1">Original</option>
                                     <option value="2">Darkmode</option>
                                     <option value="3">AsusUI</option>
                                 </select>
-                                <button class="button-tables" onclick="rssiHistory(this)">$RS_LABEL ⇵</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                             <div id="tertiaryButtonRow" class="top-buttons-tertiary" style="display: none;">
+                                <button class="button-tables" onclick="wirelessBackhaul(this)">$BH_LABEL ⟳</button>
                                 <select id="timeSelect" onchange="timeDate()" class="button-tables" data-status="$TM_STATUS">
                                     <option selected disabled hidden>Set Time/Date/Temp ☰</option>
                                     <option disabled>───── Military ─────</option>
@@ -4795,10 +4796,9 @@ cat <<HTML >> "$WEB_PAGE"
                                     <option value="7">$DATE_ISO1 °C</option>
                                     <option value="8">$DATE_ISO3 °F</option>
                                 </select>
-                                <button class="button-tables" onclick="wirelessBackhaul(this)">$BH_LABEL ⟳</button>
-                                <button class="button-tables" onclick="tableHeaders(this)">$TH_LABEL ▤</button>
-                                <button class="button-tables" onclick="radioTemps(this)">$RT_LABEL ⟳</button>
                                 <button class="button-tables" onclick="showFirmware(this)">$FW_LABEL ⟳</button>
+                                <button class="button-tables" onclick="radioTemps(this)">$RT_LABEL ⟳</button>
+                                <button class="button-tables" onclick="tableHeaders(this)">$TH_LABEL ▤</button>
                             </div>
                         </div>
                     <div class="grid-container">
