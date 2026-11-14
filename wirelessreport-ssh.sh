@@ -5317,7 +5317,7 @@ function webThemes() {
 
 function rssiHistory(btn) {
     if (btn) {
-        btn.innerText = "Toggling On/Off...";
+        btn.innerText = "Toggling On/Off";
         btn.classList.add('refresh-pulse');
     }
 
@@ -5347,7 +5347,7 @@ function rssiHistory(btn) {
 
 function runtimeTracking(btn) {
     if (btn) {
-        btn.innerText = "Toggling On/Off...";
+        btn.innerText = "Toggling On/Off";
         btn.classList.add('refresh-pulse');
     }
 
@@ -5377,7 +5377,7 @@ function runtimeTracking(btn) {
 
 function hostColor(btn) {
     if (btn) {
-        btn.innerText = "Colored⇄Numbered...";
+        btn.innerText = "Colored⇄Numbered";
         btn.classList.add('refresh-pulse');
     }
 
@@ -5431,7 +5431,7 @@ function timeDate() {
 
 function wirelessBackhaul(btn) {
     if (btn) {
-        btn.innerText = "Toggling On/Off...";
+        btn.innerText = "Toggling On/Off";
         btn.classList.add('refresh-pulse');
     }
 
@@ -5461,7 +5461,7 @@ function wirelessBackhaul(btn) {
 
 function tableHeaders(btn) {
     if (btn) {
-        btn.innerText = "Toggling On/Off...";
+        btn.innerText = "Show⇄Hide";
         btn.classList.add('refresh-pulse');
     }
 
@@ -5491,7 +5491,7 @@ function tableHeaders(btn) {
 
 function radioTemps(btn) {
     if (btn) {
-        btn.innerText = "Toggling On/Off...";
+        btn.innerText = "Show⇄Hide";
         btn.classList.add('refresh-pulse');
     }
 
@@ -5521,7 +5521,7 @@ function radioTemps(btn) {
 
 function showFirmware(btn) {
     if (btn) {
-        btn.innerText = "Toggling On/Off...";
+        btn.innerText = "Show⇄Hide";
         btn.classList.add('refresh-pulse');
     }
 
