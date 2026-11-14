@@ -2510,6 +2510,18 @@ web_update_time() {
     DATE_INTL1="$(date +'%d-%b %-I:%M:%S %p')"
     DATE_ISO1="$(date +'%Y-%m-%d %-I:%M:%S %p')"
     DATE_ISO3="$(date +'%Y-%m-%d %-I:%M:%S %p')"
+
+    case "$REPORT_UNIT" in
+        1|USA)   TM_STATUS="$DATE_USA °F" ;;
+        2|INTL)  TM_STATUS="$DATE_INTL °C" ;;
+        3|ISO)   TM_STATUS="$DATE_ISO °C" ;;
+        4|ISO2)  TM_STATUS="$DATE_ISO2 °F" ;;
+        5|USA1)  TM_STATUS="$DATE_USA1 °F" ;;
+        6|INTL1) TM_STATUS="$DATE_INTL1 °C" ;;
+        7|ISO1)  TM_STATUS="$DATE_ISO1 °C" ;;
+        8|ISO3)  TM_STATUS="$DATE_ISO3 °F" ;;
+        *)       TM_STATUS="Set Time/Date/Temp" ;;
+    esac
 }
 
 get_temp_unit() {
@@ -3285,11 +3297,22 @@ main_init() {
     menu_time_color
 }
 
+do_button_labels() {
+    case "$BACKHAUL" in 1) BH_LABEL="Backhaul On" ;; *) BH_LABEL="Backhaul Off" ;; esac
+    case "$HOSTNAME_COLOR" in 1) HN_STATUS="Colored" ;; *) HN_STATUS="Numbered" ;; esac
+    case "$IPPAD" in 2) IP_STATUS="Last 2 Octets" ;; 1) IP_STATUS="Last Octet" ;; *) IP_STATUS="Disabled" ;; esac
+    case "$RADIO_TEMPS" in 1) RT_LABEL="Radio Temps On" ;; *) RT_LABEL="Radio Temps Off" ;; esac
+    case "$RTIME" in 1) RN_LABEL="Runtime On" ;; *) RN_LABEL="Runtime Off" ;; esac
+    case "$RS_HIST" in 1) RS_LABEL="RSSI Tooltips On" ;; *) RS_LABEL="RSSI Tooltips Off" ;; esac
+    case "$SHOW_FW" in 1) FW_LABEL="Firmware On" ;; *) FW_LABEL="Firmware Off" ;; esac
+    case "$TABLE_HEADERS" in 1) TH_LABEL="Table Headers On" ;; *) TH_LABEL="Table Headers Off" ;; esac
+    case "$THEME" in ORIGINAL) TH_STATUS="Original" ;; DARKMODE) TH_STATUS="Darkmode" ;; ASUS_WEBUI) TH_STATUS="AsusUI" ;; esac
+}
+
 ssh_init
 get_usb
 check_github
 device_default_colors
-
 
 BACKHAUL=${BACKHAUL:-0}
 HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
@@ -3702,6 +3725,7 @@ runtime_tracking
 do_numbered_node
 check_version update_box
 web_update_time
+do_button_labels
 
 JS_DIFF="${DIFF:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
@@ -4740,41 +4764,41 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnOptionsToggle2" class="button-tables" onclick="toggleTertiaryRow()">⚙⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
-                                <button class="button-tables" onclick="runtimeTracking(this)">Runtime ☰</button>
-                                <button class="button-tables" onclick="hostColor(this)">Hostname ▤</button>
-                                <select id="webPadding" onchange="ipPadding()" class="button-tables">
+                                <button class="button-tables" onclick="runtimeTracking(this)">$RN_LABEL ☰</button>
+                                <button class="button-tables" data-status="$HN_STATUS" onclick="hostColor(this)">Hostname ▤</button>
+                                <select id="webPadding" onchange="ipPadding()" class="button-tables" data-status="$IP_STATUS">
                                     <option selected disabled hidden>IP Padding ⇥</option>
                                     <option value="1">Last 2 Octets</option>
                                     <option value="2">Last Octet</option>
                                     <option value="3">Disabled</option>
                                 </select>
-                                <select id="themeSelect" onchange="webThemes()" class="button-tables">
+                                <select id="themeSelect" onchange="webThemes()" class="button-tables" data-status="$TH_STATUS">
                                     <option selected disabled hidden>Themes ⟳</option>
                                     <option value="1">Original</option>
                                     <option value="2">Darkmode</option>
                                     <option value="3">AsusUI</option>
                                 </select>
-                                <button class="button-tables" onclick="rssiHistory(this)">RSSI Tooltips ⇵</button>
+                                <button class="button-tables" onclick="rssiHistory(this)">$RS_LABEL ⇵</button>
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                             </div>
                             <div id="tertiaryButtonRow" class="top-buttons-tertiary" style="display: none;">
-                                <select id="timeSelect" onchange="timeDate()" class="button-tables">
+                                <select id="timeSelect" onchange="timeDate()" class="button-tables" data-status="$TM_STATUS">
                                     <option selected disabled hidden>Set Time/Date/Temp ☰</option>
                                     <option disabled>───── Military ─────</option>
                                     <option value="1">$DATE_USA °F</option>
                                     <option value="2">$DATE_INTL °C</option>
                                     <option value="3">$DATE_ISO °C</option>
                                     <option value="4">$DATE_ISO2 °F</option>
-                                    <option disabled>─── 12HR am/pm ───</option>
+                                    <option disabled>─── 12HR AM/PM ───</option>
                                     <option value="5">$DATE_USA1 °F</option>
                                     <option value="6">$DATE_INTL1 °C</option>
                                     <option value="7">$DATE_ISO1 °C</option>
                                     <option value="8">$DATE_ISO3 °F</option>
                                 </select>
-                                <button class="button-tables" onclick="wirelessBackhaul(this)">Backhaul ⟳</button>
-                                <button class="button-tables" onclick="tableHeaders(this)">Table Headers ▤</button>
-                                <button class="button-tables" onclick="radioTemps(this)">Radio Temps ⟳</button>
-                                <button class="button-tables" onclick="showFirmware(this)">Firmware ⟳</button>
+                                <button class="button-tables" onclick="wirelessBackhaul(this)">$BH_LABEL ⟳</button>
+                                <button class="button-tables" onclick="tableHeaders(this)">$TH_LABEL ▤</button>
+                                <button class="button-tables" onclick="radioTemps(this)">$RT_LABEL ⟳</button>
+                                <button class="button-tables" onclick="showFirmware(this)">$FW_LABEL ⟳</button>
                             </div>
                         </div>
                     <div class="grid-container">
@@ -5159,6 +5183,51 @@ window.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('ssh_wifiReportAutoRefresh', this.value);
             initAutoRefresh(parseInt(this.value));
         });
+    }
+});
+
+// Only needed for button hover
+document.addEventListener('mouseover', function(e) {
+    // Handle <select>
+    const sel = e.target.closest('select[data-status]');
+    if (sel && !sel.dataset.hovering) {
+        const placeholder = sel.options[0];
+        if (placeholder) {
+            sel.dataset.originalText = placeholder.text;
+            placeholder.text = sel.dataset.status;
+            sel.dataset.hovering = "1";
+        }
+        return;
+    }
+
+    // Handle <button>
+    const btn = e.target.closest('button[data-status]');
+    if (btn && !btn.dataset.hovering) {
+        btn.dataset.originalText = btn.innerText;
+        btn.innerText = btn.dataset.status;
+        btn.dataset.hovering = "1";
+    }
+});
+
+document.addEventListener('mouseout', function(e) {
+    // Handle <select>
+    const sel = e.target.closest('select[data-status]');
+    if (sel && sel.dataset.hovering && !sel.contains(e.relatedTarget)) {
+        const placeholder = sel.options[0];
+        if (placeholder && sel.dataset.originalText) {
+            placeholder.text = sel.dataset.originalText;
+        }
+        delete sel.dataset.hovering;
+        return;
+    }
+
+    // Handle <button>
+    const btn = e.target.closest('button[data-status]');
+    if (btn && btn.dataset.hovering && !btn.contains(e.relatedTarget)) {
+        if (btn.dataset.originalText) {
+            btn.innerText = btn.dataset.originalText;
+        }
+        delete btn.dataset.hovering;
     }
 });
 
