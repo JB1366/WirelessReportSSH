@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.6.5"
+SCRIPT_VERSION="2.6.6"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -560,7 +560,8 @@ do_install() {
 
     if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
-		sys_log "(v$REMOTE_VERSION) successfully installed."
+		curl -fsL "https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-update" >/dev/null 2>&1 &
+        sys_log "(v$REMOTE_VERSION) successfully installed."
         printf "\nPress $BL[Enter]$NC to apply changes & restart script..."
         read -r discard
 		exec "$REPORT_SCRIPT" install "$@"
@@ -608,6 +609,7 @@ do_install() {
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
+    curl -fsL "https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-install" >/dev/null 2>&1 &
     echo -e "$GR[✓] SUCCESS: Installation complete!$NC\n"
     echo -e "$YL[i] To access Report, navigate to Advanced Settings > Wireless "
     echo -e "$YL    in the ASUS WebGUI and select the Wireless Report SSH tab on the far right.$NC\n"
