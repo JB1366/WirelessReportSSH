@@ -4781,7 +4781,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
                                 <button class="button-tables" onclick="wirelessBackhaul(this)">$BH_LABEL ⟳</button>
                                 <select id="timeSelect" onchange="timeDate()" class="button-tables" data-status="$TM_STATUS">
-                                    <option selected disabled hidden>Set Time/Date/Temp ☰</option>
+                                    <option selected disabled hidden>Set Date/Time/Temp ☰</option>
                                     <option disabled>───── Military ─────</option>
                                     <option value="1">$DATE_USA °F</option>
                                     <option value="2">$DATE_INTL °C</option>
