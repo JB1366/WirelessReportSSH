@@ -151,15 +151,26 @@ check_version() {
         update_box)
             GH="<span style='color: #0096ff;'>"; SP="</span>"
             case "$STATE" in
-                OFFLINE)      HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Github Offline or Unreachable$SP <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV [Offline]"; UPDATE_TITLE="update-title" ;;
-                OUTDATED)     HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}New Version$SP v$REMOTE_VERSION ${GH}available$SP
-                              <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV [$REMOTE_VERSION]"; UPDATE_TITLE="update-title2" ;;
-                HASH_DIFF)    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Hash Update available$SP <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV [Hash]"; UPDATE_TITLE="update-title2" ;;
-                UP_TO_DATE|*) HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $UPDATE_TIME"
-                              VERSION_HASH="$DEV"; UPDATE_TITLE="update-title" ;;
+                OFFLINE)
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Github Offline or Unreachable$SP <br> Last Update: $UPDATE_TIME"
+                    VERSION_HASH="$DEV [Offline]"
+                    UPDATE_TITLE="update-title"
+                    ;;
+                OUTDATED)
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}New Version$SP v$REMOTE_VERSION ${GH}available$SP <br> Last Update: $UPDATE_TIME"
+                    VERSION_HASH="$DEV [$REMOTE_VERSION]"
+                    UPDATE_TITLE="update-title2"
+                    ;;
+                HASH_DIFF)
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Hash Update available$SP <br> Last Update: $UPDATE_TIME"
+                    VERSION_HASH="$DEV [Hash]"
+                    UPDATE_TITLE="update-title2"
+                    ;;
+                UP_TO_DATE|*)
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $UPDATE_TIME"
+                    VERSION_HASH="$DEV"
+                    UPDATE_TITLE="update-title"
+                    ;;
             esac
             ;;
         do_install)
@@ -182,11 +193,11 @@ check_version() {
             ;;
         *)
             case "$STATE" in
-                OFFLINE)       printm " $STATUS $RD[Offline]                     [GitHub Unreachable]" ;;
-                NOT_INSTALLED) printm " $STATUS $GR[Not Installed]$NC          Latest Available:$GR v$REMOTE_VERSION$NC" ;;
+                OFFLINE)       printm " $STATUS $RD[Offline]                         [GitHub Unreachable]" ;;
+                NOT_INSTALLED) printm " $STATUS $GR[Not Installed]$NC             Latest Available:$GR v$REMOTE_VERSION$NC" ;;
                 OUTDATED)      printm " $STATUS $GR[New Version ${WH}v$REMOTE_VERSION$GR Available]   $CURRENT" ;;
                 HASH_DIFF)     printm " $STATUS $GR[Hash Update Available]         $CURRENT" ;;
-                UP_TO_DATE|*)  printm " $STATUS $GR[Up to date]                    $CURRENT" ;;
+                UP_TO_DATE|*)  printm " $STATUS $GR[Up to date]                     $CURRENT" ;;
             esac
             ;;
     esac
@@ -211,6 +222,7 @@ version_compare() {
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     menu_buffer=""; MB="61"; echo -e "$B_COLOR"
+
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
 
@@ -3718,9 +3730,9 @@ ALL_DEVICES="$((MAIN_DEVICE_TOTAL + NODE_DEVICE_TOTAL))"
 GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
-
 get_all_radio_row
 check_node_fw2
+
 check_updateSE
 get_theme
 runtime_tracking
@@ -5119,6 +5131,7 @@ function triggerRefresh() {
             span.innerText = "0";
         });
     }
+
     var btn = document.querySelector('.button-trigger');
     if (btn) {
         btn.innerText = "Refreshing...";
@@ -5174,8 +5187,17 @@ function initAutoRefresh(seconds) {
     clearInterval(refreshTimer);
     if (seconds > 0) {
         timeLeft = seconds;
-        refreshTimer = setInterval(function() { timeLeft--; if (timeLeft <= 0) { triggerRefresh(); clearInterval(refreshTimer); } document.getElementById('refresh-countdown').innerHTML = "&nbsp;" + timeLeft + "s"; }, 1000);
-    } else { document.getElementById('refresh-countdown').innerHTML = ""; }
+        refreshTimer = setInterval(function() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                triggerRefresh();
+                clearInterval(refreshTimer);
+            }
+            document.getElementById('refresh-countdown').innerHTML = "&nbsp;" + timeLeft + "s";
+        }, 1000);
+    } else {
+        document.getElementById('refresh-countdown').innerHTML = "";
+    }
 }
 
 window.addEventListener('DOMContentLoaded', function() {
