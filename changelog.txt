@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.6.8-router time as authoritative source.
 v2.6.7-minor function updates.
 v2.6.6-fix 3rd row buttons.
 v2.6.5-add 2nd row of options to webUI option buttons.​
