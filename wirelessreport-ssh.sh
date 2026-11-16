@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.6.8"
+SCRIPT_VERSION="2.6.9"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -222,7 +222,6 @@ version_compare() {
 menu_vars() {
     if [ -f "$CONFIG" ]; then . "$CONFIG"; fi
     menu_buffer=""; MB="61"; echo -e "$B_COLOR"
-
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
 
@@ -385,6 +384,9 @@ menu_time_color() {
 
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
+
+    COUNT1="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-update"
+    COUNT2="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-install"
 }
 
 get_usb() {
@@ -571,7 +573,7 @@ do_install() {
 
     if [ "$is_update" = "1" ]; then
 		echo -e "\n$BL[✓] Wireless Report SSH successfully installed.$NC"
-		curl -fsL "https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-update" >/dev/null 2>&1 &
+		curl -fsL "$COUNT1" >/dev/null 2>&1 &
         sys_log "(v$REMOTE_VERSION) successfully installed."
         printf "\nPress $BL[Enter]$NC to apply changes & restart script..."
         read -r discard
@@ -620,24 +622,13 @@ do_install() {
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
-    curl -fsL "https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-install" >/dev/null 2>&1 &
+    curl -fsL "$COUNT2" >/dev/null 2>&1 &
     echo -e "$GR[✓] SUCCESS: Installation complete!$NC\n"
     echo -e "$YL[i] To access Report, navigate to Advanced Settings > Wireless "
     echo -e "$YL    in the ASUS WebGUI and select the Wireless Report SSH tab on the far right.$NC\n"
     echo -e "$BL[i] Tip: On router only install, you can add node(s) later."
     echo -e "$BL    Use option #7 in SSH menu to authenticate new node(s).$NC"
 	pause
-}
-
-check_updateSE() {
-    if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
-    sed -i "\|restart:wireless_report\b|d" "$SE_FILE" 2>/dev/null
-    sed -i "\|restart:update_report\b|d" "$SE_FILE" 2>/dev/null
-    if ! grep -q "start:report" "$SE_FILE"; then
-        echo 'case "$1:$2" in start:report*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
-    fi
-    chmod +x "$SE_FILE"
-    return 0
 }
 
 do_update() {
@@ -709,7 +700,8 @@ ScriptUpdateFromAMTM() {
     if check_github && do_update; then
         echo -e "  [+] Downloading latest version (v$REMOTE_VERSION)\n\n"
         echo -e "  [✓] Wireless Report SSH successfully updated.\n"
-		sys_log "AMTM Update: (v$REMOTE_VERSION) successfully installed."
+		curl -fsL "$COUNT1" >/dev/null 2>&1 &
+        sys_log "AMTM Update: (v$REMOTE_VERSION) successfully installed."
 		return 0
     fi
     return 1
@@ -3733,7 +3725,6 @@ NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
 check_node_fw2
 
-check_updateSE
 get_theme
 runtime_tracking
 do_numbered_node
