@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.6.7"
+SCRIPT_VERSION="2.6.8"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -3740,6 +3740,7 @@ check_version update_box
 web_update_time
 do_button_labels
 
+SHOW_DAY=1
 JS_DIFF="${DIFF:-5.00}"
 printf "%b" "$RSSI_HIST_BUFFER" > "$NEW_HISTORY"
 mv "$NEW_HISTORY" "$HISTORY_DB"
@@ -5011,41 +5012,94 @@ function initial() {
     });
 }
 
+var WR_ROUTER_CLOCK = null;
+function wrMonotonicTime() {
+    return (window.performance && performance.now) ? performance.now() : Date.now();
+}
+
+function wrParseRouterClock(value) {
+    var match = String(value || '').match(/(?:^|\s)(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s+([+-])(\d{2})(\d{2})(?=\s|\(|$)/i);
+    if (!match) return null;
+    var month = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(match[2].toLowerCase());
+    var day = Number(match[1]), year = Number(match[3]);
+    var hour = Number(match[4]), minute = Number(match[5]), second = Number(match[6]);
+    var zoneHour = Number(match[8]), zoneMinute = Number(match[9]);
+    if (month < 0 || year < 1970 || hour > 23 || minute > 59 || second > 59 ||
+        zoneHour > 14 || zoneMinute > 59 || (zoneHour === 14 && zoneMinute !== 0)) return null;
+    var calendar = new Date(Date.UTC(year, month, day, hour, minute, second));
+    if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month ||
+        calendar.getUTCDate() !== day) return null;
+    var offsetMinutes = (zoneHour * 60 + zoneMinute) * (match[7] === '-' ? -1 : 1);
+    return { epochMs: calendar.getTime() - offsetMinutes * 60000, offsetMinutes: offsetMinutes };
+}
+
+function wrSetRouterClock(value, receivedMark) {
+    var parsed = wrParseRouterClock(value);
+    if (!parsed) return false;
+    WR_ROUTER_CLOCK = {
+        epochMs: parsed.epochMs,
+        offsetMinutes: parsed.offsetMinutes,
+        receivedMark: receivedMark === undefined ? wrMonotonicTime() : receivedMark
+    };
+    updateLiveClock();
+    return true;
+}
+
+function wrCurrentRouterTime() {
+    if (!WR_ROUTER_CLOCK) return null;
+    return new Date(WR_ROUTER_CLOCK.epochMs + wrMonotonicTime() - WR_ROUTER_CLOCK.receivedMark);
+}
+
+function wrDateParts(date) {
+    if (!date || !Number.isFinite(date.getTime()) || !WR_ROUTER_CLOCK) return null;
+    var d = new Date(date.getTime() + WR_ROUTER_CLOCK.offsetMinutes * 60000);
+    return {
+        year: d.getUTCFullYear(), month: d.getUTCMonth(), day: d.getUTCDate(),
+        weekDay: d.getUTCDay(), hours: d.getUTCHours(),
+        minutes: d.getUTCMinutes(), seconds: d.getUTCSeconds()
+    };
+}
+
 const T_FMT = "${T_FMT#+}";
 const SHOW_DAY = ${SHOW_DAY:-1};
-function formatWithTFMT(fmt) {
-	const now = new Date();
-	const days   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-	const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-	const map = {
-		"%Y":  now.getFullYear(),
-		"%m":  String(now.getMonth() + 1).padStart(2, "0"),
-		"%b":  months[now.getMonth()],
-		"%d":  String(now.getDate()).padStart(2, "0"),
-		"%-d": now.getDate(),
-		"%H":  String(now.getHours()).padStart(2, "0"),
-		"%-H": now.getHours(),
-		"%I":  String(((now.getHours() + 11) % 12) + 1).padStart(2, "0"),
-		"%-I": ((now.getHours() + 11) % 12) + 1,
-		"%M":  String(now.getMinutes()).padStart(2, "0"),
-		"%S":  String(now.getSeconds()).padStart(2, "0"),
-		"%p":  now.getHours() >= 12 ? "PM" : "AM"
-	};
-	let timeStr = fmt.replace(/%-d|%-H|%-I|%Y|%m|%b|%d|%H|%I|%M|%S|%p/g, m => map[m]);
-	if (SHOW_DAY === 1) {
-		timeStr = days[now.getDay()] + ", " + timeStr;
-	}
-	return timeStr;
+function formatWithTFMT(fmt, routerDate) {
+    const parts = wrDateParts(routerDate);
+    if (!parts) return 'Router time unavailable';
+    const days   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const map = {
+        "%Y":  parts.year,
+        "%m":  String(parts.month + 1).padStart(2, "0"),
+        "%b":  months[parts.month],
+        "%d":  String(parts.day).padStart(2, "0"),
+        "%-d": parts.day,
+        "%H":  String(parts.hours).padStart(2, "0"),
+        "%-H": parts.hours,
+        "%I":  String(((parts.hours + 11) % 12) + 1).padStart(2, "0"),
+        "%-I": ((parts.hours + 11) % 12) + 1,
+        "%M":  String(parts.minutes).padStart(2, "0"),
+        "%S":  String(parts.seconds).padStart(2, "0"),
+        "%p":  parts.hours >= 12 ? "PM" : "AM"
+    };
+    let timeStr = fmt.replace(/%-d|%-H|%-I|%Y|%m|%b|%d|%H|%I|%M|%S|%p/g, m => map[m]);
+    if (SHOW_DAY === 1) {
+        timeStr = days[parts.weekDay] + ", " + timeStr;
+    }
+    return timeStr;
 }
 
 function updateLiveClock() {
-	const el = document.getElementById("liveClock");
-	if (!el) return;
-	el.textContent = formatWithTFMT(T_FMT);
+    const el = document.getElementById('liveClock');
+    if (!el) return;
+    const now = wrCurrentRouterTime();
+    if (!now) {
+        el.textContent = 'Router time unavailable';
+        return;
+    }
+    el.textContent = formatWithTFMT(T_FMT, now);
 }
 
-updateLiveClock();
+wrSetRouterClock("$(date "+%a, %d %b %Y %H:%M:%S %z")");
 setInterval(updateLiveClock, 1000);
 
 var timeLeft = 0; var refreshTimer = null; var isRefreshing = false;
