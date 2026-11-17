@@ -8,6 +8,8 @@ on:
 jobs:
   sign:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Grants permission to push the .sig file back to the repo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,15 +17,19 @@ jobs:
       - name: Import Private Key from GitHub Secrets
         run: |
           echo "${{ secrets.SIGNING_KEY }}" > signing.key
+          chmod 600 signing.key
 
       - name: Generate Ed25519 Signature
         run: |
           openssl pkeyutl -sign -inkey signing.key -rawin -in wirelessreport-ssh.sh -out wirelessreport-ssh.sh.sig
 
       - name: Commit and Push .sig back to repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add wirelessreport-ssh.sh.sig
           git commit -m "chore: auto-generate cryptographic signature for release [skip ci]" || exit 0
           git push
