@@ -652,7 +652,8 @@ do_update() {
 
         if openssl pkeyutl -verify -pubin -inkey "$TEMP_PUB" -rawin -in "$TEMP_SCRIPT" -sigfile "$TEMP_SIG" >/dev/null 2>&1; then
             echo -e "\n$GR[+] Signature verified successfully.$NC"
-            rm -f "$TEMP_PUB" "$TEMP_SIG"
+            rm -f "$TEMP_PUB"
+            mv "$TEMP_SIG" "${REPORT_SCRIPT}.sig"
             mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
             chmod +x "$REPORT_SCRIPT" 2>/dev/null
             last_update
