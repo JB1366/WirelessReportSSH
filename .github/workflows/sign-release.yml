@@ -3,21 +3,27 @@ name: Auto-Sign Script
 on:
   push:
     paths:
-      - 'wirelessreport-ssh.sh' # Only triggers when you update the script
+      - 'wirelessreport-ssh.sh'
 
 jobs:
   sign:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Grants permission to push the .sig file back to the repo
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Import Private Key from GitHub Secrets
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
-          echo "${{ secrets.SIGNING_KEY }}" > signing.key
+          # Safely write the secret key without echo newline issues
+          printf '%s\n' "$SIGNING_KEY" > signing.key
           chmod 600 signing.key
+
+          # Diagnostic: verify OpenSSL can read the key structure without failing
+          openssl pkey -in signing.key -noout || { echo "Error: OpenSSL cannot read the private key format."; exit 1; }
 
       - name: Generate Ed25519 Signature
         run: |
