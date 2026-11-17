@@ -631,15 +631,39 @@ do_install() {
 	pause
 }
 
+get_pubkey() {
+    cat << 'EOF'
+-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAu5/h3RJDIzXY/QuN5iFsFbZOe2og/Raj5Z+ntbqBVbs=
+-----END PUBLIC KEY-----
+EOF
+}
+
 do_update() {
-    TEMP_SCRIPT="/tmp/wirelessreportssh.sh"
-    if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" 2>/dev/null && [ -s "$TEMP_SCRIPT" ]; then
-        mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
-        chmod +x "$REPORT_SCRIPT" 2>/dev/null
-        last_update
-        return 0
+    local TEMP_SCRIPT="/tmp/wirelessreport-ssh.sh"
+    local TEMP_SIG="/tmp/wirelessreport-ssh.sh.sig"
+    local TEMP_PUB="/tmp/wirelessreport-ssh.pub.$$"
+
+    if curl -sfL --retry 3 "$GITHUB" -o "$TEMP_SCRIPT" 2>/dev/null && [ -s "$TEMP_SCRIPT" ] && \
+       curl -sfL --retry 3 "${GITHUB}.sig" -o "$TEMP_SIG" 2>/dev/null && [ -s "$TEMP_SIG" ]; then
+
+        get_pubkey > "$TEMP_PUB"
+
+        if openssl pkeyutl -verify -pubin -inkey "$TEMP_PUB" -rawin -in "$TEMP_SCRIPT" -sigfile "$TEMP_SIG" >/dev/null 2>&1; then
+            echo -e "\n$GR[+] Signature verified successfully.$NC"
+            rm -f "$TEMP_PUB" "$TEMP_SIG"
+            mv "$TEMP_SCRIPT" "$REPORT_SCRIPT"
+            chmod +x "$REPORT_SCRIPT" 2>/dev/null
+            last_update
+            return 0
+        else
+            echo -e "\n$RD[!] Signature verification failed! Aborting update.$NC"
+            rm -f "$TEMP_SCRIPT" "$TEMP_SIG" "$TEMP_PUB"
+            pause
+            return 1
+        fi
     else
-        rm -f "$TEMP_SCRIPT"
+        rm -f "$TEMP_SCRIPT" "$TEMP_SIG"
         if [ ! -f "$0" ]; then
             echo -e "$RD[!] Download failed. Aborting installation.$NC"
             return 1
