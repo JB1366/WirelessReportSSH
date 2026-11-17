@@ -649,6 +649,7 @@ do_update() {
        curl -sfL --retry 3 "${GITHUB}.sig" -o "$TEMP_SIG" 2>/dev/null && [ -s "$TEMP_SIG" ]; then
 
         get_pubkey > "$TEMP_PUB"
+        get_pubkey > "${REPORT_SCRIPT}.pub"
 
         if openssl pkeyutl -verify -pubin -inkey "$TEMP_PUB" -rawin -in "$TEMP_SCRIPT" -sigfile "$TEMP_SIG" >/dev/null 2>&1; then
             echo -e "\n$GR[+] Signature verified successfully.$NC"
@@ -678,10 +679,12 @@ do_update() {
         if [ "$CURRENT_PATH" != "$TARGET_PATH" ]; then
             echo -e "\n$GR[+] GitHub unreachable. Installing current local copy...$NC"
             cp "$0" "$REPORT_SCRIPT"
+            get_pubkey > "${REPORT_SCRIPT}.pub"
             chmod +x "$REPORT_SCRIPT" 2>/dev/null
             pause; return 0
         else
             echo -e "\n$YL[!] GitHub unreachable and script is already in place.$NC"
+            get_pubkey > "${REPORT_SCRIPT}.pub"
             pause; return 1
         fi
     fi
