@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.7.0-add support for legacy openssl.
 v2.6.9-added Ed25519 cryptographic signature verification for script updates.
 v2.6.8-router time as authoritative source.
 v2.6.7-minor function updates.
