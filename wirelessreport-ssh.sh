@@ -85,7 +85,7 @@ install_menu() {
         printb "╔═════════════════════════════════════════════════════════════╗"
         check_version
         printb "╠═════════════════════════════════════════════════════════════╣"
-        printm "$MM" "center"
+        printm "$MM          $SHELL_TEXT" "center"
         printm ""
         printm "  $N1  Install/Update"
         printm "  $N2  Uninstall"
@@ -730,8 +730,10 @@ do_verify_signature() {
     rm -f "$TEMP_PUB"
     if [ "$RC" -eq 0 ]; then
         HEADER_TEXT="✓ Signature Verified<br><span style=\"color:#0096ff;font-weight:normal;\">Ed25519 Integrity OK</span>"
+        SHELL_TEXT="$GR✓ Signature Verified"
     else
         HEADER_TEXT="✕ Signature Check Failed<br><span style=\"color:#ff5555;font-weight:normal;\">Untrusted or Missing Signature</span>"
+        SHELL_TEXT="$RD✕ Signature Failed"
     fi
     return "$RC"
 }
@@ -3376,6 +3378,7 @@ main_init() {
     get_main_fw
     get_main_modelid
     menu_time_color
+    do_verify_signature
 }
 
 do_button_labels() {
@@ -3397,7 +3400,6 @@ ssh_init
 get_usb
 check_github
 device_default_colors
-do_verify_signature
 
 BACKHAUL=${BACKHAUL:-0}
 HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
@@ -3807,6 +3809,7 @@ do_numbered_node
 check_version update_box
 web_update_time
 do_button_labels
+do_verify_signature
 
 SHOW_DAY=1
 JS_DIFF="${DIFF:-5.00}"
