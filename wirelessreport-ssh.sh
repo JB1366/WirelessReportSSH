@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.7.0"
+SCRIPT_VERSION="2.7.1"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -613,12 +613,12 @@ do_install() {
     if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SS_FILE" 2>/dev/null
     echo "$REPORT_SCRIPT inject & # Mount Wireless Report SSH" >> "$SS_FILE"
-    chmod +x "$SS_FILE"
+    chmod 755 "$SS_FILE"
 
     if [ ! -f "$SE_FILE" ]; then echo "#!/bin/sh" > "$SE_FILE"; fi
     sed -i "\|$REPORT_SCRIPT|d" "$SE_FILE" 2>/dev/null
     echo 'case "$1:$2" in start:report*) '"$REPORT_SCRIPT"' "$2" & ;; esac # WR SSH' >> "$SE_FILE"
-    chmod +x "$SE_FILE"
+    chmod 755 "$SE_FILE"
 
     install=""; SCRIPT_VERSION="$REMOTE_VERSION"
     sys_log "(v$REMOTE_VERSION) successfully installed."
@@ -661,7 +661,7 @@ do_update() {
                 get_pubkey > "${REPORT_SCRIPT}.pub"
             fi
 
-            chmod +x "$REPORT_SCRIPT" 2>/dev/null
+            chmod 755 "$REPORT_SCRIPT" 2>/dev/null
             last_update
             return 0
         else
@@ -693,7 +693,7 @@ do_update() {
                 get_pubkey > "${REPORT_SCRIPT}.pub"
             fi
 
-            chmod +x "$REPORT_SCRIPT" 2>/dev/null
+            chmod 755 "$REPORT_SCRIPT" 2>/dev/null
             pause; return 0
         else
             echo -e "\n$YL[!] GitHub unreachable and script is already in place.$NC"
@@ -2006,7 +2006,7 @@ get_ssh_keys() {
 	nvram get sshd_authkeys > /root/.ssh/authorized_keys
     chmod 600 /root/.ssh/authorized_keys
 
-    if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod +x "$SS_FILE"; fi
+    if [ ! -f "$SS_FILE" ]; then echo "#!/bin/sh" > "$SS_FILE" && chmod 755 "$SS_FILE"; fi
     if ! grep -q "id_dropbear" "$SS_FILE"; then
         echo -e "\n$GR[+] Adding RSA Key to services-start for persistence on reboots...$NC"
 		echo -e "\n$GR[+] Adding known_hosts to services-start...$NC\n"
