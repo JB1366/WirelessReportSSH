@@ -4857,7 +4857,7 @@ cat <<HTML >> "$WEB_PAGE"
                     <div class="top-header">
                         <div class="header-wrap">
                             <div class="header-tooltip">
-                                <h1 class="header-title">WIRELESS REPORT</h1>
+                                <h1 class="header-title">WIRELESS REPORT SSH</h1>
                                 <span class="header-box">$HEADER_TEXT</span>
                             </div>
                         </div>
