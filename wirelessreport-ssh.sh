@@ -384,8 +384,8 @@ menu_time_color() {
     JB_1366="$NC Copyright (c) 2026 JB_1366 - All Rights Reserved"
     JB1366="$B_COLOR${UL}https://github.com/JB1366/WirelessReportSSH$NC"
 
-    COUNT1="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-update"
-    COUNT2="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-install"
+    COUNT1="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-update&version=${SCRIPT_VERSION}"
+    COUNT2="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-install&version=${SCRIPT_VERSION}"
 }
 
 get_usb() {
