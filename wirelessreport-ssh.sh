@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.7.2"
+SCRIPT_VERSION="2.7.3"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -4255,7 +4255,7 @@ cat <<HTML >> "$WEB_PAGE"
     .button-tables {
         border: 1px solid #475a68;
         color: white;
-        padding: 0 12px;
+        padding: 0 10px;
         font-size: 12px;
         border-radius: 4px;
         font-weight: bold;
