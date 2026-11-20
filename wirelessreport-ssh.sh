@@ -3854,7 +3854,6 @@ cat <<HTML >> "$WEB_PAGE"
     #wifiReportContainer:fullscreen {
         width: 100%;
         height: 100%;
-
         overflow: auto;
         padding: 12px;
         box-sizing: border-box;
@@ -3863,13 +3862,11 @@ cat <<HTML >> "$WEB_PAGE"
     #wifiReportContainer:-webkit-full-screen {
         width: 100%;
         height: 100%;
-
         overflow: auto;
         padding: 12px;
         box-sizing: border-box;
     }
 
-    /* Optional button active state */
     .button-tables.active {
         background: #0a84ff;
         color: white;
