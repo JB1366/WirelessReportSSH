@@ -4884,6 +4884,7 @@ cat <<HTML >> "$WEB_PAGE"
                                 <span class="header-box">$HEADER_TEXT</span>
                             </div>
                         </div>
+                        <span id="liveClock" class="live-time"></span>
                         <div class="total-count">Total Wireless Devices: $GRAND_TOTAL_DEVICES</div>
                         <div class="top-buttons">
                             <div class="button-refresh">
