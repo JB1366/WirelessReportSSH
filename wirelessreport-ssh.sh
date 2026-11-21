@@ -693,7 +693,7 @@ do_update() {
                 echo -e "\n$RD[!] Signature verification failed! Aborting update.$NC"
             fi
             rm -f "$TEMP_SCRIPT" "$TEMP_SIG" "$TEMP_PUB"
-            pause
+            [ -t 0 ] && pause
             return 1
         fi
     else
@@ -716,7 +716,7 @@ do_update() {
             fi
 
             chmod 755 "$REPORT_SCRIPT" 2>/dev/null
-            pause; return 0
+           [ -t 0 ] && pause; return 0
         else
             echo -e "\n$YL[!] GitHub unreachable and script is already in place.$NC"
 
@@ -724,7 +724,7 @@ do_update() {
                 get_pubkey > "${REPORT_SCRIPT}.pub"
             fi
 
-            pause; return 1
+            [ -t 0 ] && pause; return 1
         fi
     fi
 }
