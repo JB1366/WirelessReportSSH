@@ -85,7 +85,7 @@ install_menu() {
         printb "╔═════════════════════════════════════════════════════════════╗"
         check_version
         printb "╠═════════════════════════════════════════════════════════════╣"
-        printm "$MM                $SHELL_TEXT" "center"
+        printr "  $MM" "$SHELL_TEXT  "
         printm ""
         printm "  $N1  Install/Update"
         printm "  $N2  Uninstall"
@@ -289,6 +289,9 @@ printm() {
     if [ "$align" = "center" ]; then
         lpad=$((pad / 2))
         rpad=$((pad - lpad))
+    elif [ "$align" = "right" ]; then
+        lpad="$pad"
+        rpad=0
     else
         rpad="$pad"
     fi
@@ -306,6 +309,25 @@ printm() {
     done
     local line="${line}${box_color}║$NC\n"
     menu_buffer="${menu_buffer}${line}"
+}
+
+printr() {
+    local box_color="$B_COLOR"
+    local left_text="$1"
+    local right_text="$2"
+    local esc=$(printf '\033')
+    local plain_l=$(printf "%b" "$left_text" | sed "s/${esc}\[[0-9;]*m//g")
+    local plain_r=$(printf "%b" "$right_text" | sed "s/${esc}\[[0-9;]*m//g")
+    local used=$((${#plain_l} + ${#plain_r}))
+    local gap=$((MB - used))
+    [ "$gap" -lt 0 ] && gap=0
+    local spaces=""
+    local i=0
+    while [ "$i" -lt "$gap" ]; do
+        spaces="${spaces} "
+        i=$((i + 1))
+    done
+    menu_buffer="${menu_buffer}${box_color}║$NC${left_text}${spaces}${right_text}${box_color}║$NC\n"
 }
 
 printb() {
