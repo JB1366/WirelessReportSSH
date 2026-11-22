@@ -152,22 +152,22 @@ check_version() {
             GH="<span style='color: #0096ff;'>"; SP="</span>"
             case "$STATE" in
                 OFFLINE)
-                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Github Offline or Unreachable$SP <br> Last Update: $UPDATE_TIME"
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Github Offline or Unreachable$SP <br> Last Update: $LAST_UPDATE <br> Last Check: $LAST_CHECK"
                     VERSION_HASH="$DEV [Offline]"
                     UPDATE_TITLE="update-title"
                     ;;
                 OUTDATED)
-                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}New Version$SP v$REMOTE_VERSION ${GH}available$SP <br> Last Update: $UPDATE_TIME"
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}New Version$SP v$REMOTE_VERSION ${GH}available$SP <br> Last Update: $LAST_UPDATE <br> Last Check: $LAST_CHECK"
                     VERSION_HASH="$DEV [$REMOTE_VERSION]"
                     UPDATE_TITLE="update-title2"
                     ;;
                 HASH_DIFF)
-                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Hash Update available$SP <br> Last Update: $UPDATE_TIME"
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> ${GH}Hash Update available$SP <br> Last Update: $LAST_UPDATE <br> Last Check: $LAST_CHECK"
                     VERSION_HASH="$DEV [Hash]"
                     UPDATE_TITLE="update-title2"
                     ;;
                 UP_TO_DATE|*)
-                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $UPDATE_TIME"
+                    HOVER_TEXT="Current: v$SCRIPT_VERSION$DEV <br> Last Update: $LAST_UPDATE <br> Last Check: $LAST_CHECK"
                     VERSION_HASH="$DEV"
                     UPDATE_TITLE="update-title"
                     ;;
@@ -583,7 +583,7 @@ do_install() {
     if [ "$is_update" = "1" ]; then
         while true; do
             check_version do_install
-            echo -e "Last Updated: $B_COLOR$UPDATE_TIME$NC\n"
+            echo -e "Last Updated: $B_COLOR$LAST_UPDATE$NC\n"
             printf "Do you want to $UP (y/n): "
             read -r update
             case "$update" in y|Y) break ;; n|N) return 0 ;; *) freeze 4 ;; esac
@@ -762,15 +762,26 @@ do_verify_signature() {
 
 last_update() {
     update_time
-    UPDATE_TIME="$CUR_TIME"
-    if grep -q "UPDATE_TIME=" "$CONFIG"; then
-        sed -i "s|^UPDATE_TIME=.*|UPDATE_TIME=\"$UPDATE_TIME\"|" "$CONFIG"
+    LAST_UPDATE="$CUR_TIME"
+    if grep -q "LAST_UPDATE=" "$CONFIG"; then
+        sed -i "s|^LAST_UPDATE=.*|LAST_UPDATE=\"$LAST_UPDATE\"|" "$CONFIG"
     else
-        echo "UPDATE_TIME=\"$UPDATE_TIME\"" >> "$CONFIG"
+        echo "LAST_UPDATE=\"$LAST_UPDATE\"" >> "$CONFIG"
+    fi
+}
+
+last_check() {
+    update_time
+    LAST_CHECK="$CUR_TIME"
+    if grep -q "LAST_CHECK=" "$CONFIG"; then
+        sed -i "s|^LAST_CHECK=.*|LAST_CHECK=\"$LAST_CHECK\"|" "$CONFIG"
+    else
+        echo "LAST_CHECK=\"$LAST_CHECK\"" >> "$CONFIG"
     fi
 }
 
 do_webcheck() {
+    last_check
     STATUS="UPTODATE"
     if ! check_version web_check; then
         if do_update; then
@@ -3426,6 +3437,8 @@ device_default_colors
 BACKHAUL=${BACKHAUL:-0}
 HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
 IPPAD=${IPPAD:-1}
+LAST_CHECK="${CUR_TIME:-INITIALIZING}"
+LAST_UPDATE="${CUR_TIME:-INITIALIZING}"
 PULSE_MINS=${PULSE_MINS:-15}
 RADIO_TEMPS=${RADIO_TEMPS:-1}
 RS_HIST=${RS_HIST:-0}
@@ -6215,6 +6228,7 @@ case "$1" in
         ;;
     *update)
         do_webcheck
+        check_version update_box
         ;;
     *wirelessbackhaul)
         do_backhaul
