@@ -3437,8 +3437,8 @@ device_default_colors
 BACKHAUL=${BACKHAUL:-0}
 HOSTNAME_COLOR=${HOSTNAME_COLOR:-0}
 IPPAD=${IPPAD:-1}
-LAST_CHECK="${CUR_TIME:-INITIALIZING}"
-LAST_UPDATE="${CUR_TIME:-INITIALIZING}"
+LAST_CHECK="${LAST_CHECK:-INITIALIZING}"
+LAST_UPDATE="${LAST_UPDATE:-INITIALIZING}"
 PULSE_MINS=${PULSE_MINS:-15}
 RADIO_TEMPS=${RADIO_TEMPS:-1}
 RS_HIST=${RS_HIST:-0}
@@ -5535,6 +5535,7 @@ function triggerUpdate(btn) {
             if (btn) {
                 btn.innerText = "Up to Date ↻";
                 btn.classList.remove('refresh-pulse');
+                triggerRefresh();
                 setTimeout(function() { btn.innerText = "Update ↻"; }, 5000);
             }
         }, 3000);
@@ -6228,7 +6229,6 @@ case "$1" in
         ;;
     *update)
         do_webcheck
-        check_version update_box
         ;;
     *wirelessbackhaul)
         do_backhaul
