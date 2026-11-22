@@ -5534,8 +5534,8 @@ function triggerUpdate(btn) {
         setTimeout(function() {
             if (btn) {
                 btn.innerText = "Up to Date ↻";
-                btn.classList.remove('refresh-pulse');
                 triggerRefresh();
+                btn.classList.remove('refresh-pulse');
                 setTimeout(function() { btn.innerText = "Update ↻"; }, 5000);
             }
         }, 3000);
