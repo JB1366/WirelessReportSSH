@@ -225,6 +225,7 @@ menu_vars() {
 
     PORT="$GR$SSH_PORT$NC"
     ON="${GR}ON$NC"; OFF="${RD}OFF$NC"
+
     STATUS="$NC Status:"
     CURRENT="$NC Current:$GR v$SCRIPT_VERSION$DEV$NC"
     SELECTION="\n$NC Selection [${B_COLOR}E=Exit$NC]: "
