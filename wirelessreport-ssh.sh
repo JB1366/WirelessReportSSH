@@ -5896,35 +5896,33 @@ function showFirmware(btn) {
 function uptimePulse(btn) {
     const rawInput = window.prompt("Enter uptime pulse interval in minutes (0 - 1440):");
     if (rawInput === null) return;
-
     const trimmed = rawInput.trim();
     if (!/^\d+$/.test(trimmed)) {
         window.alert("Please enter a whole number between 0 and 1440.");
         return;
     }
-
     const minutes = Number(trimmed);
     if (minutes < 0 || minutes > 1440) {
         window.alert("Value must be between 0 and 1440 minutes.");
         return;
     }
-
     if (btn) btn.classList.add('refresh-pulse');
 
     applyService('start_report_utpulse' + minutes)
-        .then(function() {
-            setTimeout(function() {
-                if (typeof triggerRefresh === 'function') {
-                    triggerRefresh();
-                } else {
-                    window.location.reload();
-                }
-            }, 1000);
-        })
-        .catch(function(err) {
-            console.error("Uptime Pulse failed:", err);
-            if (btn) btn.classList.remove('refresh-pulse');
-        });
+
+    .then(function() {
+        setTimeout(function() {
+            if (typeof triggerRefresh === 'function') {
+                triggerRefresh();
+            } else {
+                window.location.reload();
+            }
+        }, 1000);
+    })
+    .catch(function(err) {
+        console.error("Uptime Pulse failed:", err);
+        if (btn) btn.classList.remove('refresh-pulse');
+    });
 }
 
 function switchTab(view) {
