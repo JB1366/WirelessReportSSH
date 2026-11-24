@@ -27,7 +27,7 @@
 #        shellcheck shell=sh disable=SC2086,SC2155,SC3043         #
 #═════════════════════════════════════════════════════════════════#
 
-SCRIPT_VERSION="2.7.4"
+SCRIPT_VERSION="2.7.5"
 INSTALL_DIR="/jffs/addons/wirelessreport-ssh"
 REPORT_SCRIPT="$INSTALL_DIR/wirelessreport-ssh.sh"
 CONFIG="$INSTALL_DIR/webui-ssh.conf"
@@ -378,7 +378,7 @@ get_main_modelid() {
 }
 
 menu_time_color() {
-    WH='\033[1;37m'; YL='\033[0;33m'; RD='\033[0;31m'
+    UL='\033[4m'; WH='\033[1;37m'; YL='\033[0;33m'; RD='\033[0;31m'
     BL='\033[38;5;39m'; GR='\033[0;32m'; NC='\033[0m'
     trap 'printf "\033[0m"' 0; trap 'exit 130' INT TERM HUP
 
@@ -1463,25 +1463,7 @@ set_options() {
             case "$choice" in
                 1) set_runtime_tracking ;;
                 2) do_backhaul ;;
-                3) while true; do
-                        echo -e "\n (${GR}0$NC) disable      (${GR}15$NC)def      (${GR}1440$NC) max "
-                        printf " Enter alert interval in mins [${B_COLOR}E=exit$NC]: "
-                        read -r user_mins
-                        case "$user_mins" in e|E) break 2 ;; ""|*[!0-9]*) freeze 3; continue ;; esac
-                        if [ "$user_mins" -le 1440 ]; then NEW_MINS="$user_mins"
-                            if grep -q "PULSE_MINS=" "$CONFIG"; then
-                                sed -i "s/PULSE_MINS=.*/PULSE_MINS=\"$NEW_MINS\"/" "$CONFIG"
-                            else
-                                echo "PULSE_MINS=\"$NEW_MINS\"" >> "$CONFIG"
-                            fi
-                            break 2
-                        else
-                            freeze 3
-                            continue
-                        fi
-                    done
-                    pause
-                    ;;
+                3) set_uptime_pulse ;;
                 4) set_ip_padding ;;
                 5) do_host_color ;;
                 6) do_tableheaders ;;
@@ -1563,6 +1545,40 @@ do_backhaul() {
         sed -i "s/^BACKHAUL=.*/BACKHAUL=\"$NEW_BH\"/" "$CONFIG"
     else
         echo 'BACKHAUL="1"' >> "$CONFIG"
+    fi
+}
+
+set_uptime_pulse() {
+    while true; do
+        echo -e "\n (${GR}0$NC) disable      (${GR}15$NC)def      (${GR}1440$NC) max "
+        printf " Enter alert interval in mins [${B_COLOR}E=exit$NC]: "
+        read -r user_mins
+        case "$user_mins" in e|E) break 2 ;; ""|*[!0-9]*) freeze 3; continue ;; esac
+        if [ "$user_mins" -le 1440 ]; then NEW_MINS="$user_mins"
+            if grep -q "PULSE_MINS=" "$CONFIG"; then
+                sed -i "s/PULSE_MINS=.*/PULSE_MINS=\"$NEW_MINS\"/" "$CONFIG"
+            else
+                echo "PULSE_MINS=\"$NEW_MINS\"" >> "$CONFIG"
+            fi
+            break 2
+        else
+            freeze 3
+            continue
+        fi
+    done
+    pause
+}
+
+do_uptime_pulse() {
+    local mins=${1##*utpulse}
+    case "$mins" in
+        ""|*[!0-9]*) return 1 ;;
+    esac
+    [ "$mins" -le 1440 ] || return 1
+    if [ -f "$CONFIG" ] && grep -q "^PULSE_MINS=" "$CONFIG"; then
+        sed -i "s/^PULSE_MINS=.*/PULSE_MINS=\"$mins\"/" "$CONFIG"
+    else
+        echo "PULSE_MINS=\"$mins\"" >> "$CONFIG"
     fi
 }
 
@@ -3438,6 +3454,8 @@ do_button_labels() {
     case "$SHOW_FW" in 1) FW_LABEL="Firmware On" ;; *) FW_LABEL="Firmware Off" ;; esac
     case "$TABLE_HEADERS" in 1) TH_LABEL="Table Headers On" ;; *) TH_LABEL="Table Headers Off" ;; esac
     case "$THEME" in ORIGINAL) TH_STATUS="Original" ;; DARKMODE) TH_STATUS="Darkmode" ;; ASUS_WEBUI) TH_STATUS="AsusUI" ;; esac
+    UT_LABEL="Uptime Pulse ${PULSE_MINS:-0}m"
+
     # 2-below not button labels, added after refactor.
     case "$RADIO_TEMPS" in 0) RADIO_ON='style="display: none !important;"' ;; *) RADIO_ON="" ;; esac
     case "$SHOW_FW" in 1) FW_ON="" ;; *) FW_ON='style="display:none !important;"' ;; esac
@@ -4360,14 +4378,21 @@ cat <<HTML >> "$WEB_PAGE"
 
     .top-buttons-secondary {
         display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
         gap: 10px;
         margin-top: 10px;
         margin-bottom: 10px;
         border-top: none;
         padding-top: 0;
+    }
+
+    .top-buttons-secondary .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
     }
 
     /* Active toggle state for both Options buttons */
@@ -4966,39 +4991,48 @@ cat <<HTML >> "$WEB_PAGE"
                             <button id="btnOptionsToggle" class="button-tables" onclick="toggleSecondaryRow()">⚙</button>
                             </div>
                             <div id="secondaryButtonRow" class="top-buttons-secondary" style="display: none;">
-                                <button class="button-tables" onclick="runtimeTracking(this)">$RN_LABEL ☰</button>
-                                <button class="button-tables" data-status="$HN_STATUS" onclick="hostColor(this)">Hostname ▤</button>
-                                <select id="webPadding" onchange="ipPadding()" class="button-tables" data-status="$IP_STATUS">
-                                    <option selected disabled hidden>IP Padding ⇥</option>
-                                    <option value="1">Last 2 Octets</option>
-                                    <option value="2">Last Octet</option>
-                                    <option value="3">Disabled</option>
-                                </select>
-                                <button class="button-tables" onclick="rssiHistory(this)">$RS_LABEL ⇵</button>
-                                <select id="themeSelect" onchange="webThemes()" class="button-tables" data-status="$TH_STATUS">
-                                    <option selected disabled hidden>Themes ⟳</option>
-                                    <option value="1">Original</option>
-                                    <option value="2">Darkmode</option>
-                                    <option value="3">AsusUI</option>
-                                </select>
-                                <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
-                                <button class="button-tables" onclick="wirelessBackhaul(this)">$BH_LABEL ⟳</button>
-                                <select id="timeSelect" onchange="timeDate()" class="button-tables" data-status="$TM_STATUS">
-                                    <option selected disabled hidden>Set Date/Time/Temp ☰</option>
-                                    <option disabled>───── Military ─────</option>
-                                    <option value="1">$DATE_USA °F</option>
-                                    <option value="2">$DATE_INTL °C</option>
-                                    <option value="3">$DATE_ISO °C</option>
-                                    <option value="4">$DATE_ISO2 °F</option>
-                                    <option disabled>─── 12HR AM/PM ───</option>
-                                    <option value="5">$DATE_USA1 °F</option>
-                                    <option value="6">$DATE_INTL1 °C</option>
-                                    <option value="7">$DATE_ISO1 °C</option>
-                                    <option value="8">$DATE_ISO3 °F</option>
-                                </select>
-                                <button class="button-tables" onclick="showFirmware(this)">$FW_LABEL ⟳</button>
-                                <button class="button-tables" onclick="radioTemps(this)">$RT_LABEL ⟳</button>
-                                <button class="button-tables" onclick="tableHeaders(this)">$TH_LABEL ▤</button>
+                                <div class="button-row">
+                                    <button class="button-tables" onclick="runtimeTracking(this)">$RN_LABEL ☰</button>
+                                    <button class="button-tables" data-status="$HN_STATUS" onclick="hostColor(this)">Hostname ▤</button>
+                                    <select id="webPadding" onchange="ipPadding()" class="button-tables" data-status="$IP_STATUS">
+                                        <option selected disabled hidden>IP Padding ⇥</option>
+                                        <option value="1">Last 2 Octets</option>
+                                        <option value="2">Last Octet</option>
+                                        <option value="3">Disabled</option>
+                                    </select>
+                                    <button class="button-tables" onclick="rssiHistory(this)">$RS_LABEL ⇵</button>
+                                    <button class="button-tables" onclick="openPopout()" $ROUTER_ONLY>Popout View ◫</button>
+                                </div>
+
+                                <div class="button-row">
+                                    <button class="button-tables" onclick="wirelessBackhaul(this)">$BH_LABEL ⟳</button>
+                                    <select id="timeSelect" onchange="timeDate()" class="button-tables" data-status="$TM_STATUS">
+                                        <option selected disabled hidden>Set Date/Time/Temp ☰</option>
+                                        <option disabled>───── Military ─────</option>
+                                        <option value="1">$DATE_USA °F</option>
+                                        <option value="2">$DATE_INTL °C</option>
+                                        <option value="3">$DATE_ISO °C</option>
+                                        <option value="4">$DATE_ISO2 °F</option>
+                                        <option disabled>─── 12HR AM/PM ───</option>
+                                        <option value="5">$DATE_USA1 °F</option>
+                                        <option value="6">$DATE_INTL1 °C</option>
+                                        <option value="7">$DATE_ISO1 °C</option>
+                                        <option value="8">$DATE_ISO3 °F</option>
+                                    </select>
+                                    <button class="button-tables" onclick="showFirmware(this)">$FW_LABEL ⟳</button>
+                                    <button class="button-tables" onclick="radioTemps(this)">$RT_LABEL ⟳</button>
+                                </div>
+
+                                <div class="button-row">
+                                    <button class="button-tables" onclick="tableHeaders(this)">$TH_LABEL ▤</button>
+                                    <select id="themeSelect" onchange="webThemes()" class="button-tables" data-status="$TH_STATUS">
+                                        <option selected disabled hidden>Themes ⟳</option>
+                                        <option value="1">Original</option>
+                                        <option value="2">Darkmode</option>
+                                        <option value="3">AsusUI</option>
+                                    </select>
+                                    <button class="button-tables" onclick="uptimePulse(this)">$UT_LABEL</button>
+                                </div>
                             </div>
                         </div>
                     <div class="grid-container">
@@ -5859,6 +5893,40 @@ function showFirmware(btn) {
     });
 }
 
+function uptimePulse(btn) {
+    const rawInput = window.prompt("Enter uptime pulse interval in minutes (0 - 1440):");
+    if (rawInput === null) return;
+
+    const trimmed = rawInput.trim();
+    if (!/^\d+$/.test(trimmed)) {
+        window.alert("Please enter a whole number between 0 and 1440.");
+        return;
+    }
+
+    const minutes = Number(trimmed);
+    if (minutes < 0 || minutes > 1440) {
+        window.alert("Value must be between 0 and 1440 minutes.");
+        return;
+    }
+
+    if (btn) btn.classList.add('refresh-pulse');
+
+    applyService('start_report_utpulse' + minutes)
+        .then(function() {
+            setTimeout(function() {
+                if (typeof triggerRefresh === 'function') {
+                    triggerRefresh();
+                } else {
+                    window.location.reload();
+                }
+            }, 1000);
+        })
+        .catch(function(err) {
+            console.error("Uptime Pulse failed:", err);
+            if (btn) btn.classList.remove('refresh-pulse');
+        });
+}
+
 function switchTab(view) {
     localStorage.setItem('ssh_wifiReportView', view);
     var split = document.getElementById('splitView');
@@ -6242,6 +6310,9 @@ case "$1" in
         ;;
     *update)
         do_webcheck
+        ;;
+    *utpulse*)
+        do_uptime_pulse "$1"
         ;;
     *wirelessbackhaul)
         do_backhaul
