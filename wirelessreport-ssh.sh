@@ -5380,17 +5380,18 @@ function triggerRefresh() {
                 row.innerHTML = "2.4G: <span>--</span> 5G: <span>--</span> 6G: <span>--</span>";
             });
 
-            var footerSpans = document.querySelectorAll(colId + ' tfoot span');
-            footerSpans.forEach(function(span) {
-                if (span.textContent.trim().startsWith("Uptime")) {
-                    span.style.color = "#888888";
-                    span.innerText = "Uptime: --";
-                } else if (span.textContent.trim().startsWith("Reboot")) {
-                    span.style.color = "#888888";
-                    span.innerText = "Reboot: --";
-                } else if (span.textContent.trim().startsWith("FW")) {
-                    span.style.color = "#888888";
-                    span.innerText = "FW: --";
+            var footerItems = document.querySelectorAll(colId + ' tfoot span, ' + colId + ' tfoot .fw-line');
+            footerItems.forEach(function(el) {
+                var text = el.textContent.trim();
+                if (text.startsWith("Uptime")) {
+                    el.style.color = "#888888";
+                    el.innerText = "Uptime: --";
+                } else if (text.startsWith("Reboot")) {
+                    el.style.color = "#888888";
+                    el.innerText = "Reboot: --";
+                } else if (text.startsWith("FW")) {
+                    el.style.color = "#888888";
+                    el.innerText = "FW: --";
                 }
             });
         });
