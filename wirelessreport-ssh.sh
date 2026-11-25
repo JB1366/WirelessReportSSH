@@ -4596,6 +4596,11 @@ cat <<HTML >> "$WEB_PAGE"
         font-size: 14px;
     }
 
+    .uptime-row .fw-line {
+        display: block;
+        margin-top: 8px;
+    }
+
     .temp-style {
         text-align: center;
         justify-content: flex-start;
@@ -5109,7 +5114,7 @@ cat <<HTML >> "$WEB_PAGE"
                                             <td colspan="7" class="uptime-row ${US}">
                                                 <span>Uptime: $NODE_UPTIMES</span>
                                                 <span>Reboot: $NODE_BOOTTIMES</span>
-                                                <span $FW_ON>FW: $NODE_FWVERSIONS</span>
+                                                <div class="fw-line" $FW_ON>FW: $NODE_FWVERSIONS</div>
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -5151,7 +5156,7 @@ cat <<HTML >> "$WEB_PAGE"
                                         <td colspan="7" class="uptime-row ${US}">
                                             <span>Uptime: $ALL_UPTIME</span>
                                             <span>Reboot: $ALL_BOOTTIME</span>
-                                            <span $FW_ON>FW: $ALL_FWVERSION</span>
+                                            <div class="fw-line" $FW_ON>FW: $ALL_FWVERSION</div>
                                         </td>
                                     </tr>
                                 </tfoot>
