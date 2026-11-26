@@ -89,15 +89,14 @@ install_menu() {
         printm ""
         printm "  $N1  Install/Update"
         printm "  $N2  Uninstall"
-        printm "  $N3  Set Temperature/Date"
+        printm "  $N3  Set Temp Unit & Date Format"
         printm "  $N4  Set Device Nicknames"
         printm "  $N5  Set Device $COLORS"
         printm "  $N6  Sort Node Display Order"
         printm "  $N7  Set Report Theme ($TM_STAT)"
         printm "  $N8  Set Report Options"
-        printm "  $N9  SSH Config/Options$SK($KEY)"
-        printm "  $N10 Set Header/Menu Border Color"
-        printm "  $N11 View Node Device Firmware"
+        printm "  $N9  Set Header/Menu Border Color"
+        printm "  $N10 SSH Config Options$SK($KEY)"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -115,9 +114,8 @@ install_menu() {
                         6) do_node_sorting ;;
                         7) set_theme ;;
                         8) set_options ;;
-                        9) check_ssh ;;
-                        10) set_border_color ;;
-                        11) show_node_firmware ;;
+                        9) set_border_color ;;
+                        10) check_ssh ;;
                     esac
                     break ;;
                 *) freeze 2; continue ;;
@@ -273,6 +271,8 @@ menu_vars() {
     BN="$GR$BRANCH_NAME$NC"
 
     CUR="$B_COLOR$(date "$D_FMT")$NC"; FWUP="$B_COLOR$FWUP$NC"
+
+    sed -i '/^NODES_FW_DATA=/d; /^FWUPDATE=/d' "$CONFIG" 2>/dev/null
 }
 
 printm() {
@@ -901,9 +901,7 @@ inject_menu() {
 
     flock -u "$FD"
 
-    # Ensure the Addons menu icon CSS rule exists
     if [ -f /tmp/index_style.css ] && grep -qF '.menu_Addons { background:' /tmp/index_style.css; then
-        # Rule already present — nothing to do
         :
     else
         umount /www/index_style.css 2>/dev/null
@@ -963,7 +961,7 @@ set_temp_date() {
     while true; do
         show_header
         printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                   Set Temperature/Date"
+        printm "                 Set Temp Unit & Date Format"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm "  Current: $DN $DU               Date: $CT"
         printb "╠═════════════════════════════════════════════════════════════╣"
@@ -1755,6 +1753,18 @@ do_showfirmware() {
     fi
 }
 
+set_border_color() {
+    echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
+    get_hex_to_ansi
+    get_hex_ansi_selection
+    B_COLOR="$selected_ansi"
+    if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
+    echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
+    printf "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
+    menu_time_color
+    pause
+}
+
 set_github_branch() {
     while true; do
         show_header
@@ -1764,8 +1774,8 @@ set_github_branch() {
         printm "  Branch: [$BN]                  $CURRENT"
         printb "╠═════════════════════════════════════════════════════════════╣"
         printm ""
-        printm "  $N1 main (JB1366)"
-        printm "  $N2 Development (JB1366)"
+        printm "  $N1 main"
+        printm "  $N2 Development"
         printm ""
         printb "╚═════════════════════════════════════════════════════════════╝"
         printf "%b" "$menu_buffer"
@@ -2310,86 +2320,6 @@ node_auth() {
                 ;;
         esac
     fi
-}
-
-set_border_color() {
-    echo -e "\n$B_COLOR Select Logo/Menu Border Color:"
-    get_hex_to_ansi
-    get_hex_ansi_selection
-    B_COLOR="$selected_ansi"
-    if [ -f "$CONFIG" ]; then sed -i '/^B_COLOR=/d' "$CONFIG"; fi
-    echo "B_COLOR=\"$B_COLOR\"" >> "$CONFIG"
-    printf "\n$B_COLOR[+] Logo/Menu Border Color changed.$NC"
-    menu_time_color
-    pause
-}
-
-show_node_firmware() {
-    while true; do
-        show_header
-        printb "╔═════════════════════════════════════════════════════════════╗"
-        printm "                    Node Device Firmware"
-        printb "╠═════════════════════════════════════════════════════════════╣"
-        printm " Current: $CUR        Last: $FWUP"
-        printb "╠═════════════════════════════════════════════════════════════╣"
-        printm ""
-        local node_idx node MODEL IP CLEAN_IP HEX_CLR NODE_CLR
-        local row_text formatted_main formatted_node n_name n_ip n_fw
-
-        get_node_color() { idx="$1"; echo "$NODE_COLORS" | awk -v i="$idx" '{print $i}'; }
-        node_idx=1
-
-        for node in $SSH_NODES; do
-            MODEL="${node%%|*}"
-            IP="${node#*|}"
-            CLEAN_IP="${IP//./_}"
-            eval SAVED_NICK=\$NODE_NICK_$CLEAN_IP
-            HEX_CLR=$(get_node_color "$node_idx")
-            NODE_CLR=$(get_hex_to_ansi "$HEX_CLR")
-            n_fw="Unknown"
-            if [ -n "$NODES_FW_DATA" ]; then
-                for entry in $NODES_FW_DATA; do
-                    e_name="${entry%%|*}"
-                    e_rest="${entry#*|}"
-                    e_ip="${e_rest%%|*}"
-                    e_fw="${e_rest#*|}"
-
-                    if [ "$e_ip" = "$IP" ]; then
-                        n_fw="$e_fw"
-                        break
-                    fi
-                done
-            fi
-
-            formatted_node=$(printf "  %-16s  %-15s  FW: %s" "${SAVED_NICK:-$MODEL}" "$IP" "$n_fw")
-            row_text="${NODE_CLR}${formatted_node}$NC"
-            printm "$row_text"
-
-            node_idx=$((node_idx + 1))
-        done
-        printm ""
-        printm "  $LS Scan Nodes - Update Config"
-        printm ""
-        printb "╚═════════════════════════════════════════════════════════════╝"
-        printf "%b" "$menu_buffer"
-        while true; do
-            selection
-            case "$choice" in
-                s|S)
-                    printf "\n$B_COLOR[+] Running Node scan and updating config...$NC"
-                    FW_TO_CONFIG=1; CONFIG_NODES_CACHE=""
-                    run_report
-                    echo -e "\n\n$YL[✓] Scan complete!$NC"
-                    FW_TO_CONFIG=0
-                    pause
-                    break
-                    ;;
-                *)
-                    freeze 2
-                    continue ;;
-            esac
-        done
-    done
 }
 
 freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
@@ -3431,24 +3361,6 @@ get_all_radio_row() {
     [ -z "$ALL_RADIO_ROW" ] && ALL_RADIO_ROW="<span>No Radio Temp Data</span>"
 }
 
-check_node_fw1() {
-    if [ "${FW_TO_CONFIG:-0}" -eq 1 ]; then
-        NODE_DATA_ENTRY="${NODE_NAME}|${IP}|${N_FWVERSION}"
-        CONFIG_NODES_CACHE="${CONFIG_NODES_CACHE} ${NODE_DATA_ENTRY}"
-    fi
-}
-
-check_node_fw2() {
-    if [ "${FW_TO_CONFIG:-0}" -eq 1 ] && [ -n "$CONFIG_NODES_CACHE" ]; then
-        local raw_time
-        raw_time=$(date +%s)
-        CONFIG_NODES_CACHE=$(echo "$CONFIG_NODES_CACHE" | sed 's/^[[:space:]]*//')
-        sed -i '/^NODES_FW_DATA=/d; /^FWUPDATE=/d' "$CONFIG" 2>/dev/null
-        echo "NODES_FW_DATA=\"$CONFIG_NODES_CACHE\"" >> "$CONFIG"
-        echo "FWUPDATE=\"$raw_time\"" >> "$CONFIG"
-    fi
-}
-
 main_init() {
     get_main_fw
     get_main_modelid
@@ -3829,7 +3741,6 @@ for line in $SSH_NODES; do
 		N_BOOT=$(date -d @$(( $(date +%s) - ${N_UPTIME_RAW} )) "$D_FMT")
         N_FWVERSION="${N_FIRMVER}.${N_BUILDNO}_${N_EXTENDNO}"
 
-        check_node_fw1
         get_node_radios
 
         NODE_DEVICES=0
@@ -3880,7 +3791,6 @@ GRAND_TOTAL_DEVICES="<span class='count-highlight'>$ALL_DEVICES</span>"
 MAIN_DEVICE_TOTAL="<span class='main-color'>${MAIN_DEVICE_TOTAL}</span>"
 NODE_DEVICE_TOTAL="<span class='stat-cool'>${NODE_DEVICE_TOTAL}</span>"
 get_all_radio_row
-check_node_fw2
 
 get_theme
 runtime_tracking
