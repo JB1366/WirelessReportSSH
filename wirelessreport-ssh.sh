@@ -836,6 +836,7 @@ inject_menu() {
 
     if [ -f "$CONFIG" ]; then
         sed -i '/^INSTALLED_PAGE=/d' "$CONFIG"
+        rm -f "/www/user/${INSTALLED_PAGE}.title" >/dev/null 2>&1
     else
         touch "$CONFIG"
     fi
@@ -860,6 +861,7 @@ inject_menu() {
     fi
 
     cp "$WEB_PAGE" "/www/user/$am_webui_page" 2>/dev/null
+    echo "$TAB_LABEL" > "/www/user/${am_webui_page%.asp}.title"
     echo "INSTALLED_PAGE=\"$am_webui_page\"" >> "$CONFIG"
 
     if [ ! -f "$TEMP_MENU" ]; then
@@ -935,6 +937,7 @@ do_uninstall() {
     if [ -n "$INSTALLED_PAGE" ]; then
 		umount -l "/www/user/$INSTALLED_PAGE" >/dev/null 2>&1
 		rm -f /www/user/"${INSTALLED_PAGE}" >/dev/null 2>&1
+        rm -f "/www/user/${INSTALLED_PAGE}.title" >/dev/null 2>&1
 	fi
 
     sed -i "\|$REPORT_SCRIPT|d" "$PROFILE_ADD" "$SS_FILE" "$SE_FILE" 2>/dev/null
