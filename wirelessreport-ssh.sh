@@ -1999,7 +1999,9 @@ go_developer() {
                     TMP_LOG="/jffs/addons/wicens/wicens.log"
                     WAN_LOG="/tmp/wan_ip_changes.log"
                     if [ -f "$TMP_LOG" ]; then
-                        grep -F "WAN IP has changed to" "$TMP_LOG" | sed -E 's/wicens\[[0-9]+\]:[[:space:]]*//; s/wancall[[:space:]]*:[[:space:]]*//' > "$WAN_LOG"
+                        grep -F "WAN IP has changed to" "$TMP_LOG" \
+                            | sed -E 's/wicens\[[0-9]+\]:[[:space:]]*//; s/[[:alnum:]_-]+[[:space:]]*:[[:space:]]*(WAN IP has changed to )/\1/g' \
+                            > "$WAN_LOG"
                         file_viewer "WAN IP Log" "$WAN_LOG"
                         rm -f "$WAN_LOG" 2>/dev/null
                     else
