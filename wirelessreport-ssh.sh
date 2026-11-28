@@ -409,6 +409,7 @@ menu_time_color() {
 
     COUNT1="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-update&version=${SCRIPT_VERSION}"
     COUNT2="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-install&version=${SCRIPT_VERSION}"
+    COUNT3="https://script.google.com/macros/s/AKfycbzg5z1ihLgkxqsvDWoPwYhltX_1YSl8uWsnlcbG-444jJDIesssrC61PMWn6siCunMt/exec?event=wrssh-uninst&version=${SCRIPT_VERSION}"
 }
 
 get_usb() {
@@ -956,6 +957,7 @@ do_uninstall() {
     unset TABLE_HEADERS RS_HIST RS_HIST_ENTRIES RS_HIST_DATE CUR_RS_HIST CUR_ENTRIES CUR_DATE BRANCH INJECT uninstall_script SHOW_FW
 
 	echo -e "\n$GR[+] Success: Wireless Report SSH uninstalled.$NC"
+    curl -fsL "$COUNT3" >/dev/null 2>&1 &
     sys_log "(v$SCRIPT_VERSION) successfully uninstalled."
 	restart_httpd
     ssh_init; device_default_colors
