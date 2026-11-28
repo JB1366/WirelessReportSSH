@@ -2,6 +2,7 @@
 # Wireless Report - Changelog #
 #=============================#
 
+v2.7.6-minor updates.
 v2.7.5-add uptime_pulse button.
 v2.7.4-updated signature verification.
 v2.7.3-fixed update integrity.
